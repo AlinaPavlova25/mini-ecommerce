@@ -1,0 +1,205 @@
+{% extends "base.html" %}
+
+{% block title %}Sipariş #{{ order.id }} - Admin{% endblock %}
+
+{% block content %}
+<nav aria-label="breadcrumb">
+    <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a href="{{ url_for('admin.dashboard') }}">Dashboard</a></li>
+        <li class="breadcrumb-item"><a href="{{ url_for('admin.orders') }}">Siparişler</a></li>
+        <li class="breadcrumb-item active">Sipariş #{{ order.id }}</li>
+    </ol>
+</nav>
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2>
+        <i class="bi bi-box-seam"></i> Sipariş #{{ order.id }}
+    </h2>
+    
+    {% if order.status == 'PAID' %}
+    <span class="badge bg-info fs-6">Ödendi</span>
+    {% elif order.status == 'PREPARING' %}
+    <span class="badge bg-warning text-dark fs-6">Hazırlanıyor</span>
+    {% elif order.status == 'SHIPPED' %}
+    <span class="badge bg-primary fs-6">Kargoda</span>
+    {% elif order.status == 'OUT_FOR_DELIVERY' %}
+    <span class="badge bg-primary fs-6">Dağıtımda</span>
+    {% elif order.status == 'DELIVERED' %}
+    <span class="badge bg-success fs-6">Teslim Edildi</span>
+    {% elif order.status == 'CANCEL_REQUESTED' %}
+    <span class="badge bg-secondary fs-6">İptal Talep Edildi</span>
+    {% elif order.status == 'CANCELED' %}
+    <span class="badge bg-danger fs-6">İptal Edildi</span>
+    {% elif order.status == 'RETURN_ARRIVED' %}
+    <span class="badge bg-dark fs-6">İade Tamamlandı</span>
+    {% endif %}
+</div>
+
+<div class="row">
+    <div class="col-md-8">
+        <div class="card shadow mb-4">
+            <div class="card-body">
+                <h5 class="card-title">Müşteri Bilgileri</h5>
+                <hr>
+                <p>
+                    <strong>Ad Soyad:</strong> {{ order.user.full_name or 'Belirtilmemiş' }}<br>
+                    <strong>Email:</strong> {{ order.user.email }}<br>
+                    <strong>Telefon:</strong> {{ order.user.phone or 'Belirtilmemiş' }}
+                </p>
+                
+                <h5 class="card-title mt-4">Sipariş Bilgileri</h5>
+                <hr>
+                <p>
+                    <strong>Sipariş Tarihi:</strong> {{ order.created_at.strftime('%d.%m.%Y %H:%M') }}<br>
+                    <strong>Son Güncelleme:</strong> {{ order.updated_at.strftime('%d.%m.%Y %H:%M') }}
+                </p>
+                
+                {% if order.anonymous_sender %}
+                <div class="alert alert-warning d-flex align-items-center" role="alert">
+                    <i class="bi bi-exclamation-triangle-fill fs-4 me-3"></i>
+                    <div>
+                        <strong>🎭 GİZLİ GÖNDERİCİ!</strong><br>
+                        Bu sipariş gizli gönderici olarak işaretlenmiştir. Hediye kartına gönderici bilgilerini <strong>YAZMAYINIZ</strong>.
+                    </div>
+                </div>
+                {% endif %}
+                
+                {% if order.delivery_note %}
+                <div class="alert alert-info">
+                    <strong><i class="bi bi-card-text"></i> Hediye Kartı Mesajı:</strong><br>
+                    <em>"{{ order.delivery_note }}"</em>
+                </div>
+                {% endif %}
+                
+                <p>
+                    <strong>Teslimat Adresi:</strong><br>
+                    {{ order.shipping_address|replace('\n', '<br>')|safe }}
+                </p>
+            </div>
+        </div>
+        
+        <div class="card shadow">
+            <div class="card-body">
+                <h5 class="card-title">Sipariş İçeriği</h5>
+                <hr>
+                
+                <div class="table-responsive">
+                    <table class="table">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Ürün</th>
+                                <th>Birim Fiyat</th>
+                                <th>Miktar</th>
+                                <th>Toplam</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for item in order.items %}
+                            <tr>
+                                <td>
+                                    <strong>{{ item.product.name }}</strong><br>
+                                    {% if item.discount_percent_at_purchase > 0 %}
+                                    <span class="badge bg-danger">-%{{ item.discount_percent_at_purchase }}</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% if item.discount_percent_at_purchase > 0 %}
+                                        <span class="price-old small">{{ "%.2f"|format(item.unit_price_at_purchase) }} TL</span><br>
+                                        <span class="price-new">{{ "%.2f"|format(item.effective_price) }} TL</span>
+                                    {% else %}
+                                        {{ "%.2f"|format(item.unit_price_at_purchase) }} TL
+                                    {% endif %}
+                                </td>
+                                <td>{{ item.quantity }}</td>
+                                <td><strong>{{ "%.2f"|format(item.subtotal) }} TL</strong></td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                        <tfoot>
+                            <tr>
+                                <td colspan="3" class="text-end"><strong>Toplam:</strong></td>
+                                <td><strong class="text-primary">{{ "%.2f"|format(order.total_amount) }} TL</strong></td>
+                            </tr>
+                        </tfoot>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-4">
+        <div class="card shadow mb-4">
+            <div class="card-body">
+                <h5 class="card-title">Durum Yönetimi</h5>
+                <hr>
+                
+                {% if order.status not in ['CANCELED', 'DELIVERED', 'RETURN_ARRIVED'] %}
+                <form method="POST" action="{{ url_for('admin.order_status', order_id=order.id) }}">
+                    <div class="mb-3">
+                        <label for="status" class="form-label">Yeni Durum</label>
+                        <select class="form-select" id="status" name="status">
+                            {% if order.status == 'PAID' %}
+                            <option value="PREPARING">Hazırlanıyor</option>
+                            {% endif %}
+                            
+                            {% if order.status == 'PREPARING' %}
+                            <option value="SHIPPED">Kargoya Ver</option>
+                            {% endif %}
+                            
+                            {% if order.status == 'SHIPPED' %}
+                            <option value="OUT_FOR_DELIVERY">Dağıtıma Çıkar</option>
+                            {% endif %}
+                            
+                            {% if order.status == 'OUT_FOR_DELIVERY' %}
+                            <option value="DELIVERED">Teslim Edildi</option>
+                            {% endif %}
+                        </select>
+                    </div>
+                    <button type="submit" class="btn btn-primary w-100">
+                        <i class="bi bi-arrow-right-circle"></i> Durumu Güncelle
+                    </button>
+                </form>
+                {% else %}
+                <div class="alert alert-info mb-0">
+                    <i class="bi bi-info-circle"></i> Bu sipariş için durum değişikliği yapılamaz.
+                </div>
+                {% endif %}
+            </div>
+        </div>
+        
+        {% if order.status == 'CANCEL_REQUESTED' %}
+        <div class="card shadow border-warning mb-4">
+            <div class="card-body">
+                <h6 class="card-title text-warning">
+                    <i class="bi bi-exclamation-triangle"></i> İptal Talebi
+                </h6>
+                <p class="small mb-3">Müşteri bu siparişin iptalini talep etti.</p>
+                
+                <form method="POST" action="{{ url_for('admin.order_approve_cancel', order_id=order.id) }}" onsubmit="return confirm('İptali onaylamak istediğinizden emin misiniz?');">
+                    <button type="submit" class="btn btn-warning w-100">
+                        <i class="bi bi-check-circle"></i> İptali Onayla
+                    </button>
+                </form>
+            </div>
+        </div>
+        {% endif %}
+        
+        {% if order.status == 'CANCELED' %}
+        <div class="card shadow border-info">
+            <div class="card-body">
+                <h6 class="card-title text-info">
+                    <i class="bi bi-arrow-return-left"></i> İade İşlemi
+                </h6>
+                <p class="small mb-3">İade ürünler size ulaştıysa stok geri yüklenecektir.</p>
+                
+                <form method="POST" action="{{ url_for('admin.order_return_arrived', order_id=order.id) }}" onsubmit="return confirm('İade ürünler size ulaştı mı?');">
+                    <button type="submit" class="btn btn-info w-100">
+                        <i class="bi bi-box-arrow-in-down"></i> İade Ulaştı
+                    </button>
+                </form>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

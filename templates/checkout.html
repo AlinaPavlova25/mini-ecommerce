@@ -1,0 +1,396 @@
+{% extends "base.html" %}
+
+{% block title %}Ödeme - FlowerShop{% endblock %}
+
+{% block content %}
+<div class="container my-5">
+    <div class="row">
+        <div class="col-md-8">
+            <div class="checkout-form">
+                <h2 class="mb-4">Sipariş Bilgileri</h2>
+                
+                <form method="POST" action="{{ url_for('shop.checkout_pay') }}" id="checkoutForm">
+                    <!-- Kayıtlı Adres Seçimi -->
+                    {% if current_user.addresses.count() > 0 %}
+                    <div class="form-section">
+                        <h4><i class="bi bi-bookmark-fill"></i> Kayıtlı Adreslerim</h4>
+                        
+                        <div class="row">
+                            {% for address in current_user.addresses %}
+                            <div class="col-md-6 mb-3">
+                                <div class="form-check">
+                                    <input class="form-check-input saved-address-radio" type="radio" name="saved_address_id" id="address_{{ address.id }}" value="{{ address.id }}" {% if address.is_default %}checked{% endif %}>
+                                    <label class="form-check-label w-100" for="address_{{ address.id }}" style="cursor: pointer;">
+                                        <div class="card {% if address.is_default %}border-primary{% endif %}" style="margin-left: 25px;">
+                                            <div class="card-body p-3">
+                                                <h6 class="mb-1">
+                                                    <i class="bi bi-geo-alt-fill"></i> {{ address.label }}
+                                                    {% if address.is_default %}
+                                                    <span class="badge bg-primary ms-2">Varsayılan</span>
+                                                    {% endif %}
+                                                </h6>
+                                                <p class="mb-0 small">
+                                                    {{ address.receiver_name }} {{ address.receiver_surname }}<br>
+                                                    {{ address.receiver_phone }}<br>
+                                                    {{ address.city }} - {{ address.address }}
+                                                </p>
+                                            </div>
+                                        </div>
+                                    </label>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                        
+                        <div class="form-check mb-3">
+                            <input class="form-check-input" type="radio" name="saved_address_id" id="new_address" value="new" {% if current_user.addresses.count() == 0 %}checked{% endif %}>
+                            <label class="form-check-label" for="new_address">
+                                <strong>Yeni adres kullan</strong>
+                            </label>
+                        </div>
+                    </div>
+                    {% endif %}
+                    
+                    <!-- Alıcı Bilgileri -->
+                    <div class="form-section" id="manualAddressSection">
+                        <h4><i class="bi bi-person-fill"></i> Alıcı Bilgileri</h4>
+                        
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="receiver_name">Alıcı Adı *</label>
+                                    <input type="text" class="form-control-custom" id="receiver_name" name="receiver_name" required placeholder="Örn: Ayşe">
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="receiver_surname">Alıcı Soyadı *</label>
+                                    <input type="text" class="form-control-custom" id="receiver_surname" name="receiver_surname" required placeholder="Örn: Yılmaz">
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="receiver_phone">Alıcı Telefonu *</label>
+                            <input type="tel" class="form-control-custom" id="receiver_phone" name="receiver_phone" required placeholder="05XX XXX XX XX">
+                        </div>
+                    </div>
+                    
+                    <!-- Teslimat Adresi -->
+                    <div class="form-section">
+                        <h4><i class="bi bi-geo-alt-fill"></i> Teslimat Adresi</h4>
+                        
+                        <div class="form-group">
+                            <label for="delivery_city">İl *</label>
+                            <select class="form-control-custom" id="delivery_city" name="delivery_city" required>
+                                <option value="">İl Seçiniz</option>
+                                <option>Adana</option>
+                                <option>Adıyaman</option>
+                                <option>Afyonkarahisar</option>
+                                <option>Ağrı</option>
+                                <option>Aksaray</option>
+                                <option>Amasya</option>
+                                <option>Ankara</option>
+                                <option>Antalya</option>
+                                <option>Ardahan</option>
+                                <option>Artvin</option>
+                                <option>Aydın</option>
+                                <option>Balıkesir</option>
+                                <option>Bartın</option>
+                                <option>Batman</option>
+                                <option>Bayburt</option>
+                                <option>Bilecik</option>
+                                <option>Bingöl</option>
+                                <option>Bitlis</option>
+                                <option>Bolu</option>
+                                <option>Burdur</option>
+                                <option>Bursa</option>
+                                <option>Çanakkale</option>
+                                <option>Çankırı</option>
+                                <option>Çorum</option>
+                                <option>Denizli</option>
+                                <option>Diyarbakır</option>
+                                <option>Düzce</option>
+                                <option>Edirne</option>
+                                <option>Elazığ</option>
+                                <option>Erzincan</option>
+                                <option>Erzurum</option>
+                                <option>Eskişehir</option>
+                                <option>Gaziantep</option>
+                                <option>Giresun</option>
+                                <option>Gümüşhane</option>
+                                <option>Hakkari</option>
+                                <option>Hatay</option>
+                                <option>Iğdır</option>
+                                <option>Isparta</option>
+                                <option selected>İstanbul</option>
+                                <option>İzmir</option>
+                                <option>Kahramanmaraş</option>
+                                <option>Karabük</option>
+                                <option>Karaman</option>
+                                <option>Kars</option>
+                                <option>Kastamonu</option>
+                                <option>Kayseri</option>
+                                <option>Kırıkkale</option>
+                                <option>Kırklareli</option>
+                                <option>Kırşehir</option>
+                                <option>Kilis</option>
+                                <option>Kocaeli</option>
+                                <option>Konya</option>
+                                <option>Kütahya</option>
+                                <option>Malatya</option>
+                                <option>Manisa</option>
+                                <option>Mardin</option>
+                                <option>Mersin</option>
+                                <option>Muğla</option>
+                                <option>Muş</option>
+                                <option>Nevşehir</option>
+                                <option>Niğde</option>
+                                <option>Ordu</option>
+                                <option>Osmaniye</option>
+                                <option>Rize</option>
+                                <option>Sakarya</option>
+                                <option>Samsun</option>
+                                <option>Siirt</option>
+                                <option>Sinop</option>
+                                <option>Sivas</option>
+                                <option>Şanlıurfa</option>
+                                <option>Şırnak</option>
+                                <option>Tekirdağ</option>
+                                <option>Tokat</option>
+                                <option>Trabzon</option>
+                                <option>Tunceli</option>
+                                <option>Uşak</option>
+                                <option>Van</option>
+                                <option>Yalova</option>
+                                <option>Yozgat</option>
+                                <option>Zonguldak</option>
+                            </select>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="shipping_address">İlçe ve Adres Detayı *</label>
+                            <textarea class="form-control-custom" id="shipping_address" name="shipping_address" rows="4" required placeholder="İlçe, mahalle, sokak, bina no, kat/daire bilgilerini yazınız..."></textarea>
+                            <small class="text-muted">Örn: Kadıköy, Caferağa Mah. Moda Cad. No:45 Daire:8</small>
+                        </div>
+                    </div>
+                    
+                    <!-- Gönderi Notu -->
+                    <div class="form-section">
+                        <h4><i class="bi bi-card-text"></i> Gönderi Notu (Opsiyonel)</h4>
+                        
+                        <div class="form-group">
+                            <label for="delivery_note">Hediye Kartı Mesajı</label>
+                            <textarea class="form-control-custom" id="delivery_note" name="delivery_note" rows="3" placeholder="Sevdiklerinize özel bir mesaj yazabilirsiniz..."></textarea>
+                            <small class="text-muted">Mesajınız hediye kartına yazılacaktır.</small>
+                        </div>
+                        
+                        <div class="form-check mt-3">
+                            <input class="form-check-input" type="checkbox" id="anonymous_sender" name="anonymous_sender" value="1">
+                            <label class="form-check-label" for="anonymous_sender">
+                                <strong>🎭 Gizli Gönderici</strong>
+                                <small class="d-block text-muted">İşaretlerseniz, hediye kartında gönderici bilgileriniz görünmeyecektir.</small>
+                            </label>
+                        </div>
+                    </div>
+                    
+                    <!-- Ödeme Bilgileri -->
+                    <div class="form-section">
+                        <h4><i class="bi bi-credit-card-fill"></i> Kredi Kartı Bilgileri</h4>
+                        
+                        <div class="form-group">
+                            <label for="card_number">Kart Numarası *</label>
+                            <input type="text" class="form-control-custom" id="card_number" name="card_number" required placeholder="0000 0000 0000 0000" maxlength="19">
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="card_holder">Kart Üzerindeki İsim *</label>
+                            <input type="text" class="form-control-custom" id="card_holder" name="card_holder" required placeholder="Örn: AYŞE YILMAZ">
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="expiry_date">Son Kullanma Tarihi *</label>
+                                    <input type="text" class="form-control-custom" id="expiry_date" name="expiry_date" required placeholder="AA/YY" maxlength="5">
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="cvv">CVV *</label>
+                                    <input type="text" class="form-control-custom" id="cvv" name="cvv" required placeholder="000" maxlength="3">
+                                </div>
+                            </div>
+                        </div>
+                        
+                        {% if total >= 2000 %}
+                        <div class="form-group">
+                            <label for="installments">Taksit Seçeneği</label>
+                            <select class="form-control-custom" id="installments" name="installments">
+                                <option value="1">Tek Çekim - {{ "%.2f"|format(total) }} TL</option>
+                                <option value="3">3 Taksit - {{ "%.2f"|format((total * 1.0325) / 3) }} TL/ay (Toplam: {{ "%.2f"|format(total * 1.0325) }} TL)</option>
+                                <option value="6">6 Taksit - {{ "%.2f"|format((total * 1.0325) / 6) }} TL/ay (Toplam: {{ "%.2f"|format(total * 1.0325) }} TL)</option>
+                                <option value="9">9 Taksit - {{ "%.2f"|format((total * 1.0325) / 9) }} TL/ay (Toplam: {{ "%.2f"|format(total * 1.0325) }} TL)</option>
+                                <option value="12">12 Taksit - {{ "%.2f"|format((total * 1.0325) / 12) }} TL/ay (Toplam: {{ "%.2f"|format(total * 1.0325) }} TL)</option>
+                            </select>
+                            <small class="text-muted">Taksitli ödemelerde %3.25 komisyon uygulanır.</small>
+                        </div>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="alert-custom alert-warning">
+                        <i class="bi bi-info-circle-fill"></i>
+                        <strong>Not:</strong> Bu simüle bir ödeme işlemidir. Gerçek kredi kartı işlemi yapılmayacaktır.
+                    </div>
+                    
+                    <button type="submit" class="btn-hero w-100 mt-4">
+                        <i class="bi bi-check-circle-fill"></i> Ödemeyi Tamamla
+                    </button>
+                </form>
+            </div>
+        </div>
+        
+        <div class="col-md-4">
+            <div class="checkout-form">
+                <h4 class="mb-4">Sipariş Özeti</h4>
+                
+                <div class="mb-4">
+                    {% for item in cart_items %}
+                    <div class="d-flex justify-content-between align-items-start mb-3 pb-3" style="border-bottom: 1px solid var(--border-color);">
+                        <div class="flex-grow-1">
+                            <strong>{{ item.product.name }}</strong><br>
+                            <small class="text-muted">
+                                {{ "%.2f"|format(item.discounted_price) }} TL × {{ item.quantity }}
+                                {% if item.discount_percent > 0 %}
+                                <span class="product-badge badge-discount">-%{{ item.discount_percent }}</span>
+                                {% endif %}
+                            </small>
+                        </div>
+                        <div class="text-end">
+                            <strong>{{ "%.2f"|format(item.subtotal) }} TL</strong>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+                
+                <div class="d-flex justify-content-between mb-2">
+                    <span>Ara Toplam:</span>
+                    <strong>{{ "%.2f"|format(total) }} TL</strong>
+                </div>
+                <div class="d-flex justify-content-between mb-3">
+                    <span>Teslimat:</span>
+                    <strong class="text-success">Ücretsiz</strong>
+                </div>
+                
+                <hr style="border-color: var(--primary-pink);">
+                
+                <div class="d-flex justify-content-between mb-3">
+                    <h5>Toplam:</h5>
+                    <h5 style="color: var(--primary-pink);">{{ "%.2f"|format(total) }} TL</h5>
+                </div>
+                
+                <div class="alert-custom alert-success">
+                    <i class="bi bi-truck"></i>
+                    <small>Siparişiniz aynı gün içinde teslim edilecektir.</small>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Kayıtlı adres verileri
+const savedAddresses = {
+    {% for address in current_user.addresses %}
+    '{{ address.id }}': {
+        receiver_name: '{{ address.receiver_name }}',
+        receiver_surname: '{{ address.receiver_surname }}',
+        receiver_phone: '{{ address.receiver_phone }}',
+        city: '{{ address.city }}',
+        address: '{{ address.address }}'
+    },
+    {% endfor %}
+};
+
+// Kayıtlı adres seçimi
+document.querySelectorAll('.saved-address-radio').forEach(radio => {
+    radio.addEventListener('change', function() {
+        const addressId = this.value;
+        const manualSection = document.getElementById('manualAddressSection');
+        
+        if (addressId === 'new') {
+            // Yeni adres - formu temizle ve göster
+            manualSection.style.display = 'block';
+            document.getElementById('receiver_name').value = '';
+            document.getElementById('receiver_surname').value = '';
+            document.getElementById('receiver_phone').value = '';
+            document.getElementById('delivery_city').value = '';
+            document.getElementById('shipping_address').value = '';
+            
+            // Zorunlu alanları aktif et
+            document.getElementById('receiver_name').required = true;
+            document.getElementById('receiver_surname').required = true;
+            document.getElementById('receiver_phone').required = true;
+            document.getElementById('delivery_city').required = true;
+            document.getElementById('shipping_address').required = true;
+        } else {
+            // Kayıtlı adres seçildi - formu doldur
+            const address = savedAddresses[addressId];
+            if (address) {
+                document.getElementById('receiver_name').value = address.receiver_name;
+                document.getElementById('receiver_surname').value = address.receiver_surname;
+                document.getElementById('receiver_phone').value = address.receiver_phone;
+                document.getElementById('delivery_city').value = address.city;
+                document.getElementById('shipping_address').value = address.address;
+                
+                // Formu gizle (opsiyonel - göstermek isterseniz bu satırı silin)
+                // manualSection.style.display = 'none';
+                
+                // Zorunlu alanları pasif et (zaten dolu)
+                document.getElementById('receiver_name').required = false;
+                document.getElementById('receiver_surname').required = false;
+                document.getElementById('receiver_phone').required = false;
+                document.getElementById('delivery_city').required = false;
+                document.getElementById('shipping_address').required = false;
+            }
+        }
+    });
+});
+
+// Sayfa yüklendiğinde varsayılan adresi doldur
+window.addEventListener('DOMContentLoaded', function() {
+    const checkedRadio = document.querySelector('.saved-address-radio:checked');
+    if (checkedRadio && checkedRadio.value !== 'new') {
+        checkedRadio.dispatchEvent(new Event('change'));
+    }
+});
+
+// Kart numarası formatı (0000 0000 0000 0000)
+document.getElementById('card_number').addEventListener('input', function(e) {
+    let value = e.target.value.replace(/\s/g, '');
+    let formattedValue = value.match(/.{1,4}/g)?.join(' ') || value;
+    e.target.value = formattedValue.substring(0, 19);
+});
+
+// Son kullanma tarihi formatı (AA/YY)
+document.getElementById('expiry_date').addEventListener('input', function(e) {
+    let value = e.target.value.replace(/\D/g, '');
+    if (value.length >= 2) {
+        value = value.substring(0, 2) + '/' + value.substring(2, 4);
+    }
+    e.target.value = value;
+});
+
+// CVV sadece rakam
+document.getElementById('cvv').addEventListener('input', function(e) {
+    e.target.value = e.target.value.replace(/\D/g, '').substring(0, 3);
+});
+
+// Kart üzerindeki isim büyük harf
+document.getElementById('card_holder').addEventListener('input', function(e) {
+    e.target.value = e.target.value.toUpperCase();
+});
+</script>
+{% endblock %}

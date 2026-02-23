@@ -1,0 +1,118 @@
+{% extends "base.html" %}
+
+{% block title %}Kampanya Yönetimi - Admin{% endblock %}
+
+{% block content %}
+<h2 class="mb-4">
+    <i class="bi bi-percent"></i> Kampanya Yönetimi
+</h2>
+
+<div class="row mb-4">
+    <div class="col-md-6">
+        <div class="card shadow">
+            <div class="card-body">
+                <h5 class="card-title">Yeni Kampanya Oluştur</h5>
+                <form method="POST" action="{{ url_for('admin.campaign_new') }}">
+                    <div class="mb-3">
+                        <label for="product_id" class="form-label">Ürün *</label>
+                        <select class="form-select" id="product_id" name="product_id" required>
+                            <option value="">Seçiniz...</option>
+                            {% for product in products %}
+                            <option value="{{ product.id }}">{{ product.name }} ({{ product.category.name }})</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="percent" class="form-label">İndirim Yüzdesi (%) *</label>
+                        <input type="number" class="form-control" id="percent" name="percent" min="0" max="100" required>
+                        <div class="form-text">0-100 arası bir değer girin</div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="name" class="form-label">Kampanya Adı *</label>
+                        <input type="text" class="form-control" id="name" name="name" placeholder="Örn: Sevgililer Günü" required>
+                    </div>
+                    
+                    <button type="submit" class="btn btn-success">
+                        <i class="bi bi-plus-circle"></i> Kampanya Oluştur
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-6">
+        <div class="alert alert-info">
+            <h6><i class="bi bi-info-circle"></i> Kampanya Kuralları</h6>
+            <ul class="mb-0">
+                <li>Her ürün için sadece 1 aktif kampanya olabilir</li>
+                <li>İndirim yüzdesi 0-100 arasında olmalıdır</li>
+                <li>Kampanyayı aktif/pasif yapabilirsiniz</li>
+                <li>Sipariş anında kampanya bilgisi kaydedilir</li>
+            </ul>
+        </div>
+    </div>
+</div>
+
+<div class="card shadow">
+    <div class="card-body">
+        <h5 class="card-title">Mevcut Kampanyalar</h5>
+        <div class="table-responsive">
+            <table class="table table-hover">
+                <thead class="table-light">
+                    <tr>
+                        <th>Kampanya Adı</th>
+                        <th>Ürün</th>
+                        <th>İndirim</th>
+                        <th>Durum</th>
+                        <th>İşlemler</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for campaign in campaigns %}
+                    <tr>
+                        <td>
+                            <form method="POST" action="{{ url_for('admin.campaign_edit', campaign_id=campaign.id) }}" class="d-inline" id="edit-form-{{ campaign.id }}">
+                                <input type="text" class="form-control form-control-sm d-inline-block" name="name" value="{{ campaign.name }}" style="width: auto; min-width: 150px;" required>
+                            </form>
+                        </td>
+                        <td>{{ campaign.product.name }}</td>
+                        <td>
+                            <form method="POST" action="{{ url_for('admin.campaign_edit', campaign_id=campaign.id) }}" class="d-inline" id="percent-form-{{ campaign.id }}">
+                                <input type="hidden" name="name" value="{{ campaign.name }}">
+                                <div class="input-group input-group-sm" style="width: 100px;">
+                                    <input type="number" class="form-control" name="percent" value="{{ campaign.percent }}" min="0" max="100" required>
+                                    <span class="input-group-text">%</span>
+                                </div>
+                            </form>
+                        </td>
+                        <td>
+                            <form method="POST" action="{{ url_for('admin.campaign_toggle', campaign_id=campaign.id) }}" class="d-inline">
+                                <button type="submit" class="btn btn-sm {% if campaign.active %}btn-success{% else %}btn-secondary{% endif %}">
+                                    {% if campaign.active %}Aktif{% else %}Pasif{% endif %}
+                                </button>
+                            </form>
+                        </td>
+                        <td>
+                            <button type="button" class="btn btn-sm btn-outline-primary" onclick="document.getElementById('edit-form-{{ campaign.id }}').submit(); document.getElementById('percent-form-{{ campaign.id }}').submit();">
+                                <i class="bi bi-check-lg"></i> Kaydet
+                            </button>
+                            <form method="POST" action="{{ url_for('admin.campaign_delete', campaign_id=campaign.id) }}" class="d-inline" onsubmit="return confirm('Bu kampanyayı silmek istediğinizden emin misiniz?');">
+                                <button type="submit" class="btn btn-sm btn-outline-danger">
+                                    <i class="bi bi-trash"></i>
+                                </button>
+                            </form>
+                        </td>
+                    </tr>
+                    {% else %}
+                    <tr>
+                        <td colspan="5" class="text-center text-muted">Henüz kampanya bulunmuyor</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,117 @@
+{% extends "base.html" %}
+
+{% block title %}{{ t('cart') }} - {{ t('site_name') }}{% endblock %}
+
+{% block content %}
+<h2 class="mb-4">
+    <i class="bi bi-cart3"></i> {{ t('your_cart') }}
+</h2>
+
+{% if cart_items %}
+<div class="row">
+    <div class="col-md-8">
+        <div class="table-responsive">
+            <table class="table table-hover">
+                <thead class="table-light">
+                    <tr>
+                        <th>{{ t('product_name') }}</th>
+                        <th>{{ t('price') }}</th>
+                        <th>{{ t('quantity') }}</th>
+                        <th>{{ t('subtotal') }}</th>
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for item in cart_items %}
+                    <tr>
+                        <td>
+                            <div class="d-flex align-items-center">
+                                {% if item.product.image_path %}
+                                <img src="{{ url_for('static', filename='uploads/' + item.product.image_path) }}" alt="{{ item.product.name }}" style="width: 60px; height: 60px; object-fit: cover;" class="me-3 rounded">
+                                {% endif %}
+                                <div>
+                                    <strong>{{ item.product.name }}</strong><br>
+                                    <small class="text-muted">{{ item.product.category.name }}</small>
+                                    {% if item.discount_percent > 0 %}
+                                    <br><span class="badge bg-danger">-%{{ item.discount_percent }}</span>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </td>
+                        <td class="align-middle">
+                            {% if item.discount_percent > 0 %}
+                                <span class="price-old small">{{ "%.2f"|format(item.unit_price) }} TL</span><br>
+                                <span class="price-new">{{ "%.2f"|format(item.discounted_price) }} TL</span>
+                            {% else %}
+                                {{ "%.2f"|format(item.unit_price) }} TL
+                            {% endif %}
+                        </td>
+                        <td class="align-middle">
+                            <form method="POST" action="{{ url_for('shop.cart_update') }}" class="d-inline">
+                                <input type="hidden" name="product_id" value="{{ item.product.id }}">
+                                <input type="number" name="quantity" value="{{ item.quantity }}" min="1" max="{{ item.product.stock_qty }}" class="form-control" style="width: 80px; display: inline-block;">
+                                <button type="submit" class="btn btn-sm btn-outline-secondary">
+                                    <i class="bi bi-arrow-repeat"></i>
+                                </button>
+                            </form>
+                        </td>
+                        <td class="align-middle">
+                            <strong>{{ "%.2f"|format(item.subtotal) }} TL</strong>
+                        </td>
+                        <td class="align-middle">
+                            <form method="POST" action="{{ url_for('shop.cart_update') }}" class="d-inline">
+                                <input type="hidden" name="product_id" value="{{ item.product.id }}">
+                                <input type="hidden" name="action" value="remove">
+                                <button type="submit" class="btn btn-sm btn-danger">
+                                    <i class="bi bi-trash"></i>
+                                </button>
+                            </form>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+    
+    <div class="col-md-4">
+        <div class="card shadow">
+            <div class="card-body">
+                <h5 class="card-title">{{ t('order_summary') }}</h5>
+                <hr>
+                <div class="d-flex justify-content-between mb-2">
+                    <span>{{ t('subtotal') }}:</span>
+                    <strong>{{ "%.2f"|format(total) }} TL</strong>
+                </div>
+                <div class="d-flex justify-content-between mb-3">
+                    <span>{{ t('shipping') }}:</span>
+                    <strong class="text-success">{{ t('free') }}</strong>
+                </div>
+                <hr>
+                <div class="d-flex justify-content-between mb-3">
+                    <h5>{{ t('total') }}:</h5>
+                    <h5 class="text-primary">{{ "%.2f"|format(total) }} TL</h5>
+                </div>
+                
+                {% if current_user.is_authenticated %}
+                <a href="{{ url_for('shop.checkout') }}" class="btn btn-primary btn-lg w-100">
+                    {{ t('checkout') }}
+                </a>
+                {% else %}
+                <a href="{{ url_for('auth.login', next=url_for('shop.checkout')) }}" class="btn btn-primary btn-lg w-100">
+                    {{ t('login') }} & {{ t('checkout') }}
+                </a>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% else %}
+<div class="alert alert-info">
+    <i class="bi bi-info-circle"></i> {{ t('empty_cart') }}.
+</div>
+<a href="{{ url_for('shop.product_list') }}" class="btn btn-primary">
+    {{ t('continue_shopping') }}
+</a>
+{% endif %}
+{% endblock %}

@@ -1,0 +1,67 @@
+{% extends "base.html" %}
+
+{% block title %}Siparişlerim - Mini E-Ticaret{% endblock %}
+
+{% block content %}
+<h2 class="mb-4">
+    <i class="bi bi-box-seam"></i> Siparişlerim
+</h2>
+
+{% if orders %}
+<div class="row">
+    {% for order in orders %}
+    <div class="col-md-6 mb-4">
+        <div class="card shadow-sm">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-start mb-3">
+                    <div>
+                        <h5 class="card-title mb-1">Sipariş #{{ order.id }}</h5>
+                        <small class="text-muted">
+                            <i class="bi bi-calendar"></i> {{ order.created_at.strftime('%d.%m.%Y %H:%M') }}
+                        </small>
+                    </div>
+                    <div>
+                        {% if order.status == 'PAID' %}
+                        <span class="badge bg-info">Ödendi</span>
+                        {% elif order.status == 'PREPARING' %}
+                        <span class="badge bg-warning text-dark">Hazırlanıyor</span>
+                        {% elif order.status == 'SHIPPED' %}
+                        <span class="badge bg-primary">Kargoda</span>
+                        {% elif order.status == 'OUT_FOR_DELIVERY' %}
+                        <span class="badge bg-primary">Dağıtımda</span>
+                        {% elif order.status == 'DELIVERED' %}
+                        <span class="badge bg-success">Teslim Edildi</span>
+                        {% elif order.status == 'CANCEL_REQUESTED' %}
+                        <span class="badge bg-secondary">İptal Talep Edildi</span>
+                        {% elif order.status == 'CANCELED' %}
+                        <span class="badge bg-danger">İptal Edildi</span>
+                        {% elif order.status == 'RETURN_ARRIVED' %}
+                        <span class="badge bg-dark">İade Tamamlandı</span>
+                        {% endif %}
+                    </div>
+                </div>
+                
+                <p class="mb-2">
+                    <strong>Ürünler:</strong> {{ order.items|length }} çeşit ürün
+                </p>
+                <p class="mb-3">
+                    <strong>Toplam:</strong> <span class="text-primary">{{ "%.2f"|format(order.total_amount) }} TL</span>
+                </p>
+                
+                <a href="{{ url_for('shop.order_detail', order_id=order.id) }}" class="btn btn-sm btn-primary">
+                    <i class="bi bi-eye"></i> Detayları Gör
+                </a>
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+{% else %}
+<div class="alert alert-info">
+    <i class="bi bi-info-circle"></i> Henüz siparişiniz bulunmuyor.
+</div>
+<a href="{{ url_for('shop.product_list') }}" class="btn btn-primary">
+    Alışverişe Başla
+</a>
+{% endif %}
+{% endblock %}

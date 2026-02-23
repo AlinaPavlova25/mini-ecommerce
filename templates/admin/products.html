@@ -1,0 +1,76 @@
+{% extends "base.html" %}
+
+{% block title %}Ürün Yönetimi - Admin{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2>
+        <i class="bi bi-box"></i> Ürün Yönetimi
+    </h2>
+    <a href="{{ url_for('admin.product_new') }}" class="btn btn-success">
+        <i class="bi bi-plus-circle"></i> Yeni Ürün Ekle
+    </a>
+</div>
+
+<div class="card shadow">
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table table-hover">
+                <thead class="table-light">
+                    <tr>
+                        <th>ID</th>
+                        <th>Resim</th>
+                        <th>Ürün Adı</th>
+                        <th>Kategori</th>
+                        <th>Fiyat</th>
+                        <th>Stok</th>
+                        <th>Durum</th>
+                        <th>İşlemler</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for product in products %}
+                    <tr>
+                        <td>{{ product.id }}</td>
+                        <td>
+                            {% if product.image_path %}
+                            <img src="{{ url_for('static', filename='uploads/' + product.image_path) }}" alt="{{ product.name }}" style="width: 50px; height: 50px; object-fit: cover;" class="rounded">
+                            {% else %}
+                            <div class="bg-secondary text-white d-flex align-items-center justify-content-center rounded" style="width: 50px; height: 50px;">
+                                <i class="bi bi-image"></i>
+                            </div>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <strong>{{ product.name }}</strong><br>
+                            {% if product.product_type %}
+                            <small class="text-muted">{{ product.product_type }}</small>
+                            {% endif %}
+                        </td>
+                        <td>{{ product.category.name }}</td>
+                        <td>{{ "%.2f"|format(product.price) }} TL</td>
+                        <td>
+                            <span class="badge {% if product.stock_qty == 0 %}bg-danger{% elif product.stock_qty <= 5 %}bg-warning text-dark{% else %}bg-success{% endif %}">
+                                {{ product.stock_qty }}
+                            </span>
+                        </td>
+                        <td>
+                            <form method="POST" action="{{ url_for('admin.product_toggle', product_id=product.id) }}" class="d-inline">
+                                <button type="submit" class="btn btn-sm {% if product.is_active %}btn-success{% else %}btn-secondary{% endif %}">
+                                    {% if product.is_active %}Aktif{% else %}Pasif{% endif %}
+                                </button>
+                            </form>
+                        </td>
+                        <td>
+                            <a href="{{ url_for('admin.product_edit', product_id=product.id) }}" class="btn btn-sm btn-outline-primary">
+                                <i class="bi bi-pencil"></i>
+                            </a>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

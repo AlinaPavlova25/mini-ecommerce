@@ -1,0 +1,44 @@
+{% extends "base.html" %}
+
+{% block title %}{{ t('login') }} - {{ t('site_name') }}{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-5">
+        <div class="card shadow">
+            <div class="card-body">
+                <h3 class="card-title text-center mb-4">{{ t('login') }}</h3>
+                
+                <form method="POST" action="{{ url_for('auth.login') }}">
+                    <div class="mb-3">
+                        <label for="email" class="form-label">{{ t('email') }}</label>
+                        <input type="email" class="form-control" id="email" name="email" required>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="password" class="form-label">{{ t('password') }}</label>
+                        <input type="password" class="form-control" id="password" name="password" required>
+                        <div class="text-end mt-2">
+                            <a href="{{ url_for('auth.forgot_password') }}" class="small text-muted">{{ t('forgot_password') }}</a>
+                        </div>
+                    </div>
+                    
+                    <div class="d-grid">
+                        <button type="submit" class="btn btn-primary">{{ t('login') }}</button>
+                    </div>
+                </form>
+                
+                <hr class="my-4">
+                
+                <p class="text-center mb-0">
+                    {% if current_lang == 'en' %}
+                    Don't have an account? <a href="{{ url_for('auth.register') }}">Register</a>
+                    {% else %}
+                    Hesabınız yok mu? <a href="{{ url_for('auth.register') }}">Kayıt olun</a>
+                    {% endif %}
+                </p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

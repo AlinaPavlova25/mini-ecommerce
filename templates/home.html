@@ -1,0 +1,195 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ t('site_name') }}{% endblock %}
+
+{% block content %}
+<!-- Hero Banner -->
+<section class="hero-banner fade-in-up">
+    <div class="container">
+        <h1>{{ t('hero_title') }}</h1>
+        <p>{{ t('hero_subtitle') }}</p>
+        <a href="{{ url_for('shop.product_list') }}" class="btn-hero">{{ t('start_shopping') }}</a>
+    </div>
+</section>
+
+<!-- Category Cards -->
+<section class="container">
+    <div class="category-cards">
+        {% for category in categories %}
+        <a href="{{ url_for('shop.product_list', category=category.slug) }}" class="category-card">
+            <img src="{{ category.image_url or 'https://via.placeholder.com/400x300?text=' + category.name }}" alt="{{ get_name(category) }}">
+            <div class="category-card-body">
+                <h3>{{ get_name(category) }}</h3>
+                <p>{{ category.description }}</p>
+            </div>
+        </a>
+        {% endfor %}
+    </div>
+</section>
+
+<!-- Featured Products -->
+{% if featured_products %}
+<section class="container my-5">
+    <h2 class="text-center mb-4" style="color: var(--dark-text); font-size: 36px; font-weight: 700;">{{ t('featured_products') }}</h2>
+    
+    <div class="product-grid">
+        {% for product in featured_products[:8] %}
+        <div class="product-card fade-in-up">
+            <div class="product-image">
+                <a href="{{ url_for('shop.product_detail', product_id=product.id) }}">
+                    <img src="{{ url_for('static', filename='uploads/' + product.image_path) if product.image_path else 'https://via.placeholder.com/400x400' or 'https://via.placeholder.com/400x400?text=' + product.name }}" alt="{{ product.name }}">
+                </a>
+                
+                {% if product.active_discount %}
+                <span class="product-badge badge-discount">-{{ product.active_discount.percent }}%</span>
+                {% elif product.stock_qty < 5 and product.stock_qty > 0 %}
+                <span class="product-badge badge-stock-low">
+                    {% if current_lang == 'en' %}
+                    Last {{ product.stock_qty }} items
+                    {% else %}
+                    Son {{ product.stock_qty }} adet
+                    {% endif %}
+                </span>
+                {% elif product.stock_qty == 0 %}
+                <span class="product-badge badge-out-of-stock">{{ t('sold_out') }}</span>
+                {% endif %}
+            </div>
+            
+            <div class="product-info">
+                <a href="{{ url_for('shop.product_detail', product_id=product.id) }}" style="text-decoration: none;">
+                    <h3 class="product-title">{{ get_name(product) }}</h3>
+                </a>
+                <p class="product-category">{{ get_name(product.category) }}</p>
+                
+                <div class="product-price">
+                    {% if product.active_discount %}
+                    <span class="price-current">{{ "%.2f"|format(product.discounted_price) }} TL</span>
+                    <span class="price-old">{{ "%.2f"|format(product.price) }} TL</span>
+                    {% else %}
+                    <span class="price-current">{{ "%.2f"|format(product.price) }} TL</span>
+                    {% endif %}
+                </div>
+                
+                {% if product.stock_qty > 0 %}
+                <div class="d-flex gap-2">
+                    <form method="POST" action="{{ url_for('shop.cart_add', product_id=product.id) }}" class="flex-grow-1">
+                        <button type="submit" class="btn-add-cart w-100">
+                            <i class="bi bi-bag-heart-fill"></i> {{ t('add_to_cart') }}
+                        </button>
+                    </form>
+                    
+                    {% if current_user.is_authenticated %}
+                    <form method="POST" action="{{ url_for('profile.wishlist_add', product_id=product.id) }}">
+                        <button type="submit" class="btn btn-outline-danger" style="padding: 12px 16px; border-radius: 8px;">
+                            <i class="bi bi-heart-fill"></i>
+                        </button>
+                    </form>
+                    {% endif %}
+                </div>
+                {% else %}
+                <button class="btn-add-cart" disabled>
+                    <i class="bi bi-x-circle"></i> {{ t('sold_out') }}
+                </button>
+                {% endif %}
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    
+    <div class="text-center mt-4">
+        <a href="{{ url_for('shop.product_list') }}" class="btn-hero">{{ t('view_all_products') }}</a>
+    </div>
+</section>
+{% endif %}
+
+<!-- Discounted Products -->
+{% if discounted_products %}
+<section class="container my-5">
+    <h2 class="text-center mb-4" style="color: var(--primary-pink); font-size: 36px; font-weight: 700;">
+        <i class="bi bi-lightning-fill"></i> {{ t('discounted_products') }}
+    </h2>
+    
+    <div class="product-grid">
+        {% for product in discounted_products %}
+        <div class="product-card fade-in-up">
+            <div class="product-image">
+                <a href="{{ url_for('shop.product_detail', product_id=product.id) }}">
+                    <img src="{{ url_for('static', filename='uploads/' + product.image_path) if product.image_path else 'https://via.placeholder.com/400x400' or 'https://via.placeholder.com/400x400?text=' + product.name }}" alt="{{ product.name }}">
+                </a>
+                
+                <span class="product-badge badge-discount">-{{ product.active_discount.percent }}%</span>
+            </div>
+            
+            <div class="product-info">
+                <a href="{{ url_for('shop.product_detail', product_id=product.id) }}" style="text-decoration: none;">
+                    <h3 class="product-title">{{ get_name(product) }}</h3>
+                </a>
+                <p class="product-category">{{ get_name(product.category) }}</p>
+                
+                <div class="product-price">
+                    <span class="price-current">{{ "%.2f"|format(product.discounted_price) }} TL</span>
+                    <span class="price-old">{{ "%.2f"|format(product.price) }} TL</span>
+                </div>
+                
+                {% if product.stock_qty > 0 %}
+                <div class="d-flex gap-2">
+                    <form method="POST" action="{{ url_for('shop.cart_add', product_id=product.id) }}" class="flex-grow-1">
+                        <button type="submit" class="btn-add-cart w-100">
+                            <i class="bi bi-bag-heart-fill"></i> {{ t('add_to_cart') }}
+                        </button>
+                    </form>
+                    
+                    {% if current_user.is_authenticated %}
+                    <form method="POST" action="{{ url_for('profile.wishlist_add', product_id=product.id) }}">
+                        <button type="submit" class="btn btn-outline-danger" style="padding: 12px 16px; border-radius: 8px;">
+                            <i class="bi bi-heart-fill"></i>
+                        </button>
+                    </form>
+                    {% endif %}
+                </div>
+                {% else %}
+                <button class="btn-add-cart" disabled>
+                    <i class="bi bi-x-circle"></i> {{ t('sold_out') }}
+                </button>
+                {% endif %}
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</section>
+{% endif %}
+
+<!-- Features Section -->
+<section class="container my-5">
+    <div class="row text-center">
+        <div class="col-md-3 mb-4">
+            <div class="p-4">
+                <i class="bi bi-truck" style="font-size: 48px; color: var(--primary-pink);"></i>
+                <h5 class="mt-3">{{ t('fast_delivery') }}</h5>
+                <p class="text-muted">{{ t('fast_delivery_desc') }}</p>
+            </div>
+        </div>
+        <div class="col-md-3 mb-4">
+            <div class="p-4">
+                <i class="bi bi-shield-check" style="font-size: 48px; color: var(--primary-pink);"></i>
+                <h5 class="mt-3">{{ t('secure_shopping') }}</h5>
+                <p class="text-muted">{{ t('secure_shopping_desc') }}</p>
+            </div>
+        </div>
+        <div class="col-md-3 mb-4">
+            <div class="p-4">
+                <i class="bi bi-flower2" style="font-size: 48px; color: var(--primary-pink);"></i>
+                <h5 class="mt-3">{{ t('fresh_products') }}</h5>
+                <p class="text-muted">{{ t('fresh_products_desc') }}</p>
+            </div>
+        </div>
+        <div class="col-md-3 mb-4">
+            <div class="p-4">
+                <i class="bi bi-headset" style="font-size: 48px; color: var(--primary-pink);"></i>
+                <h5 class="mt-3">{{ t('support_247') }}</h5>
+                <p class="text-muted">{{ t('support_247_desc') }}</p>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}

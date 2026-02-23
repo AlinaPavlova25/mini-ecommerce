@@ -1,0 +1,62 @@
+{% extends "base.html" %}
+
+{% block title %}{{ t('register') }} - {{ t('site_name') }}{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-6">
+        <div class="card shadow">
+            <div class="card-body">
+                <h3 class="card-title text-center mb-4">
+                    <i class="bi bi-person-plus-fill"></i> {{ t('register') }}
+                </h3>
+                
+                <form method="POST" action="{{ url_for('auth.register') }}">
+                    <div class="mb-3">
+                        <label for="email" class="form-label">{{ t('email') }} *</label>
+                        <input type="email" class="form-control" id="email" name="email" required placeholder="example@email.com">
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="password" class="form-label">{{ t('password') }} *</label>
+                        <input type="password" class="form-control" id="password" name="password" required minlength="6" placeholder="{% if current_lang == 'en' %}At least 6 characters{% else %}En az 6 karakter{% endif %}">
+                        <div class="form-text">{% if current_lang == 'en' %}Use a secure password{% else %}Güvenli bir şifre kullanın{% endif %}</div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="full_name" class="form-label">{{ t('full_name') }}</label>
+                        <input type="text" class="form-control" id="full_name" name="full_name" placeholder="{% if current_lang == 'en' %}John Doe{% else %}Ayşe Yılmaz{% endif %}">
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="phone" class="form-label">{{ t('phone') }}</label>
+                        <input type="tel" class="form-control" id="phone" name="phone" placeholder="05XX XXX XX XX">
+                        <div class="form-text">{% if current_lang == 'en' %}Will be used for order updates{% else %}Sipariş güncellemeleri için kullanılacak{% endif %}</div>
+                    </div>
+                    
+                    <div class="alert alert-info">
+                        <i class="bi bi-info-circle-fill"></i>
+                        <small><strong>{% if current_lang == 'en' %}Note{% else %}Not{% endif %}:</strong> {% if current_lang == 'en' %}You can add your address information from your profile page after registration.{% else %}Adres bilgilerinizi kayıt olduktan sonra profil sayfanızdan ekleyebilirsiniz.{% endif %}</small>
+                    </div>
+                    
+                    <div class="d-grid">
+                        <button type="submit" class="btn btn-primary btn-lg">
+                            <i class="bi bi-check-circle-fill"></i> {{ t('register') }}
+                        </button>
+                    </div>
+                </form>
+                
+                <hr class="my-4">
+                
+                <p class="text-center mb-0">
+                    {% if current_lang == 'en' %}
+                    Already have an account? <a href="{{ url_for('auth.login') }}">Login</a>
+                    {% else %}
+                    Zaten hesabınız var mı? <a href="{{ url_for('auth.login') }}">Giriş yapın</a>
+                    {% endif %}
+                </p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
