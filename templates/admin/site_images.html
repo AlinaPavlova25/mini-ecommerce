@@ -1,0 +1,73 @@
+{% extends "base.html" %}
+{% block title %}Site Görselleri — Admin LuxWatch{% endblock %}
+{% block extra_css %}<link rel="stylesheet" href="{{ url_for('static', filename='css/admin.css') }}">{% endblock %}
+
+{% block content %}
+<div class="lw-admin-wrap">
+    {% include 'admin/_sidebar.html' %}
+    <main class="lw-admin-main">
+
+        <div class="lw-admin-page-header">
+            <div class="lw-admin-page-title">Site Görselleri</div>
+        </div>
+
+        <div style="padding: 0 0 1rem; font-size: 0.8rem; color: var(--text-muted);">
+            Ana sayfa hero banner, marka görselleri gibi site görsellerini buradan yönetin.
+        </div>
+
+        <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 1.5rem;">
+            {% for image in images %}
+            <div class="lw-admin-section">
+                <div class="lw-admin-section-header" style="display: flex; justify-content: space-between; align-items: center;">
+                    <span>{{ image.label }}</span>
+                    <span style="font-family: monospace; font-size: 0.65rem; color: var(--text-muted);">{{ image.key }}</span>
+                </div>
+                <div style="padding: 1.25rem;">
+
+                    <!-- Preview -->
+                    <div style="background: var(--bg-secondary); border: 1px solid var(--border); margin-bottom: 1rem; overflow: hidden; aspect-ratio: 16/9; display: flex; align-items: center; justify-content: center;">
+                        {% if image.image_path %}
+                        <img src="{{ url_for('static', filename='uploads/' + image.image_path) }}" alt="{{ image.label }}" style="width: 100%; height: 100%; object-fit: cover;">
+                        {% else %}
+                        <div style="text-align: center; color: var(--text-muted);">
+                            <i class="fa-regular fa-image" style="font-size: 2rem; margin-bottom: 0.5rem; display: block;"></i>
+                            <div style="font-size: 0.72rem; letter-spacing: 0.05em;">Görsel Yüklenmedi</div>
+                        </div>
+                        {% endif %}
+                    </div>
+
+                    {% if image.updated_at and image.image_path %}
+                    <div style="font-size: 0.7rem; color: var(--text-muted); margin-bottom: 0.75rem;">
+                        Son güncelleme: {{ image.updated_at.strftime('%d.%m.%Y %H:%M') }}
+                    </div>
+                    {% endif %}
+
+                    <!-- Upload Form -->
+                    <form method="POST" action="{{ url_for('admin.site_image_upload', image_id=image.id) }}" enctype="multipart/form-data" style="display: flex; flex-direction: column; gap: 0.75rem;">
+                        <input type="file" name="image" class="lw-input" accept="image/*" required style="font-size: 0.78rem; padding: 0.4rem 0.75rem;">
+                        <button type="submit" class="lw-admin-btn-gold" style="justify-content: center; font-size: 0.72rem;">
+                            <i class="fa-solid fa-arrow-up-from-bracket"></i>
+                            {% if image.image_path %}Görseli Değiştir{% else %}Görsel Yükle{% endif %}
+                        </button>
+                    </form>
+
+                    {% if image.image_path %}
+                    <form method="POST" action="{{ url_for('admin.site_image_delete', image_id=image.id) }}" onsubmit="return confirm('Bu görseli silmek istediğinizden emin misiniz?');" style="margin-top: 0.5rem;">
+                        <button type="submit" class="lw-admin-btn-sm danger" style="width: 100%; text-align: center; justify-content: center;">
+                            <i class="fa-regular fa-trash-can"></i> Görseli Sil
+                        </button>
+                    </form>
+                    {% endif %}
+
+                </div>
+            </div>
+            {% else %}
+            <div style="color: var(--text-muted); text-align: center; padding: 3rem; background: var(--bg-card); border: 1px solid var(--border);">
+                Site görsel kaydı bulunamadı. Seed scripti çalıştırdınız mı?
+            </div>
+            {% endfor %}
+        </div>
+
+    </main>
+</div>
+{% endblock %}

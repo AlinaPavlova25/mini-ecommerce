@@ -1,0 +1,64 @@
+{% extends "base.html" %}
+{% block title %}Marka Yönetimi — Admin LuxWatch{% endblock %}
+{% block extra_css %}<link rel="stylesheet" href="{{ url_for('static', filename='css/admin.css') }}">{% endblock %}
+
+{% block content %}
+<div class="lw-admin-wrap">
+    {% include 'admin/_sidebar.html' %}
+    <main class="lw-admin-main">
+
+        <div class="lw-admin-page-header">
+            <div class="lw-admin-page-title">Marka Yönetimi</div>
+            <a href="{{ url_for('admin.brand_new') }}" class="lw-admin-btn-gold">
+                <i class="fa-solid fa-plus"></i> Yeni Marka
+            </a>
+        </div>
+
+        <div class="lw-admin-section">
+            <div style="overflow-x: auto;">
+                <table class="lw-admin-table">
+                    <thead>
+                        <tr>
+                            <th>Sıra</th>
+                            <th>Logo</th>
+                            <th>Marka</th>
+                            <th>Slug</th>
+                            <th>Ülke</th>
+                            <th>Kuruluş</th>
+                            <th>Ürün Sayısı</th>
+                            <th>İşlem</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for brand in brands %}
+                        <tr>
+                            <td style="color: var(--text-muted);">{{ brand.sort_order }}</td>
+                            <td>
+                                {% if brand.logo_path %}
+                                <img src="{{ url_for('static', filename='uploads/' + brand.logo_path) }}" alt="{{ brand.name }}" style="height: 30px; width: auto; object-fit: contain;">
+                                {% else %}
+                                <div style="width: 44px; height: 30px; background: var(--bg-secondary); border: 1px solid var(--border); display: flex; align-items: center; justify-content: center; color: var(--border); font-size: 0.65rem;">LOGO</div>
+                                {% endif %}
+                            </td>
+                            <td style="color: var(--text-primary); font-family: var(--font-serif);">{{ brand.name }}</td>
+                            <td style="color: var(--text-muted); font-family: monospace; font-size: 0.78rem;">{{ brand.slug }}</td>
+                            <td>{{ brand.country or '—' }}</td>
+                            <td>{{ brand.founded_year or '—' }}</td>
+                            <td style="color: var(--gold);">{{ brand.products.count() }}</td>
+                            <td>
+                                <a href="{{ url_for('admin.brand_edit', brand_id=brand.id) }}" class="lw-admin-btn-sm">
+                                    <i class="fa-solid fa-pen-to-square"></i> Düzenle
+                                </a>
+                            </td>
+                        </tr>
+                        {% else %}
+                        <tr><td colspan="8" style="text-align: center; padding: 3rem; color: var(--text-muted);">Henüz marka yok.</td></tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+    </main>
+</div>
+{% endblock %}

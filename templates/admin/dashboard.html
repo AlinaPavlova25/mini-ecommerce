@@ -1,174 +1,151 @@
 {% extends "base.html" %}
 
-{% block title %}Admin Dashboard - Mini E-Ticaret{% endblock %}
+{% block title %}Admin Dashboard — LuxWatch{% endblock %}
 
 {% block content %}
-<h2 class="mb-4">
-    <i class="bi bi-speedometer2"></i> Admin Dashboard
-</h2>
+<div class="lw-admin-wrap">
 
-<div class="row mb-4">
-    <div class="col-md-4">
-        <div class="card shadow text-white bg-primary">
-            <div class="card-body">
-                <h5 class="card-title">
-                    <i class="bi bi-box-seam"></i> Toplam Sipariş
-                </h5>
-                <h2>{{ total_orders }}</h2>
-            </div>
-        </div>
-    </div>
-    
-    <div class="col-md-4">
-        <div class="card shadow text-white bg-success">
-            <div class="card-body">
-                <h5 class="card-title">
-                    <i class="bi bi-calendar-check"></i> Bugünkü Siparişler
-                </h5>
-                <h2>{{ today_orders }}</h2>
-            </div>
-        </div>
-    </div>
-    
-    <div class="col-md-4">
-        <div class="card shadow text-white bg-warning">
-            <div class="card-body">
-                <h5 class="card-title">
-                    <i class="bi bi-exclamation-triangle"></i> Düşük Stoklu Ürünler
-                </h5>
-                <h2>{{ low_stock_products|length }}</h2>
-            </div>
-        </div>
-    </div>
-</div>
+    <!-- Sidebar -->
+    {% include 'admin/_sidebar.html' %}
 
-<div class="row mb-4">
-    <div class="col-md-12">
-        <div class="card shadow">
-            <div class="card-body">
-                <h5 class="card-title">Hızlı Erişim</h5>
-                <div class="row mt-3">
-                    <div class="col-md-3 mb-2">
-                        <a href="{{ url_for('admin.products') }}" class="btn btn-outline-primary w-100">
-                            <i class="bi bi-box"></i> Ürün Yönetimi
-                        </a>
+    <!-- Main Content -->
+    <main class="lw-admin-main">
+
+        <!-- Stats Row -->
+        <div class="lw-admin-stats">
+            <div class="lw-stat-card">
+                <div class="lw-stat-icon"><i class="fa-solid fa-box-open"></i></div>
+                <div>
+                    <div class="lw-stat-value">{{ total_orders }}</div>
+                    <div class="lw-stat-label">Toplam Sipariş</div>
+                </div>
+            </div>
+            <div class="lw-stat-card">
+                <div class="lw-stat-icon" style="color: var(--gold);"><i class="fa-regular fa-calendar-check"></i></div>
+                <div>
+                    <div class="lw-stat-value">{{ today_orders }}</div>
+                    <div class="lw-stat-label">Bugünkü Sipariş</div>
+                </div>
+            </div>
+            <div class="lw-stat-card">
+                <div class="lw-stat-icon" style="color: #f87171;"><i class="fa-solid fa-triangle-exclamation"></i></div>
+                <div>
+                    <div class="lw-stat-value">{{ low_stock_products|length }}</div>
+                    <div class="lw-stat-label">Düşük Stoklu Ürün</div>
+                </div>
+            </div>
+            <div class="lw-stat-card">
+                <div class="lw-stat-icon" style="color: #4ade80;"><i class="fa-solid fa-clock"></i></div>
+                <div>
+                    <div class="lw-stat-value">
+                        {{ recent_orders|selectattr('status', 'eq', 'PAID')|list|length }}
                     </div>
-                    <div class="col-md-3 mb-2">
-                        <a href="{{ url_for('admin.stock') }}" class="btn btn-outline-warning w-100">
-                            <i class="bi bi-boxes"></i> Stok Yönetimi
-                        </a>
-                    </div>
-                    <div class="col-md-3 mb-2">
-                        <a href="{{ url_for('admin.campaigns') }}" class="btn btn-outline-danger w-100">
-                            <i class="bi bi-percent"></i> Kampanyalar
-                        </a>
-                    </div>
-                    <div class="col-md-3 mb-2">
-                        <a href="{{ url_for('admin.orders') }}" class="btn btn-outline-success w-100">
-                            <i class="bi bi-cart-check"></i> Siparişler
-                        </a>
-                    </div>
+                    <div class="lw-stat-label">Bekleyen Sipariş</div>
                 </div>
             </div>
         </div>
-    </div>
-</div>
 
-{% if low_stock_products %}
-<div class="row mb-4">
-    <div class="col-md-12">
-        <div class="card shadow border-warning">
-            <div class="card-body">
-                <h5 class="card-title text-warning">
-                    <i class="bi bi-exclamation-triangle"></i> Düşük Stoklu Ürünler
-                </h5>
-                <div class="table-responsive">
-                    <table class="table table-sm">
-                        <thead>
-                            <tr>
-                                <th>Ürün</th>
-                                <th>Kategori</th>
-                                <th>Stok</th>
-                                <th>İşlem</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {% for product in low_stock_products %}
-                            <tr>
-                                <td>{{ product.name }}</td>
-                                <td>{{ product.category.name }}</td>
-                                <td>
-                                    <span class="badge {% if product.stock_qty == 0 %}bg-danger{% else %}bg-warning text-dark{% endif %}">
-                                        {{ product.stock_qty }}
-                                    </span>
-                                </td>
-                                <td>
-                                    <a href="{{ url_for('admin.product_edit', product_id=product.id) }}" class="btn btn-sm btn-outline-primary">
-                                        Düzenle
-                                    </a>
-                                </td>
-                            </tr>
-                            {% endfor %}
-                        </tbody>
-                    </table>
-                </div>
+        <!-- Quick Actions -->
+        <div class="lw-admin-section">
+            <div class="lw-admin-section-header">Hızlı Erişim</div>
+            <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 1rem; padding: 1.5rem;">
+                <a href="{{ url_for('admin.product_new') }}" class="lw-quick-action">
+                    <i class="fa-solid fa-plus-circle"></i>
+                    <span>Yeni Ürün</span>
+                </a>
+                <a href="{{ url_for('admin.brand_new') }}" class="lw-quick-action">
+                    <i class="fa-solid fa-tag"></i>
+                    <span>Yeni Marka</span>
+                </a>
+                <a href="{{ url_for('admin.site_images') }}" class="lw-quick-action">
+                    <i class="fa-regular fa-image"></i>
+                    <span>Site Görselleri</span>
+                </a>
+                <a href="{{ url_for('admin.newsletter') }}" class="lw-quick-action">
+                    <i class="fa-regular fa-envelope"></i>
+                    <span>E-bülten</span>
+                </a>
             </div>
         </div>
-    </div>
-</div>
-{% endif %}
 
-<div class="row">
-    <div class="col-md-12">
-        <div class="card shadow">
-            <div class="card-body">
-                <h5 class="card-title">Son Siparişler</h5>
-                <div class="table-responsive">
-                    <table class="table table-hover">
-                        <thead class="table-light">
-                            <tr>
-                                <th>#</th>
-                                <th>Müşteri</th>
-                                <th>Tarih</th>
-                                <th>Durum</th>
-                                <th>Tutar</th>
-                                <th>İşlem</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {% for order in recent_orders %}
-                            <tr>
-                                <td>{{ order.id }}</td>
-                                <td>{{ order.user.full_name or order.user.email }}</td>
-                                <td>{{ order.created_at.strftime('%d.%m.%Y %H:%M') }}</td>
-                                <td>
-                                    {% if order.status == 'PAID' %}
-                                    <span class="badge bg-info">Ödendi</span>
-                                    {% elif order.status == 'PREPARING' %}
-                                    <span class="badge bg-warning text-dark">Hazırlanıyor</span>
-                                    {% elif order.status == 'SHIPPED' %}
-                                    <span class="badge bg-primary">Kargoda</span>
-                                    {% elif order.status == 'DELIVERED' %}
-                                    <span class="badge bg-success">Teslim Edildi</span>
-                                    {% elif order.status == 'CANCELED' %}
-                                    <span class="badge bg-danger">İptal Edildi</span>
-                                    {% else %}
-                                    <span class="badge bg-secondary">{{ order.status }}</span>
-                                    {% endif %}
-                                </td>
-                                <td>{{ "%.2f"|format(order.total_amount) }} TL</td>
-                                <td>
-                                    <a href="{{ url_for('admin.order_detail', order_id=order.id) }}" class="btn btn-sm btn-outline-primary">
-                                        Detay
-                                    </a>
-                                </td>
-                            </tr>
-                            {% endfor %}
-                        </tbody>
-                    </table>
-                </div>
+        <!-- Low Stock Warning -->
+        {% if low_stock_products %}
+        <div class="lw-admin-section">
+            <div class="lw-admin-section-header" style="color: #f87171;">
+                <i class="fa-solid fa-triangle-exclamation" style="margin-right: 0.5rem;"></i>
+                Düşük Stoklu Ürünler
+            </div>
+            <div style="overflow-x: auto;">
+                <table class="lw-admin-table">
+                    <thead>
+                        <tr>
+                            <th>Ürün</th>
+                            <th>Marka</th>
+                            <th>Stok</th>
+                            <th>İşlem</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for product in low_stock_products %}
+                        <tr>
+                            <td>{{ product.name }}</td>
+                            <td>{{ product.brand.name }}</td>
+                            <td>
+                                <span class="lw-stock-badge {% if product.stock_qty == 0 %}lw-stock-zero{% else %}lw-stock-low{% endif %}">
+                                    {{ product.stock_qty }}
+                                </span>
+                            </td>
+                            <td>
+                                <a href="{{ url_for('admin.product_edit', product_id=product.id) }}" class="lw-admin-btn-sm">Düzenle</a>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
             </div>
         </div>
-    </div>
+        {% endif %}
+
+        <!-- Recent Orders -->
+        <div class="lw-admin-section">
+            <div class="lw-admin-section-header" style="display: flex; justify-content: space-between; align-items: center;">
+                <span>Son Siparişler</span>
+                <a href="{{ url_for('admin.orders') }}" style="font-size: 0.72rem; color: var(--gold); text-decoration: none;">Tümünü Gör →</a>
+            </div>
+            <div style="overflow-x: auto;">
+                <table class="lw-admin-table">
+                    <thead>
+                        <tr>
+                            <th>#</th>
+                            <th>Müşteri</th>
+                            <th>Tarih</th>
+                            <th>Durum</th>
+                            <th>Tutar</th>
+                            <th>İşlem</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for order in recent_orders %}
+                        <tr>
+                            <td style="color: var(--text-muted);">#{{ order.id }}</td>
+                            <td>{{ order.user.full_name or order.user.email }}</td>
+                            <td style="color: var(--text-muted); font-size: 0.8rem;">{{ order.created_at.strftime('%d.%m.%Y %H:%M') }}</td>
+                            <td><span class="lw-order-badge-sm lw-order-{{ order.status.lower() }}">{{ order.status }}</span></td>
+                            <td style="color: var(--gold); font-family: var(--font-serif);">{{ "%.2f"|format(order.total_amount) }} TL</td>
+                            <td>
+                                <a href="{{ url_for('admin.order_detail', order_id=order.id) }}" class="lw-admin-btn-sm">Detay</a>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+    </main>
 </div>
+{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/admin.css') }}">
 {% endblock %}

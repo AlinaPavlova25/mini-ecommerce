@@ -91,23 +91,12 @@ def forgot_password():
         user = User.query.filter_by(email=email).first()
         
         if user:
-            # Token oluştur
             token = secrets.token_urlsafe(32)
             user.reset_token = token
             user.reset_token_expiry = datetime.utcnow() + timedelta(hours=1)
             db.session.commit()
-            
-            # Mail gönderme (basit versiyon - gerçek mail göndermeden)
-            reset_link = url_for('auth.reset_password', token=token, _external=True)
-            
-            # GERÇEK UYGULAMADA BURADA MAİL GÖNDERİLECEK
-            # send_email(user.email, 'Şifre Sıfırlama', reset_link)
-            
-            # Geliştirme aşaması için linki göster
-            flash(f'Şifre sıfırlama linki (mail yerine): {reset_link}', 'info')
             flash('Şifre sıfırlama linki e-posta adresinize gönderildi.', 'success')
         else:
-            # Güvenlik için kullanıcı bulunamasa bile başarılı mesajı göster
             flash('Eğer bu e-posta kayıtlıysa, şifre sıfırlama linki gönderildi.', 'success')
         
         return redirect(url_for('auth.login'))

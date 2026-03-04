@@ -1,0 +1,134 @@
+{% extends "base.html" %}
+
+{% block title %}{{ get_name(brand) }} — LuxWatch{% endblock %}
+
+{% macro product_card(product) %}
+<a href="{{ url_for('shop.product_detail', product_id=product.id) }}" class="lw-product-card">
+    <div class="lw-product-img">
+        {% if product.image_path %}
+        <img src="{{ url_for('static', filename='uploads/' + product.image_path) }}" alt="{{ get_name(product) }}" loading="lazy">
+        {% else %}
+        <div class="lw-product-img-placeholder"><i class="fa-regular fa-image"></i></div>
+        {% endif %}
+        {% if product.active_discount %}
+        <span class="lw-product-badge">-%{{ product.active_discount.percent }}</span>
+        {% endif %}
+    </div>
+    <div class="lw-product-info">
+        <div class="lw-product-brand">{{ product.brand.name }}</div>
+        <div class="lw-product-name">{{ get_name(product) }}</div>
+        <div class="lw-product-price">
+            {% if product.active_discount %}
+            <span class="price-new">{{ "%.2f"|format(product.discounted_price) }} TL</span>
+            <span class="price-old">{{ "%.2f"|format(product.price) }} TL</span>
+            {% else %}
+            <span class="price-new">{{ "%.2f"|format(product.price) }} TL</span>
+            {% endif %}
+        </div>
+    </div>
+</a>
+{% endmacro %}
+
+{% block content %}
+
+<!-- Brand Hero -->
+<div style="position: relative; background: linear-gradient(180deg, var(--bg-secondary) 0%, var(--bg-primary) 100%); border-bottom: 1px solid var(--border); padding: 5rem 2rem 4rem; text-align: center; overflow: hidden;">
+    <div style="position: absolute; inset: 0; background: radial-gradient(ellipse at 50% 0%, rgba(198,167,94,0.07) 0%, transparent 65%); pointer-events: none;"></div>
+    <div style="position: relative; z-index: 1;">
+        {% if brand.logo_path %}
+        <img src="{{ url_for('static', filename='uploads/' + brand.logo_path) }}" alt="{{ brand.name }}" style="height: 60px; width: auto; object-fit: contain; margin-bottom: 2rem; filter: brightness(0) invert(1) opacity(0.85);">
+        {% endif %}
+        <div style="font-size: 0.65rem; letter-spacing: 0.3em; text-transform: uppercase; color: var(--gold); margin-bottom: 1rem; font-family: var(--font-sans);">
+            {% if brand.country %}{{ brand.country }}{% endif %}{% if brand.country and brand.founded_year %} — {% endif %}{% if brand.founded_year %}Est. {{ brand.founded_year }}{% endif %}
+        </div>
+        <h1 style="font-family: var(--font-serif); font-size: clamp(2.5rem, 6vw, 4.5rem); color: var(--text-primary); margin-bottom: 1.5rem; letter-spacing: 0.03em;">
+            {{ brand.name }}
+        </h1>
+        <div class="lw-divider"></div>
+        {% if current_lang == 'en' and brand.description_en %}
+        <p style="max-width: 600px; margin: 1.5rem auto 0; color: var(--text-secondary); font-size: 0.9rem; line-height: 1.9;">{{ brand.description_en }}</p>
+        {% elif brand.description %}
+        <p style="max-width: 600px; margin: 1.5rem auto 0; color: var(--text-secondary); font-size: 0.9rem; line-height: 1.9;">{{ brand.description }}</p>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Men's Collection -->
+{% if men_products %}
+<section style="padding: 4rem 2rem;">
+    <div class="lw-container">
+        <div style="display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 2.5rem;">
+            <div>
+                <div class="lw-eyebrow">{{ brand.name }}</div>
+                <h2 class="lw-section-title" style="text-align: left; margin-bottom: 0; font-size: 1.8rem;">
+                    {% if current_lang == 'en' %}Men's Collection{% else %}Erkek Koleksiyonu{% endif %}
+                </h2>
+            </div>
+            <a href="{{ url_for('shop.product_list', brand=brand.slug, gender='erkek') }}" class="btn-ghost" style="font-size: 0.72rem;">
+                <span>{% if current_lang == 'en' %}View All{% else %}Tümünü Gör{% endif %}</span>
+                <i class="fa-solid fa-arrow-right"></i>
+            </a>
+        </div>
+        <div class="lw-product-grid">
+            {% for product in men_products %}{{ product_card(product) }}{% endfor %}
+        </div>
+    </div>
+</section>
+{% endif %}
+
+<!-- Women's Collection -->
+{% if women_products %}
+<section style="padding: 4rem 2rem; background: var(--bg-secondary);">
+    <div class="lw-container">
+        <div style="display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 2.5rem;">
+            <div>
+                <div class="lw-eyebrow">{{ brand.name }}</div>
+                <h2 class="lw-section-title" style="text-align: left; margin-bottom: 0; font-size: 1.8rem;">
+                    {% if current_lang == 'en' %}Women's Collection{% else %}Kadın Koleksiyonu{% endif %}
+                </h2>
+            </div>
+            <a href="{{ url_for('shop.product_list', brand=brand.slug, gender='kadin') }}" class="btn-ghost" style="font-size: 0.72rem;">
+                <span>{% if current_lang == 'en' %}View All{% else %}Tümünü Gör{% endif %}</span>
+                <i class="fa-solid fa-arrow-right"></i>
+            </a>
+        </div>
+        <div class="lw-product-grid">
+            {% for product in women_products %}{{ product_card(product) }}{% endfor %}
+        </div>
+    </div>
+</section>
+{% endif %}
+
+<!-- Unisex -->
+{% if unisex_products %}
+<section style="padding: 4rem 2rem;">
+    <div class="lw-container">
+        <div style="display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 2.5rem;">
+            <div>
+                <div class="lw-eyebrow">{{ brand.name }}</div>
+                <h2 class="lw-section-title" style="text-align: left; margin-bottom: 0; font-size: 1.8rem;">
+                    {% if current_lang == 'en' %}Unisex Collection{% else %}Unisex Koleksiyon{% endif %}
+                </h2>
+            </div>
+            <a href="{{ url_for('shop.product_list', brand=brand.slug, gender='unisex') }}" class="btn-ghost" style="font-size: 0.72rem;">
+                <span>{% if current_lang == 'en' %}View All{% else %}Tümünü Gör{% endif %}</span>
+                <i class="fa-solid fa-arrow-right"></i>
+            </a>
+        </div>
+        <div class="lw-product-grid">
+            {% for product in unisex_products %}{{ product_card(product) }}{% endfor %}
+        </div>
+    </div>
+</section>
+{% endif %}
+
+{% if not men_products and not women_products and not unisex_products %}
+<div style="text-align: center; padding: 8rem 2rem;">
+    <div style="font-size: 3rem; color: var(--border); margin-bottom: 1.5rem;"><i class="fa-regular fa-clock"></i></div>
+    <h3 style="font-family: var(--font-serif); font-size: 1.5rem; color: var(--text-muted);">
+        {% if current_lang == 'en' %}No products available yet{% else %}Henüz ürün bulunmuyor{% endif %}
+    </h3>
+</div>
+{% endif %}
+
+{% endblock %}

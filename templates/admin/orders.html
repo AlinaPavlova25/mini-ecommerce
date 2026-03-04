@@ -1,103 +1,83 @@
 {% extends "base.html" %}
-
-{% block title %}Sipariş Yönetimi - Admin{% endblock %}
+{% block title %}Sipariş Yönetimi — Admin LuxWatch{% endblock %}
+{% block extra_css %}<link rel="stylesheet" href="{{ url_for('static', filename='css/admin.css') }}">{% endblock %}
 
 {% block content %}
-<h2 class="mb-4">
-    <i class="bi bi-cart-check"></i> Sipariş Yönetimi
-</h2>
+<div class="lw-admin-wrap">
+    {% include 'admin/_sidebar.html' %}
+    <main class="lw-admin-main">
 
-<div class="card shadow mb-4">
-    <div class="card-body">
-        <form method="GET" action="{{ url_for('admin.orders') }}" class="row g-3">
-            <div class="col-md-4">
-                <label for="status" class="form-label">Durum Filtresi</label>
-                <select class="form-select" id="status" name="status" onchange="this.form.submit()">
-                    <option value="">Tümü</option>
-                    <option value="PAID" {% if status_filter == 'PAID' %}selected{% endif %}>Ödendi</option>
-                    <option value="PREPARING" {% if status_filter == 'PREPARING' %}selected{% endif %}>Hazırlanıyor</option>
-                    <option value="SHIPPED" {% if status_filter == 'SHIPPED' %}selected{% endif %}>Kargoda</option>
-                    <option value="OUT_FOR_DELIVERY" {% if status_filter == 'OUT_FOR_DELIVERY' %}selected{% endif %}>Dağıtımda</option>
-                    <option value="DELIVERED" {% if status_filter == 'DELIVERED' %}selected{% endif %}>Teslim Edildi</option>
-                    <option value="CANCEL_REQUESTED" {% if status_filter == 'CANCEL_REQUESTED' %}selected{% endif %}>İptal Talep Edildi</option>
-                    <option value="CANCELED" {% if status_filter == 'CANCELED' %}selected{% endif %}>İptal Edildi</option>
-                    <option value="RETURN_ARRIVED" {% if status_filter == 'RETURN_ARRIVED' %}selected{% endif %}>İade Tamamlandı</option>
-                </select>
-            </div>
-        </form>
-    </div>
-</div>
-
-<div class="card shadow">
-    <div class="card-body">
-        <div class="table-responsive">
-            <table class="table table-hover">
-                <thead class="table-light">
-                    <tr>
-                        <th>#</th>
-                        <th>Müşteri</th>
-                        <th>Tarih</th>
-                        <th>Durum</th>
-                        <th>Tutar</th>
-                        <th>Özel</th>
-                        <th>İşlem</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for order in orders %}
-                    <tr {% if order.anonymous_sender %}class="table-warning"{% endif %}>
-                        <td><strong>#{{ order.id }}</strong></td>
-                        <td>
-                            {{ order.user.full_name or order.user.email }}<br>
-                            <small class="text-muted">{{ order.user.email }}</small>
-                        </td>
-                        <td>{{ order.created_at.strftime('%d.%m.%Y %H:%M') }}</td>
-                        <td>
-                            {% if order.status == 'PAID' %}
-                            <span class="badge bg-info">Ödendi</span>
-                            {% elif order.status == 'PREPARING' %}
-                            <span class="badge bg-warning text-dark">Hazırlanıyor</span>
-                            {% elif order.status == 'SHIPPED' %}
-                            <span class="badge bg-primary">Kargoda</span>
-                            {% elif order.status == 'OUT_FOR_DELIVERY' %}
-                            <span class="badge bg-primary">Dağıtımda</span>
-                            {% elif order.status == 'DELIVERED' %}
-                            <span class="badge bg-success">Teslim Edildi</span>
-                            {% elif order.status == 'CANCEL_REQUESTED' %}
-                            <span class="badge bg-secondary">İptal Talep Edildi</span>
-                            {% elif order.status == 'CANCELED' %}
-                            <span class="badge bg-danger">İptal Edildi</span>
-                            {% elif order.status == 'RETURN_ARRIVED' %}
-                            <span class="badge bg-dark">İade Tamamlandı</span>
-                            {% endif %}
-                        </td>
-                        <td><strong>{{ "%.2f"|format(order.total_amount) }} TL</strong></td>
-                        <td>
-                            {% if order.anonymous_sender %}
-                            <span class="badge bg-warning text-dark" title="Gizli Gönderici">
-                                🎭 Gizli
-                            </span>
-                            {% endif %}
-                            {% if order.delivery_note %}
-                            <span class="badge bg-info" title="Hediye Mesajı Var">
-                                <i class="bi bi-card-text"></i>
-                            </span>
-                            {% endif %}
-                        </td>
-                        <td>
-                            <a href="{{ url_for('admin.order_detail', order_id=order.id) }}" class="btn btn-sm btn-outline-primary">
-                                <i class="bi bi-eye"></i> Detay
-                            </a>
-                        </td>
-                    </tr>
-                    {% else %}
-                    <tr>
-                        <td colspan="6" class="text-center text-muted">Sipariş bulunamadı</td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
+        <div class="lw-admin-page-header">
+            <div class="lw-admin-page-title">Sipariş Yönetimi</div>
         </div>
-    </div>
+
+        <!-- Filter -->
+        <div class="lw-admin-section">
+            <div style="padding: 1rem 1.5rem;">
+                <form method="GET" style="display: flex; align-items: center; gap: 1rem;">
+                    <label style="font-size: 0.72rem; color: var(--text-muted); letter-spacing: 0.08em; text-transform: uppercase;">Durum:</label>
+                    <select name="status" class="lw-input" style="max-width: 200px;" onchange="this.form.submit()">
+                        <option value="">Tümü</option>
+                        <option value="PAID" {% if status_filter == 'PAID' %}selected{% endif %}>Ödendi</option>
+                        <option value="PREPARING" {% if status_filter == 'PREPARING' %}selected{% endif %}>Hazırlanıyor</option>
+                        <option value="SHIPPED" {% if status_filter == 'SHIPPED' %}selected{% endif %}>Kargoda</option>
+                        <option value="OUT_FOR_DELIVERY" {% if status_filter == 'OUT_FOR_DELIVERY' %}selected{% endif %}>Dağıtımda</option>
+                        <option value="DELIVERED" {% if status_filter == 'DELIVERED' %}selected{% endif %}>Teslim Edildi</option>
+                        <option value="CANCEL_REQUESTED" {% if status_filter == 'CANCEL_REQUESTED' %}selected{% endif %}>İptal Talep</option>
+                        <option value="CANCELED" {% if status_filter == 'CANCELED' %}selected{% endif %}>İptal Edildi</option>
+                        <option value="RETURN_ARRIVED" {% if status_filter == 'RETURN_ARRIVED' %}selected{% endif %}>İade Tamamlandı</option>
+                    </select>
+                    {% if status_filter %}
+                    <a href="{{ url_for('admin.orders') }}" class="lw-admin-btn-sm">Temizle</a>
+                    {% endif %}
+                </form>
+            </div>
+        </div>
+
+        <div class="lw-admin-section">
+            <div style="overflow-x: auto;">
+                <table class="lw-admin-table">
+                    <thead>
+                        <tr>
+                            <th>#</th>
+                            <th>Müşteri</th>
+                            <th>Tarih</th>
+                            <th>Durum</th>
+                            <th>Tutar</th>
+                            <th>Kupon</th>
+                            <th>İşlem</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for order in orders %}
+                        <tr>
+                            <td style="color: var(--text-muted); font-family: monospace;">#{{ order.id }}</td>
+                            <td>
+                                <div style="color: var(--text-primary);">{{ order.user.full_name or '—' }}</div>
+                                <div style="font-size: 0.72rem; color: var(--text-muted);">{{ order.user.email }}</div>
+                            </td>
+                            <td style="color: var(--text-muted); font-size: 0.8rem;">{{ order.created_at.strftime('%d.%m.%Y %H:%M') }}</td>
+                            <td><span class="lw-order-badge-sm lw-order-{{ order.status.lower() }}">{{ order.status }}</span></td>
+                            <td style="color: var(--gold); font-family: var(--font-serif);">{{ "%.2f"|format(order.total_amount) }} TL</td>
+                            <td>
+                                {% if order.coupon_code %}
+                                <span style="font-size: 0.7rem; font-family: monospace; color: var(--gold);">{{ order.coupon_code }}</span>
+                                {% else %}
+                                <span style="color: var(--text-muted);">—</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <a href="{{ url_for('admin.order_detail', order_id=order.id) }}" class="lw-admin-btn-sm">Detay</a>
+                            </td>
+                        </tr>
+                        {% else %}
+                        <tr><td colspan="7" style="text-align: center; padding: 3rem; color: var(--text-muted);">Sipariş bulunamadı.</td></tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+    </main>
 </div>
 {% endblock %}

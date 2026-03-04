@@ -1,102 +1,95 @@
 {% extends "base.html" %}
-
-{% block title %}Stok Yönetimi - Admin{% endblock %}
+{% block title %}Stok Yönetimi — Admin LuxWatch{% endblock %}
+{% block extra_css %}<link rel="stylesheet" href="{{ url_for('static', filename='css/admin.css') }}">{% endblock %}
 
 {% block content %}
-<h2 class="mb-4">
-    <i class="bi bi-boxes"></i> Stok Yönetimi
-</h2>
+<div class="lw-admin-wrap">
+    {% include 'admin/_sidebar.html' %}
+    <main class="lw-admin-main">
 
-<div class="card shadow mb-3">
-    <div class="card-body">
-        <form method="GET" class="row g-3">
-            <div class="col-md-3">
-                <label class="form-label">Sıralama</label>
-                <select name="sort" class="form-select" onchange="this.form.submit()">
-                    <option value="stock" {% if sort_by == 'stock' %}selected{% endif %}>Stok Miktarı (Artan)</option>
-                    <option value="name" {% if sort_by == 'name' %}selected{% endif %}>İsim (A-Z)</option>
-                    <option value="category" {% if sort_by == 'category' %}selected{% endif %}>Kategoriye Göre</option>
-                </select>
-            </div>
-            <div class="col-md-3">
-                <label class="form-label">Kategori Filtresi</label>
-                <select name="category" class="form-select" onchange="this.form.submit()">
-                    <option value="">Tüm Kategoriler</option>
-                    {% for cat in categories %}
-                    <option value="{{ cat.id }}" {% if category_filter == cat.id %}selected{% endif %}>{{ cat.name }}</option>
-                    {% endfor %}
-                </select>
-            </div>
-            <div class="col-md-3">
-                <label class="form-label">Alt Kategori Filtresi</label>
-                <select name="subcategory" class="form-select" onchange="this.form.submit()">
-                    <option value="">Tüm Alt Kategoriler</option>
-                    {% for subcat in subcategories %}
-                    <option value="{{ subcat }}" {% if subcategory_filter == subcat %}selected{% endif %}>{{ subcat }}</option>
-                    {% endfor %}
-                </select>
-            </div>
-            <div class="col-md-3">
-                <label class="form-label">&nbsp;</label>
-                <a href="{{ url_for('admin.stock') }}" class="btn btn-secondary d-block">Filtreyi Temizle</a>
-            </div>
-        </form>
-    </div>
-</div>
-
-<div class="card shadow">
-    <div class="card-body">
-        <div class="table-responsive">
-            <table class="table table-hover">
-                <thead class="table-light">
-                    <tr>
-                        <th>Ürün</th>
-                        <th>Kategori</th>
-                        <th>Alt Kategori</th>
-                        <th>Mevcut Stok</th>
-                        <th>Hızlı İşlemler</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for product in products %}
-                    <tr>
-                        <td>
-                            <strong>{{ product.name }}</strong>
-                            {% if not product.is_active %}
-                            <span class="badge bg-secondary">Pasif</span>
-                            {% endif %}
-                        </td>
-                        <td>{{ product.category.name }}</td>
-                        <td>{{ product.subcategory or '-' }}</td>
-                        <td>
-                            <span class="badge fs-6 {% if product.stock_qty == 0 %}bg-danger{% elif product.stock_qty <= 5 %}bg-warning text-dark{% else %}bg-success{% endif %}">
-                                {{ product.stock_qty }}
-                            </span>
-                        </td>
-                        <td>
-                            <form method="POST" action="{{ url_for('admin.stock_adjust') }}" class="d-inline">
-                                <input type="hidden" name="product_id" value="{{ product.id }}">
-                                <div class="btn-group" role="group">
-                                    <button type="submit" name="adjustment" value="-10" class="btn btn-sm btn-outline-danger" {% if product.stock_qty < 10 %}disabled{% endif %}>
-                                        -10
-                                    </button>
-                                    <button type="submit" name="adjustment" value="-1" class="btn btn-sm btn-outline-danger" {% if product.stock_qty < 1 %}disabled{% endif %}>
-                                        -1
-                                    </button>
-                                    <button type="submit" name="adjustment" value="1" class="btn btn-sm btn-outline-success">
-                                        +1
-                                    </button>
-                                    <button type="submit" name="adjustment" value="10" class="btn btn-sm btn-outline-success">
-                                        +10
-                                    </button>
-                                </div>
-                            </form>
-                        </td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
+        <div class="lw-admin-page-header">
+            <div class="lw-admin-page-title">Stok Yönetimi</div>
         </div>
-    </div>
+
+        <!-- Filters -->
+        <div class="lw-admin-section">
+            <div style="padding: 1rem 1.5rem;">
+                <form method="GET" style="display: flex; align-items: center; gap: 1rem; flex-wrap: wrap;">
+                    <div style="display: flex; align-items: center; gap: 0.5rem;">
+                        <label style="font-size: 0.72rem; color: var(--text-muted); letter-spacing: 0.08em; text-transform: uppercase;">Marka:</label>
+                        <select name="brand" class="lw-input" style="max-width: 160px;" onchange="this.form.submit()">
+                            <option value="">Tümü</option>
+                            {% for b in brands %}
+                            <option value="{{ b.id }}" {% if brand_filter == b.id %}selected{% endif %}>{{ b.name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div style="display: flex; align-items: center; gap: 0.5rem;">
+                        <label style="font-size: 0.72rem; color: var(--text-muted); letter-spacing: 0.08em; text-transform: uppercase;">Sıralama:</label>
+                        <select name="sort" class="lw-input" style="max-width: 160px;" onchange="this.form.submit()">
+                            <option value="stock" {% if sort_by == 'stock' %}selected{% endif %}>Stok (Az→Çok)</option>
+                            <option value="name" {% if sort_by == 'name' %}selected{% endif %}>İsim (A-Z)</option>
+                            <option value="brand" {% if sort_by == 'brand' %}selected{% endif %}>Markaya Göre</option>
+                        </select>
+                    </div>
+                    {% if brand_filter %}
+                    <a href="{{ url_for('admin.stock') }}" class="lw-admin-btn-sm">Filtreyi Temizle</a>
+                    {% endif %}
+                </form>
+            </div>
+        </div>
+
+        <div class="lw-admin-section">
+            <div style="overflow-x: auto;">
+                <table class="lw-admin-table">
+                    <thead>
+                        <tr>
+                            <th>Ürün</th>
+                            <th>Marka</th>
+                            <th>Cinsiyet</th>
+                            <th>Stok</th>
+                            <th>Hızlı Düzenleme</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for product in products %}
+                        <tr>
+                            <td>
+                                <div style="color: {% if not product.is_active %}var(--text-muted){% else %}var(--text-primary){% endif %};">
+                                    {{ product.name }}
+                                    {% if not product.is_active %}
+                                    <span style="font-size: 0.62rem; color: var(--text-muted); letter-spacing: 0.1em; text-transform: uppercase; margin-left: 0.4rem;">(Pasif)</span>
+                                    {% endif %}
+                                </div>
+                                {% if product.reference_number %}
+                                <div style="font-size: 0.72rem; color: var(--text-muted);">Ref: {{ product.reference_number }}</div>
+                                {% endif %}
+                            </td>
+                            <td>{{ product.brand.name }}</td>
+                            <td style="text-transform: capitalize; font-size: 0.8rem; color: var(--text-muted);">{{ product.gender }}</td>
+                            <td>
+                                <span class="lw-stock-badge {% if product.stock_qty == 0 %}lw-stock-zero{% elif product.stock_qty <= 5 %}lw-stock-low{% else %}lw-stock-ok{% endif %}">
+                                    {{ product.stock_qty }}
+                                </span>
+                            </td>
+                            <td>
+                                <form method="POST" action="{{ url_for('admin.stock_adjust') }}" style="display: flex; gap: 0.4rem; align-items: center;">
+                                    <input type="hidden" name="product_id" value="{{ product.id }}">
+                                    <button type="submit" name="adjustment" value="-10" class="lw-admin-btn-sm danger" {% if product.stock_qty < 10 %}disabled style="opacity: 0.3;"{% endif %}>-10</button>
+                                    <button type="submit" name="adjustment" value="-1" class="lw-admin-btn-sm danger" {% if product.stock_qty < 1 %}disabled style="opacity: 0.3;"{% endif %}>-1</button>
+                                    <button type="submit" name="adjustment" value="+1" class="lw-admin-btn-sm">+1</button>
+                                    <button type="submit" name="adjustment" value="+10" class="lw-admin-btn-sm">+10</button>
+                                </form>
+                            </td>
+                        </tr>
+                        {% else %}
+                        <tr><td colspan="5" style="text-align: center; padding: 3rem; color: var(--text-muted);">Ürün bulunamadı.</td></tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+    </main>
 </div>
 {% endblock %}

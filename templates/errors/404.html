@@ -1,12 +1,35 @@
 {% extends "base.html" %}
 
-{% block title %}404 - Sayfa Bulunamadı{% endblock %}
+{% block title %}404 — LuxWatch{% endblock %}
 
 {% block content %}
-<div class="text-center py-5">
-    <h1 class="display-1">404</h1>
-    <h2>Sayfa Bulunamadı</h2>
-    <p class="lead">Aradığınız sayfa mevcut değil.</p>
-    <a href="{{ url_for('shop.home') }}" class="btn btn-primary">Ana Sayfaya Dön</a>
+<div style="min-height: 70vh; display: flex; align-items: center; justify-content: center; padding: 4rem 2rem; text-align: center;">
+    <div>
+        <div style="font-family: var(--font-serif); font-size: clamp(5rem, 15vw, 10rem); color: var(--bg-card); line-height: 1; margin-bottom: 0; position: relative;">
+            404
+            <div style="position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; font-size: 0.6em; color: transparent; -webkit-text-stroke: 1px rgba(198,167,94,0.3);">404</div>
+        </div>
+        <div class="lw-divider" style="margin: 1.5rem auto;"></div>
+        <h1 style="font-family: var(--font-serif); font-size: 1.8rem; color: var(--text-primary); margin-bottom: 1rem;">
+            {% if current_lang == 'en' %}Page Not Found{% else %}Sayfa Bulunamadı{% endif %}
+        </h1>
+        <p style="color: var(--text-muted); font-size: 0.85rem; max-width: 380px; margin: 0 auto 2.5rem; line-height: 1.8;">
+            {% if current_lang == 'en' %}
+            The page you are looking for may have been moved or no longer exists.
+            {% else %}
+            Aradığınız sayfa taşınmış veya artık mevcut değil.
+            {% endif %}
+        </p>
+        <div style="display: flex; gap: 1rem; justify-content: center; flex-wrap: wrap;">
+            <a href="{{ url_for('shop.home') }}" class="btn-gold-solid">
+                <span>{% if current_lang == 'en' %}Return Home{% else %}Ana Sayfaya Dön{% endif %}</span>
+                <i class="fa-solid fa-house"></i>
+            </a>
+            <a href="{{ url_for('shop.product_list') }}" class="btn-ghost">
+                <span>{% if current_lang == 'en' %}Explore Watches{% else %}Saatlere Gözat{% endif %}</span>
+                <i class="fa-solid fa-arrow-right"></i>
+            </a>
+        </div>
+    </div>
 </div>
 {% endblock %}

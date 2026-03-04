@@ -1,0 +1,39 @@
+<aside class="lw-admin-sidebar">
+    <div class="lw-admin-logo">
+        <span>LuxWatch</span>
+        <small>Admin Panel</small>
+    </div>
+    <nav class="lw-admin-nav">
+        <a href="{{ url_for('admin.dashboard') }}" class="{% if request.endpoint == 'admin.dashboard' %}active{% endif %}">
+            <i class="fa-solid fa-gauge"></i> Dashboard
+        </a>
+        <div class="lw-admin-nav-group">Katalog</div>
+        <a href="{{ url_for('admin.products') }}" class="{% if 'product' in request.endpoint %}active{% endif %}">
+            <i class="fa-solid fa-clock"></i> Ürünler
+        </a>
+        <a href="{{ url_for('admin.brands') }}" class="{% if 'brand' in request.endpoint %}active{% endif %}">
+            <i class="fa-solid fa-tag"></i> Markalar
+        </a>
+        <a href="{{ url_for('admin.campaigns') }}" class="{% if 'campaign' in request.endpoint %}active{% endif %}">
+            <i class="fa-solid fa-percent"></i> Kampanyalar
+        </a>
+        <div class="lw-admin-nav-group">İşlemler</div>
+        <a href="{{ url_for('admin.orders') }}" class="{% if 'order' in request.endpoint %}active{% endif %}">
+            <i class="fa-solid fa-box-open"></i> Siparişler
+        </a>
+        <a href="{{ url_for('admin.stock') }}" class="{% if request.endpoint == 'admin.stock' or request.endpoint == 'admin.stock_adjust' %}active{% endif %}">
+            <i class="fa-solid fa-warehouse"></i> Stok
+        </a>
+        <div class="lw-admin-nav-group">İçerik</div>
+        <a href="{{ url_for('admin.site_images') }}" class="{% if 'site_image' in request.endpoint %}active{% endif %}">
+            <i class="fa-regular fa-image"></i> Site Görselleri
+        </a>
+        <a href="{{ url_for('admin.newsletter') }}" class="{% if request.endpoint == 'admin.newsletter' %}active{% endif %}">
+            <i class="fa-regular fa-envelope"></i> E-bülten
+        </a>
+        <div class="lw-admin-nav-group" style="margin-top: 1.5rem;"></div>
+        <a href="{{ url_for('shop.home') }}" style="margin-top: auto;">
+            <i class="fa-solid fa-arrow-left"></i> Siteye Dön
+        </a>
+    </nav>
+</aside>

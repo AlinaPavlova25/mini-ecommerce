@@ -1,396 +1,412 @@
-{% extends "base.html" %}
+{% extends 'base.html' %}
 
-{% block title %}Ödeme - FlowerShop{% endblock %}
+{% block title %}{% if current_lang == 'en' %}Checkout{% else %}Ödeme{% endif %} — LuxWatch{% endblock %}
+
+{% block extra_css %}
+<style>
+.checkout-grid {
+    display: grid;
+    grid-template-columns: 1fr 380px;
+    gap: 3rem;
+    align-items: start;
+}
+
+.checkout-section {
+    margin-bottom: 2.5rem;
+}
+
+.checkout-section-title {
+    font-size: 0.65rem;
+    letter-spacing: 0.3em;
+    text-transform: uppercase;
+    color: var(--gold);
+    font-family: var(--font-sans);
+    margin-bottom: 1.5rem;
+    padding-bottom: 0.75rem;
+    border-bottom: 1px solid var(--border-subtle);
+}
+
+.form-grid-2 {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1.5rem;
+}
+
+.form-field {
+    margin-bottom: 1.5rem;
+}
+
+.form-field label {
+    display: block;
+    font-size: 0.65rem;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    margin-bottom: 0.5rem;
+    font-family: var(--font-sans);
+}
+
+.form-field input,
+.form-field select,
+.form-field textarea {
+    width: 100%;
+    background: transparent;
+    border: 1px solid var(--border-subtle);
+    color: var(--text-primary);
+    font-family: var(--font-sans);
+    font-size: 0.85rem;
+    font-weight: 300;
+    padding: 0.75rem 1rem;
+    outline: none;
+    transition: border-color 0.3s ease;
+}
+
+.form-field input:focus,
+.form-field select:focus,
+.form-field textarea:focus {
+    border-color: var(--gold);
+}
+
+.form-field select {
+    background: var(--bg-card);
+    cursor: pointer;
+    -webkit-appearance: none;
+    appearance: none;
+}
+
+.form-field.error input,
+.form-field.error select {
+    border-color: #b43c3c;
+}
+
+.field-error {
+    font-size: 0.7rem;
+    color: #e07070;
+    margin-top: 0.3rem;
+    display: none;
+}
+
+.field-error.visible { display: block; }
+
+.card-icon {
+    position: absolute;
+    right: 0.75rem;
+    top: 50%;
+    transform: translateY(-50%);
+    font-size: 1.1rem;
+    color: var(--text-muted);
+}
+
+.address-option {
+    border: 1px solid var(--border-subtle);
+    padding: 1rem 1.25rem;
+    cursor: pointer;
+    transition: var(--transition-fast);
+    margin-bottom: 0.75rem;
+    display: flex;
+    align-items: flex-start;
+    gap: 0.75rem;
+}
+
+.address-option:hover { border-color: var(--border-gold); }
+.address-option.selected { border-color: var(--gold); background: rgba(198,167,94,0.04); }
+
+@media (max-width: 960px) {
+    .checkout-grid { grid-template-columns: 1fr; }
+    .form-grid-2 { grid-template-columns: 1fr; }
+}
+</style>
+{% endblock %}
 
 {% block content %}
-<div class="container my-5">
-    <div class="row">
-        <div class="col-md-8">
-            <div class="checkout-form">
-                <h2 class="mb-4">Sipariş Bilgileri</h2>
-                
-                <form method="POST" action="{{ url_for('shop.checkout_pay') }}" id="checkoutForm">
-                    <!-- Kayıtlı Adres Seçimi -->
-                    {% if current_user.addresses.count() > 0 %}
-                    <div class="form-section">
-                        <h4><i class="bi bi-bookmark-fill"></i> Kayıtlı Adreslerim</h4>
-                        
-                        <div class="row">
-                            {% for address in current_user.addresses %}
-                            <div class="col-md-6 mb-3">
-                                <div class="form-check">
-                                    <input class="form-check-input saved-address-radio" type="radio" name="saved_address_id" id="address_{{ address.id }}" value="{{ address.id }}" {% if address.is_default %}checked{% endif %}>
-                                    <label class="form-check-label w-100" for="address_{{ address.id }}" style="cursor: pointer;">
-                                        <div class="card {% if address.is_default %}border-primary{% endif %}" style="margin-left: 25px;">
-                                            <div class="card-body p-3">
-                                                <h6 class="mb-1">
-                                                    <i class="bi bi-geo-alt-fill"></i> {{ address.label }}
-                                                    {% if address.is_default %}
-                                                    <span class="badge bg-primary ms-2">Varsayılan</span>
-                                                    {% endif %}
-                                                </h6>
-                                                <p class="mb-0 small">
-                                                    {{ address.receiver_name }} {{ address.receiver_surname }}<br>
-                                                    {{ address.receiver_phone }}<br>
-                                                    {{ address.city }} - {{ address.address }}
-                                                </p>
-                                            </div>
-                                        </div>
-                                    </label>
-                                </div>
-                            </div>
-                            {% endfor %}
-                        </div>
-                        
-                        <div class="form-check mb-3">
-                            <input class="form-check-input" type="radio" name="saved_address_id" id="new_address" value="new" {% if current_user.addresses.count() == 0 %}checked{% endif %}>
-                            <label class="form-check-label" for="new_address">
-                                <strong>Yeni adres kullan</strong>
-                            </label>
-                        </div>
+<div class="lw-container" style="padding-top: 2rem; padding-bottom: 4rem;">
+    <nav class="lw-breadcrumb">
+        <a href="{{ url_for('shop.home') }}">{% if current_lang == 'en' %}Home{% else %}Ana Sayfa{% endif %}</a>
+        <span class="separator">—</span>
+        <a href="{{ url_for('shop.cart_view') }}">{% if current_lang == 'en' %}Bag{% else %}Sepet{% endif %}</a>
+        <span class="separator">—</span>
+        <span class="current">{% if current_lang == 'en' %}Checkout{% else %}Ödeme{% endif %}</span>
+    </nav>
+
+    <h1 style="font-size: 2rem; font-weight: 400; margin-bottom: 2.5rem;">
+        {% if current_lang == 'en' %}Checkout{% else %}Ödeme{% endif %}
+    </h1>
+
+    <form action="{{ url_for('shop.checkout_pay') }}" method="POST" id="checkout-form">
+        <div class="checkout-grid">
+            <!-- LEFT: SHIPPING + PAYMENT -->
+            <div>
+                <!-- DELIVERY ADDRESS -->
+                <div class="checkout-section">
+                    <div class="checkout-section-title">
+                        {% if current_lang == 'en' %}Delivery Address{% else %}Teslimat Adresi{% endif %}
                     </div>
+
+                    {% if addresses %}
+                    <div id="saved-addresses">
+                        {% for addr in addresses %}
+                        <label class="address-option {% if loop.first %}selected{% endif %}" onclick="selectAddress(this, '{{ addr.id }}')">
+                            <input type="radio" name="saved_address_id" value="{{ addr.id }}" {% if loop.first %}checked{% endif %} style="display: none;">
+                            <div>
+                                <div style="font-size: 0.8rem; color: var(--text-primary); margin-bottom: 0.3rem;">{{ addr.receiver_name }} {{ addr.receiver_surname }}</div>
+                                <div style="font-size: 0.75rem; color: var(--text-secondary);">{{ addr.city }}</div>
+                                <div style="font-size: 0.75rem; color: var(--text-muted);">{{ addr.address[:60] }}{% if addr.address|length > 60 %}…{% endif %}</div>
+                            </div>
+                        </label>
+                        {% endfor %}
+                        <label class="address-option" onclick="selectAddress(this, 'new')">
+                            <input type="radio" name="saved_address_id" value="new" style="display: none;">
+                            <div style="font-size: 0.8rem; color: var(--gold);">
+                                <i class="fa-solid fa-plus" style="margin-right: 0.5rem;"></i>
+                                {% if current_lang == 'en' %}Enter a new address{% else %}Yeni adres girin{% endif %}
+                            </div>
+                        </label>
+                    </div>
+                    <div id="new-address-form" style="display: none; margin-top: 1.5rem;">
+                    {% else %}
+                    <input type="hidden" name="saved_address_id" value="new">
+                    <div id="new-address-form">
                     {% endif %}
-                    
-                    <!-- Alıcı Bilgileri -->
-                    <div class="form-section" id="manualAddressSection">
-                        <h4><i class="bi bi-person-fill"></i> Alıcı Bilgileri</h4>
-                        
-                        <div class="row">
-                            <div class="col-md-6">
-                                <div class="form-group">
-                                    <label for="receiver_name">Alıcı Adı *</label>
-                                    <input type="text" class="form-control-custom" id="receiver_name" name="receiver_name" required placeholder="Örn: Ayşe">
-                                </div>
+                        <div class="form-grid-2">
+                            <div class="form-field">
+                                <label>{% if current_lang == 'en' %}First Name{% else %}Ad{% endif %} *</label>
+                                <input type="text" name="receiver_name" placeholder="{% if current_lang == 'en' %}First name{% else %}Adınız{% endif %}">
                             </div>
-                            <div class="col-md-6">
-                                <div class="form-group">
-                                    <label for="receiver_surname">Alıcı Soyadı *</label>
-                                    <input type="text" class="form-control-custom" id="receiver_surname" name="receiver_surname" required placeholder="Örn: Yılmaz">
-                                </div>
+                            <div class="form-field">
+                                <label>{% if current_lang == 'en' %}Last Name{% else %}Soyad{% endif %} *</label>
+                                <input type="text" name="receiver_surname" placeholder="{% if current_lang == 'en' %}Last name{% else %}Soyadınız{% endif %}">
                             </div>
                         </div>
-                        
-                        <div class="form-group">
-                            <label for="receiver_phone">Alıcı Telefonu *</label>
-                            <input type="tel" class="form-control-custom" id="receiver_phone" name="receiver_phone" required placeholder="05XX XXX XX XX">
+                        <div class="form-grid-2">
+                            <div class="form-field">
+                                <label>{% if current_lang == 'en' %}Phone{% else %}Telefon{% endif %} *</label>
+                                <input type="tel" name="receiver_phone" placeholder="+90 555 000 00 00">
+                            </div>
+                            <div class="form-field">
+                                <label>{% if current_lang == 'en' %}City{% else %}Şehir{% endif %} *</label>
+                                <input type="text" name="delivery_city" placeholder="{% if current_lang == 'en' %}City{% else %}Şehir{% endif %}">
+                            </div>
+                        </div>
+                        <div class="form-field">
+                            <label>{% if current_lang == 'en' %}Address{% else %}Adres{% endif %} *</label>
+                            <textarea name="shipping_address" rows="3" placeholder="{% if current_lang == 'en' %}Full address{% else %}Tam adres{% endif %}" style="width: 100%; background: transparent; border: 1px solid var(--border-subtle); color: var(--text-primary); font-family: var(--font-sans); font-size: 0.85rem; font-weight: 300; padding: 0.75rem 1rem; outline: none; resize: vertical; transition: border-color 0.3s ease;" onfocus="this.style.borderColor='var(--gold)'" onblur="this.style.borderColor='rgba(198,167,94,0.15)'"></textarea>
                         </div>
                     </div>
-                    
-                    <!-- Teslimat Adresi -->
-                    <div class="form-section">
-                        <h4><i class="bi bi-geo-alt-fill"></i> Teslimat Adresi</h4>
-                        
-                        <div class="form-group">
-                            <label for="delivery_city">İl *</label>
-                            <select class="form-control-custom" id="delivery_city" name="delivery_city" required>
-                                <option value="">İl Seçiniz</option>
-                                <option>Adana</option>
-                                <option>Adıyaman</option>
-                                <option>Afyonkarahisar</option>
-                                <option>Ağrı</option>
-                                <option>Aksaray</option>
-                                <option>Amasya</option>
-                                <option>Ankara</option>
-                                <option>Antalya</option>
-                                <option>Ardahan</option>
-                                <option>Artvin</option>
-                                <option>Aydın</option>
-                                <option>Balıkesir</option>
-                                <option>Bartın</option>
-                                <option>Batman</option>
-                                <option>Bayburt</option>
-                                <option>Bilecik</option>
-                                <option>Bingöl</option>
-                                <option>Bitlis</option>
-                                <option>Bolu</option>
-                                <option>Burdur</option>
-                                <option>Bursa</option>
-                                <option>Çanakkale</option>
-                                <option>Çankırı</option>
-                                <option>Çorum</option>
-                                <option>Denizli</option>
-                                <option>Diyarbakır</option>
-                                <option>Düzce</option>
-                                <option>Edirne</option>
-                                <option>Elazığ</option>
-                                <option>Erzincan</option>
-                                <option>Erzurum</option>
-                                <option>Eskişehir</option>
-                                <option>Gaziantep</option>
-                                <option>Giresun</option>
-                                <option>Gümüşhane</option>
-                                <option>Hakkari</option>
-                                <option>Hatay</option>
-                                <option>Iğdır</option>
-                                <option>Isparta</option>
-                                <option selected>İstanbul</option>
-                                <option>İzmir</option>
-                                <option>Kahramanmaraş</option>
-                                <option>Karabük</option>
-                                <option>Karaman</option>
-                                <option>Kars</option>
-                                <option>Kastamonu</option>
-                                <option>Kayseri</option>
-                                <option>Kırıkkale</option>
-                                <option>Kırklareli</option>
-                                <option>Kırşehir</option>
-                                <option>Kilis</option>
-                                <option>Kocaeli</option>
-                                <option>Konya</option>
-                                <option>Kütahya</option>
-                                <option>Malatya</option>
-                                <option>Manisa</option>
-                                <option>Mardin</option>
-                                <option>Mersin</option>
-                                <option>Muğla</option>
-                                <option>Muş</option>
-                                <option>Nevşehir</option>
-                                <option>Niğde</option>
-                                <option>Ordu</option>
-                                <option>Osmaniye</option>
-                                <option>Rize</option>
-                                <option>Sakarya</option>
-                                <option>Samsun</option>
-                                <option>Siirt</option>
-                                <option>Sinop</option>
-                                <option>Sivas</option>
-                                <option>Şanlıurfa</option>
-                                <option>Şırnak</option>
-                                <option>Tekirdağ</option>
-                                <option>Tokat</option>
-                                <option>Trabzon</option>
-                                <option>Tunceli</option>
-                                <option>Uşak</option>
-                                <option>Van</option>
-                                <option>Yalova</option>
-                                <option>Yozgat</option>
-                                <option>Zonguldak</option>
-                            </select>
-                        </div>
-                        
-                        <div class="form-group">
-                            <label for="shipping_address">İlçe ve Adres Detayı *</label>
-                            <textarea class="form-control-custom" id="shipping_address" name="shipping_address" rows="4" required placeholder="İlçe, mahalle, sokak, bina no, kat/daire bilgilerini yazınız..."></textarea>
-                            <small class="text-muted">Örn: Kadıköy, Caferağa Mah. Moda Cad. No:45 Daire:8</small>
+
+                    <div class="form-field" style="margin-top: 1rem;">
+                        <label>{% if current_lang == 'en' %}Delivery Note (Optional){% else %}Teslimat Notu (İsteğe Bağlı){% endif %}</label>
+                        <input type="text" name="delivery_note" placeholder="{% if current_lang == 'en' %}Any special instructions?{% else %}Özel talimatlar var mı?{% endif %}">
+                    </div>
+                </div>
+
+                <!-- PAYMENT -->
+                <div class="checkout-section">
+                    <div class="checkout-section-title">
+                        {% if current_lang == 'en' %}Payment Information{% else %}Ödeme Bilgileri{% endif %}
+                    </div>
+
+                    <div class="form-field">
+                        <label>{% if current_lang == 'en' %}Cardholder Name{% else %}Kart Üzerindeki İsim{% endif %} *</label>
+                        <input type="text" name="card_holder" id="card_holder" placeholder="{% if current_lang == 'en' %}Full name on card{% else %}Kart üzerindeki ad soyad{% endif %}" autocomplete="cc-name">
+                    </div>
+
+                    <div class="form-field" style="position: relative;">
+                        <label>{% if current_lang == 'en' %}Card Number{% else %}Kart Numarası{% endif %} *</label>
+                        <input type="text" name="card_number" id="card_number" placeholder="0000 0000 0000 0000" maxlength="19"
+                               autocomplete="cc-number" oninput="formatCardNumber(this)" style="letter-spacing: 0.1em; padding-right: 2.5rem;">
+                        <i class="fa-brands fa-cc-visa card-icon" id="card-brand-icon"></i>
+                        <div class="field-error" id="card-error">
+                            {% if current_lang == 'en' %}Please enter a valid card number{% else %}Geçerli bir kart numarası girin{% endif %}
                         </div>
                     </div>
-                    
-                    <!-- Gönderi Notu -->
-                    <div class="form-section">
-                        <h4><i class="bi bi-card-text"></i> Gönderi Notu (Opsiyonel)</h4>
-                        
-                        <div class="form-group">
-                            <label for="delivery_note">Hediye Kartı Mesajı</label>
-                            <textarea class="form-control-custom" id="delivery_note" name="delivery_note" rows="3" placeholder="Sevdiklerinize özel bir mesaj yazabilirsiniz..."></textarea>
-                            <small class="text-muted">Mesajınız hediye kartına yazılacaktır.</small>
+
+                    <div class="form-grid-2">
+                        <div class="form-field">
+                            <label>{% if current_lang == 'en' %}Expiry Date (MM/YY){% else %}Son Kullanma Tarihi (AA/YY){% endif %} *</label>
+                            <input type="text" name="card_expiry" id="card_expiry" placeholder="AA/YY" maxlength="5"
+                                   autocomplete="cc-exp" oninput="formatExpiry(this)">
+                            <div class="field-error" id="expiry-error">
+                                {% if current_lang == 'en' %}Card has expired or date is invalid{% else %}Kartın tarihi geçmiş veya geçersiz{% endif %}
+                            </div>
                         </div>
-                        
-                        <div class="form-check mt-3">
-                            <input class="form-check-input" type="checkbox" id="anonymous_sender" name="anonymous_sender" value="1">
-                            <label class="form-check-label" for="anonymous_sender">
-                                <strong>🎭 Gizli Gönderici</strong>
-                                <small class="d-block text-muted">İşaretlerseniz, hediye kartında gönderici bilgileriniz görünmeyecektir.</small>
-                            </label>
+                        <div class="form-field">
+                            <label>CVV *</label>
+                            <input type="text" name="card_cvv" id="card_cvv" placeholder="000" maxlength="4" autocomplete="cc-csc">
                         </div>
                     </div>
-                    
-                    <!-- Ödeme Bilgileri -->
-                    <div class="form-section">
-                        <h4><i class="bi bi-credit-card-fill"></i> Kredi Kartı Bilgileri</h4>
-                        
-                        <div class="form-group">
-                            <label for="card_number">Kart Numarası *</label>
-                            <input type="text" class="form-control-custom" id="card_number" name="card_number" required placeholder="0000 0000 0000 0000" maxlength="19">
-                        </div>
-                        
-                        <div class="form-group">
-                            <label for="card_holder">Kart Üzerindeki İsim *</label>
-                            <input type="text" class="form-control-custom" id="card_holder" name="card_holder" required placeholder="Örn: AYŞE YILMAZ">
-                        </div>
-                        
-                        <div class="row">
-                            <div class="col-md-6">
-                                <div class="form-group">
-                                    <label for="expiry_date">Son Kullanma Tarihi *</label>
-                                    <input type="text" class="form-control-custom" id="expiry_date" name="expiry_date" required placeholder="AA/YY" maxlength="5">
-                                </div>
-                            </div>
-                            <div class="col-md-6">
-                                <div class="form-group">
-                                    <label for="cvv">CVV *</label>
-                                    <input type="text" class="form-control-custom" id="cvv" name="cvv" required placeholder="000" maxlength="3">
-                                </div>
-                            </div>
-                        </div>
-                        
-                        {% if total >= 2000 %}
-                        <div class="form-group">
-                            <label for="installments">Taksit Seçeneği</label>
-                            <select class="form-control-custom" id="installments" name="installments">
-                                <option value="1">Tek Çekim - {{ "%.2f"|format(total) }} TL</option>
-                                <option value="3">3 Taksit - {{ "%.2f"|format((total * 1.0325) / 3) }} TL/ay (Toplam: {{ "%.2f"|format(total * 1.0325) }} TL)</option>
-                                <option value="6">6 Taksit - {{ "%.2f"|format((total * 1.0325) / 6) }} TL/ay (Toplam: {{ "%.2f"|format(total * 1.0325) }} TL)</option>
-                                <option value="9">9 Taksit - {{ "%.2f"|format((total * 1.0325) / 9) }} TL/ay (Toplam: {{ "%.2f"|format(total * 1.0325) }} TL)</option>
-                                <option value="12">12 Taksit - {{ "%.2f"|format((total * 1.0325) / 12) }} TL/ay (Toplam: {{ "%.2f"|format(total * 1.0325) }} TL)</option>
-                            </select>
-                            <small class="text-muted">Taksitli ödemelerde %3.25 komisyon uygulanır.</small>
+
+                    <div style="display: flex; align-items: center; gap: 0.75rem; font-size: 0.75rem; color: var(--text-muted); margin-top: 0.5rem;">
+                        <i class="fa-solid fa-lock" style="color: var(--gold);"></i>
+                        {% if current_lang == 'en' %}Your payment is secured with 256-bit SSL encryption{% else %}Ödemeniz 256-bit SSL şifreleme ile korunmaktadır{% endif %}
+                    </div>
+                </div>
+            </div>
+
+            <!-- RIGHT: SUMMARY -->
+            <div style="background: var(--bg-card); border: 1px solid var(--border-subtle); padding: 2rem; position: sticky; top: 90px;">
+                <div style="font-size: 0.65rem; letter-spacing: 0.25em; text-transform: uppercase; color: var(--gold); margin-bottom: 1.5rem; font-family: var(--font-sans);">
+                    {% if current_lang == 'en' %}Order Summary{% else %}Sipariş Özeti{% endif %}
+                </div>
+
+                <!-- ITEMS -->
+                {% for item in cart_items %}
+                <div style="display: flex; gap: 1rem; margin-bottom: 1rem; padding-bottom: 1rem; border-bottom: 1px solid rgba(198,167,94,0.08);">
+                    <div style="width: 56px; height: 56px; flex-shrink: 0; background: var(--bg-elevated); border: 1px solid var(--border-subtle); overflow: hidden;">
+                        {% if item.product.image_path %}
+                        <img src="{{ url_for('static', filename='uploads/' + item.product.image_path) }}" style="width: 100%; height: 100%; object-fit: cover;">
+                        {% else %}
+                        <div style="width: 100%; height: 100%; display: flex; align-items: center; justify-content: center;">
+                            <i class="fa-regular fa-clock" style="color: var(--gold-dark); opacity: 0.4; font-size: 0.9rem;"></i>
                         </div>
                         {% endif %}
                     </div>
-                    
-                    <div class="alert-custom alert-warning">
-                        <i class="bi bi-info-circle-fill"></i>
-                        <strong>Not:</strong> Bu simüle bir ödeme işlemidir. Gerçek kredi kartı işlemi yapılmayacaktır.
+                    <div style="flex: 1; min-width: 0;">
+                        <div style="font-size: 0.7rem; color: var(--gold); letter-spacing: 0.1em;">{{ item.product.brand.name }}</div>
+                        <div style="font-size: 0.8rem; color: var(--text-primary); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">{{ item.product.get_name(current_lang) }}</div>
+                        <div style="font-size: 0.7rem; color: var(--text-muted);">×{{ item.quantity }}</div>
                     </div>
-                    
-                    <button type="submit" class="btn-hero w-100 mt-4">
-                        <i class="bi bi-check-circle-fill"></i> Ödemeyi Tamamla
-                    </button>
-                </form>
-            </div>
-        </div>
-        
-        <div class="col-md-4">
-            <div class="checkout-form">
-                <h4 class="mb-4">Sipariş Özeti</h4>
-                
-                <div class="mb-4">
-                    {% for item in cart_items %}
-                    <div class="d-flex justify-content-between align-items-start mb-3 pb-3" style="border-bottom: 1px solid var(--border-color);">
-                        <div class="flex-grow-1">
-                            <strong>{{ item.product.name }}</strong><br>
-                            <small class="text-muted">
-                                {{ "%.2f"|format(item.discounted_price) }} TL × {{ item.quantity }}
-                                {% if item.discount_percent > 0 %}
-                                <span class="product-badge badge-discount">-%{{ item.discount_percent }}</span>
-                                {% endif %}
-                            </small>
-                        </div>
-                        <div class="text-end">
-                            <strong>{{ "%.2f"|format(item.subtotal) }} TL</strong>
-                        </div>
+                    <div style="font-size: 0.85rem; color: var(--gold); white-space: nowrap;">₺{{ "{:,.0f}".format(item.subtotal) }}</div>
+                </div>
+                {% endfor %}
+
+                <!-- TOTALS -->
+                <div style="padding-top: 0.75rem;">
+                    <div style="display: flex; justify-content: space-between; margin-bottom: 0.6rem; font-size: 0.82rem; color: var(--text-secondary);">
+                        <span>{% if current_lang == 'en' %}Subtotal{% else %}Ara Toplam{% endif %}</span>
+                        <span>₺{{ "{:,.0f}".format(total) }}</span>
                     </div>
-                    {% endfor %}
+                    {% if coupon_discount > 0 %}
+                    <div style="display: flex; justify-content: space-between; margin-bottom: 0.6rem; font-size: 0.82rem; color: #5a9a5a;">
+                        <span>{% if current_lang == 'en' %}Discount{% else %}İndirim{% endif %}</span>
+                        <span>−₺{{ "{:,.0f}".format(coupon_discount) }}</span>
+                    </div>
+                    {% endif %}
+                    <div style="display: flex; justify-content: space-between; margin-bottom: 0.6rem; font-size: 0.82rem; color: var(--text-secondary);">
+                        <span>{% if current_lang == 'en' %}Shipping{% else %}Kargo{% endif %}</span>
+                        <span style="color: #5a9a5a;">{% if current_lang == 'en' %}Free{% else %}Ücretsiz{% endif %}</span>
+                    </div>
+                    <div style="display: flex; justify-content: space-between; padding-top: 1rem; border-top: 1px solid var(--border-subtle);">
+                        <span style="font-family: var(--font-serif); font-size: 1rem;">{% if current_lang == 'en' %}Total{% else %}Toplam{% endif %}</span>
+                        <span style="font-family: var(--font-serif); font-size: 1.3rem; color: var(--gold);">₺{{ "{:,.0f}".format(final_total) }}</span>
+                    </div>
                 </div>
-                
-                <div class="d-flex justify-content-between mb-2">
-                    <span>Ara Toplam:</span>
-                    <strong>{{ "%.2f"|format(total) }} TL</strong>
-                </div>
-                <div class="d-flex justify-content-between mb-3">
-                    <span>Teslimat:</span>
-                    <strong class="text-success">Ücretsiz</strong>
-                </div>
-                
-                <hr style="border-color: var(--primary-pink);">
-                
-                <div class="d-flex justify-content-between mb-3">
-                    <h5>Toplam:</h5>
-                    <h5 style="color: var(--primary-pink);">{{ "%.2f"|format(total) }} TL</h5>
-                </div>
-                
-                <div class="alert-custom alert-success">
-                    <i class="bi bi-truck"></i>
-                    <small>Siparişiniz aynı gün içinde teslim edilecektir.</small>
+
+                <button type="submit" id="submit-btn" class="btn-gold-solid w-100" style="justify-content: center; display: flex; margin-top: 1.5rem;">
+                    <i class="fa-solid fa-lock"></i>
+                    {% if current_lang == 'en' %}Place Order{% else %}Siparişi Tamamla{% endif %}
+                </button>
+
+                <div style="text-align: center; margin-top: 1rem; font-size: 0.7rem; color: var(--text-muted);">
+                    {% if current_lang == 'en' %}By placing your order, you agree to our terms.{% else %}Sipariş vererek şartlarımızı kabul etmiş olursunuz.{% endif %}
                 </div>
             </div>
         </div>
-    </div>
+    </form>
 </div>
-{% endblock %}
 
-{% block extra_js %}
 <script>
-// Kayıtlı adres verileri
-const savedAddresses = {
-    {% for address in current_user.addresses %}
-    '{{ address.id }}': {
-        receiver_name: '{{ address.receiver_name }}',
-        receiver_surname: '{{ address.receiver_surname }}',
-        receiver_phone: '{{ address.receiver_phone }}',
-        city: '{{ address.city }}',
-        address: '{{ address.address }}'
-    },
-    {% endfor %}
-};
-
-// Kayıtlı adres seçimi
-document.querySelectorAll('.saved-address-radio').forEach(radio => {
-    radio.addEventListener('change', function() {
-        const addressId = this.value;
-        const manualSection = document.getElementById('manualAddressSection');
-        
-        if (addressId === 'new') {
-            // Yeni adres - formu temizle ve göster
-            manualSection.style.display = 'block';
-            document.getElementById('receiver_name').value = '';
-            document.getElementById('receiver_surname').value = '';
-            document.getElementById('receiver_phone').value = '';
-            document.getElementById('delivery_city').value = '';
-            document.getElementById('shipping_address').value = '';
-            
-            // Zorunlu alanları aktif et
-            document.getElementById('receiver_name').required = true;
-            document.getElementById('receiver_surname').required = true;
-            document.getElementById('receiver_phone').required = true;
-            document.getElementById('delivery_city').required = true;
-            document.getElementById('shipping_address').required = true;
-        } else {
-            // Kayıtlı adres seçildi - formu doldur
-            const address = savedAddresses[addressId];
-            if (address) {
-                document.getElementById('receiver_name').value = address.receiver_name;
-                document.getElementById('receiver_surname').value = address.receiver_surname;
-                document.getElementById('receiver_phone').value = address.receiver_phone;
-                document.getElementById('delivery_city').value = address.city;
-                document.getElementById('shipping_address').value = address.address;
-                
-                // Formu gizle (opsiyonel - göstermek isterseniz bu satırı silin)
-                // manualSection.style.display = 'none';
-                
-                // Zorunlu alanları pasif et (zaten dolu)
-                document.getElementById('receiver_name').required = false;
-                document.getElementById('receiver_surname').required = false;
-                document.getElementById('receiver_phone').required = false;
-                document.getElementById('delivery_city').required = false;
-                document.getElementById('shipping_address').required = false;
-            }
-        }
+function selectAddress(label, id) {
+    document.querySelectorAll('.address-option').forEach(function(el) {
+        el.classList.remove('selected');
     });
-});
+    label.classList.add('selected');
+    label.querySelector('input[type="radio"]').checked = true;
 
-// Sayfa yüklendiğinde varsayılan adresi doldur
-window.addEventListener('DOMContentLoaded', function() {
-    const checkedRadio = document.querySelector('.saved-address-radio:checked');
-    if (checkedRadio && checkedRadio.value !== 'new') {
-        checkedRadio.dispatchEvent(new Event('change'));
+    var newForm = document.getElementById('new-address-form');
+    if (newForm) {
+        newForm.style.display = id === 'new' ? 'block' : 'none';
     }
-});
+}
 
-// Kart numarası formatı (0000 0000 0000 0000)
-document.getElementById('card_number').addEventListener('input', function(e) {
-    let value = e.target.value.replace(/\s/g, '');
-    let formattedValue = value.match(/.{1,4}/g)?.join(' ') || value;
-    e.target.value = formattedValue.substring(0, 19);
-});
+function formatCardNumber(input) {
+    var value = input.value.replace(/\D/g, '').substring(0, 16);
+    input.value = value.replace(/(.{4})/g, '$1 ').trim();
+    updateCardIcon(value);
+}
 
-// Son kullanma tarihi formatı (AA/YY)
-document.getElementById('expiry_date').addEventListener('input', function(e) {
-    let value = e.target.value.replace(/\D/g, '');
+function updateCardIcon(num) {
+    var icon = document.getElementById('card-brand-icon');
+    if (!icon) return;
+    if (num.startsWith('4')) {
+        icon.className = 'fa-brands fa-cc-visa card-icon';
+    } else if (/^5[1-5]/.test(num) || /^2[2-7]/.test(num)) {
+        icon.className = 'fa-brands fa-cc-mastercard card-icon';
+    } else if (/^3[47]/.test(num)) {
+        icon.className = 'fa-brands fa-cc-amex card-icon';
+    } else {
+        icon.className = 'fa-regular fa-credit-card card-icon';
+    }
+}
+
+function formatExpiry(input) {
+    var value = input.value.replace(/\D/g, '');
     if (value.length >= 2) {
-        value = value.substring(0, 2) + '/' + value.substring(2, 4);
+        value = value.substring(0,2) + '/' + value.substring(2,4);
     }
-    e.target.value = value;
-});
+    input.value = value;
+}
 
-// CVV sadece rakam
-document.getElementById('cvv').addEventListener('input', function(e) {
-    e.target.value = e.target.value.replace(/\D/g, '').substring(0, 3);
-});
+function luhnCheck(num) {
+    var digits = num.replace(/\D/g, '').split('').reverse().map(Number);
+    if (digits.length < 13 || digits.length > 19) return false;
+    var total = 0;
+    for (var i = 0; i < digits.length; i++) {
+        var d = digits[i];
+        if (i % 2 === 1) {
+            d *= 2;
+            if (d > 9) d -= 9;
+        }
+        total += d;
+    }
+    return total % 10 === 0;
+}
 
-// Kart üzerindeki isim büyük harf
-document.getElementById('card_holder').addEventListener('input', function(e) {
-    e.target.value = e.target.value.toUpperCase();
+function expiryCheck(val) {
+    var parts = val.split('/');
+    if (parts.length !== 2) return false;
+    var month = parseInt(parts[0]);
+    var year = parseInt(parts[1]);
+    if (isNaN(month) || isNaN(year)) return false;
+    if (year < 100) year += 2000;
+    if (month < 1 || month > 12) return false;
+    var now = new Date();
+    var expDate = new Date(year, month - 1, 1);
+    var nowDate = new Date(now.getFullYear(), now.getMonth(), 1);
+    return expDate >= nowDate;
+}
+
+document.getElementById('checkout-form').addEventListener('submit', function(e) {
+    var cardNum = document.getElementById('card_number').value.replace(/\s/g, '');
+    var expiry = document.getElementById('card_expiry').value;
+    var hasError = false;
+
+    var cardError = document.getElementById('card-error');
+    if (!luhnCheck(cardNum)) {
+        cardError.classList.add('visible');
+        document.getElementById('card_number').parentElement.classList.add('error');
+        hasError = true;
+    } else {
+        cardError.classList.remove('visible');
+        document.getElementById('card_number').parentElement.classList.remove('error');
+    }
+
+    var expiryError = document.getElementById('expiry-error');
+    if (!expiryCheck(expiry)) {
+        expiryError.classList.add('visible');
+        document.getElementById('card_expiry').parentElement.classList.add('error');
+        hasError = true;
+    } else {
+        expiryError.classList.remove('visible');
+        document.getElementById('card_expiry').parentElement.classList.remove('error');
+    }
+
+    if (hasError) {
+        e.preventDefault();
+        return;
+    }
+
+    document.getElementById('submit-btn').disabled = true;
+    document.getElementById('submit-btn').innerHTML = '<i class="fa-solid fa-circle-notch fa-spin"></i> {% if current_lang == "en" %}Processing...{% else %}İşleniyor...{% endif %}';
 });
 </script>
 {% endblock %}

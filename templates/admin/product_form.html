@@ -1,112 +1,219 @@
 {% extends "base.html" %}
-
-{% block title %}{% if product %}Ürün Düzenle{% else %}Yeni Ürün{% endif %} - Admin{% endblock %}
+{% block title %}{% if product %}Ürün Düzenle{% else %}Yeni Ürün{% endif %} — Admin LuxWatch{% endblock %}
+{% block extra_css %}<link rel="stylesheet" href="{{ url_for('static', filename='css/admin.css') }}">{% endblock %}
 
 {% block content %}
-<nav aria-label="breadcrumb">
-    <ol class="breadcrumb">
-        <li class="breadcrumb-item"><a href="{{ url_for('admin.dashboard') }}">Dashboard</a></li>
-        <li class="breadcrumb-item"><a href="{{ url_for('admin.products') }}">Ürünler</a></li>
-        <li class="breadcrumb-item active">{% if product %}Düzenle{% else %}Yeni Ürün{% endif %}</li>
-    </ol>
-</nav>
+<div class="lw-admin-wrap">
+    {% include 'admin/_sidebar.html' %}
+    <main class="lw-admin-main">
 
-<h2 class="mb-4">
-    {% if product %}
-    <i class="bi bi-pencil"></i> Ürün Düzenle
-    {% else %}
-    <i class="bi bi-plus-circle"></i> Yeni Ürün Ekle
-    {% endif %}
-</h2>
+        <div class="lw-admin-page-header">
+            <div>
+                <div style="font-size: 0.72rem; color: var(--text-muted); margin-bottom: 0.4rem;">
+                    <a href="{{ url_for('admin.products') }}" style="color: var(--text-muted); text-decoration: none;">Ürünler</a>
+                    <span style="margin: 0 0.5rem;">›</span>
+                    <span>{% if product %}Düzenle{% else %}Yeni Ürün{% endif %}</span>
+                </div>
+                <div class="lw-admin-page-title">{% if product %}{{ product.name }}{% else %}Yeni Ürün Ekle{% endif %}</div>
+            </div>
+        </div>
 
-<div class="row">
-    <div class="col-md-8">
-        <div class="card shadow">
-            <div class="card-body">
-                <form method="POST" enctype="multipart/form-data">
-                    <div class="mb-3">
-                        <label for="name" class="form-label">Ürün Adı *</label>
-                        <input type="text" class="form-control" id="name" name="name" value="{{ product.name if product else '' }}" required>
+        <div class="lw-admin-section">
+            <form method="POST" enctype="multipart/form-data" class="lw-admin-form">
+
+                <!-- Temel Bilgiler -->
+                <div class="lw-admin-section-header">Temel Bilgiler</div>
+                <div style="padding: 0 2rem;">
+                    <div class="lw-admin-form-row">
+                        <div class="lw-form-group">
+                            <label class="lw-label">Ürün Adı (TR) *</label>
+                            <input type="text" name="name" class="lw-input" value="{{ product.name if product else '' }}" required>
+                        </div>
+                        <div class="lw-form-group">
+                            <label class="lw-label">Ürün Adı (EN)</label>
+                            <input type="text" name="name_en" class="lw-input" value="{{ product.name_en if product else '' }}">
+                        </div>
                     </div>
-                    
-                    <div class="mb-3">
-                        <label for="description" class="form-label">Açıklama</label>
-                        <textarea class="form-control" id="description" name="description" rows="4">{{ product.description if product else '' }}</textarea>
+
+                    <div class="lw-form-group">
+                        <label class="lw-label">Açıklama (TR)</label>
+                        <textarea name="description" class="lw-input" rows="3" style="resize: vertical;">{{ product.description if product else '' }}</textarea>
                     </div>
-                    
-                    <div class="row">
-                        <div class="col-md-6 mb-3">
-                            <label for="category_id" class="form-label">Kategori *</label>
-                            <select class="form-select" id="category_id" name="category_id" required>
+
+                    <div class="lw-form-group">
+                        <label class="lw-label">Açıklama (EN)</label>
+                        <textarea name="description_en" class="lw-input" rows="3" style="resize: vertical;">{{ product.description_en if product else '' }}</textarea>
+                    </div>
+                </div>
+
+                <!-- Kategori & Cinsiyet -->
+                <div class="lw-admin-section-header" style="margin-top: 0.5rem;">Kategori</div>
+                <div style="padding: 0 2rem;">
+                    <div class="lw-admin-form-row">
+                        <div class="lw-form-group">
+                            <label class="lw-label">Marka *</label>
+                            <select name="brand_id" class="lw-input" required>
                                 <option value="">Seçiniz...</option>
-                                {% for category in categories %}
-                                <option value="{{ category.id }}" {% if product and product.category_id == category.id %}selected{% endif %}>
-                                    {{ category.name }}
-                                </option>
+                                {% for brand in brands %}
+                                <option value="{{ brand.id }}" {% if product and product.brand_id == brand.id %}selected{% endif %}>{{ brand.name }}</option>
                                 {% endfor %}
                             </select>
                         </div>
-                        
-                        <div class="col-md-6 mb-3">
-                            <label for="product_type" class="form-label">Ürün Tipi</label>
-                            <input type="text" class="form-control" id="product_type" name="product_type" value="{{ product.product_type if product else '' }}" placeholder="Örn: Gül, Bitter, vb.">
+                        <div class="lw-form-group">
+                            <label class="lw-label">Cinsiyet</label>
+                            <select name="gender" class="lw-input">
+                                <option value="erkek" {% if product and product.gender == 'erkek' %}selected{% endif %}>Erkek</option>
+                                <option value="kadin" {% if product and product.gender == 'kadin' %}selected{% endif %}>Kadın</option>
+                                <option value="unisex" {% if not product or product.gender == 'unisex' %}selected{% endif %}>Unisex</option>
+                            </select>
                         </div>
                     </div>
-                    
-                    <div class="row">
-                        <div class="col-md-6 mb-3">
-                            <label for="price" class="form-label">Fiyat (TL) *</label>
-                            <input type="number" step="0.01" class="form-control" id="price" name="price" value="{{ product.price if product else '' }}" required>
+                </div>
+
+                <!-- Saat Özellikleri -->
+                <div class="lw-admin-section-header" style="margin-top: 0.5rem;">Saat Özellikleri</div>
+                <div style="padding: 0 2rem;">
+                    <div class="lw-admin-form-row">
+                        <div class="lw-form-group">
+                            <label class="lw-label">Referans Numarası</label>
+                            <input type="text" name="reference_number" class="lw-input" value="{{ product.reference_number if product else '' }}" placeholder="ör: 126610LN">
                         </div>
-                        
-                        <div class="col-md-6 mb-3">
-                            <label for="stock_qty" class="form-label">Stok Miktarı *</label>
-                            <input type="number" class="form-control" id="stock_qty" name="stock_qty" value="{{ product.stock_qty if product else '0' }}" required>
+                        <div class="lw-form-group">
+                            <label class="lw-label">Kasa Malzemesi</label>
+                            <input type="text" name="case_material" class="lw-input" value="{{ product.case_material if product else '' }}" placeholder="ör: Oyster Çelik">
                         </div>
                     </div>
-                    
-                    <div class="mb-3">
-                        <label for="image" class="form-label">Ürün Resmi</label>
-                        {% if product and product.image_path %}
-                        <div class="mb-3 p-3 border rounded">
-                            <img src="{{ url_for('static', filename='uploads/' + product.image_path) }}" alt="{{ product.name }}" style="max-width: 200px; height: auto;" class="rounded d-block mb-2">
-                            <button type="button" class="btn btn-sm btn-outline-danger" onclick="deleteImage({{ product.id }})">
-                                <i class="bi bi-trash"></i> Görseli Sil
+                    <div class="lw-admin-form-row-3">
+                        <div class="lw-form-group">
+                            <label class="lw-label">Kasa Çapı</label>
+                            <input type="text" name="case_diameter" class="lw-input" value="{{ product.case_diameter if product else '' }}" placeholder="ör: 41 mm">
+                        </div>
+                        <div class="lw-form-group">
+                            <label class="lw-label">Mekanizma</label>
+                            <input type="text" name="movement" class="lw-input" value="{{ product.movement if product else '' }}" placeholder="ör: Cal. 3235">
+                        </div>
+                        <div class="lw-form-group">
+                            <label class="lw-label">Su Direnci</label>
+                            <input type="text" name="water_resistance" class="lw-input" value="{{ product.water_resistance if product else '' }}" placeholder="ör: 300 m">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Fiyat & Stok -->
+                <div class="lw-admin-section-header" style="margin-top: 0.5rem;">Fiyat & Stok</div>
+                <div style="padding: 0 2rem;">
+                    <div class="lw-admin-form-row">
+                        <div class="lw-form-group">
+                            <label class="lw-label">Fiyat (TL) *</label>
+                            <input type="number" step="0.01" min="0" name="price" class="lw-input" value="{{ product.price if product else '' }}" required>
+                        </div>
+                        <div class="lw-form-group">
+                            <label class="lw-label">Stok Miktarı *</label>
+                            <input type="number" min="0" name="stock_qty" class="lw-input" value="{{ product.stock_qty if product else '0' }}" required>
+                        </div>
+                    </div>
+
+                    <div style="display: flex; align-items: center; gap: 0.75rem; padding: 0.75rem; border: 1px solid var(--border); margin-bottom: 1rem;">
+                        <input type="checkbox" id="is_featured" name="is_featured" value="1" {% if product and product.is_featured %}checked{% endif %} style="accent-color: var(--gold); width: 14px; height: 14px;">
+                        <label for="is_featured" style="font-size: 0.78rem; color: var(--text-secondary); cursor: pointer; margin: 0;">
+                            Öne Çıkan Ürün (Ana sayfada göster)
+                        </label>
+                    </div>
+                </div>
+
+                <!-- Görsel -->
+                <div class="lw-admin-section-header" style="margin-top: 0.5rem;">Ana Ürün Görseli</div>
+                <div style="padding: 0 2rem 2rem;">
+                    {% if product and product.image_path %}
+                    <div style="display: flex; align-items: center; gap: 1.5rem; margin-bottom: 1rem; padding: 1rem; background: var(--bg-secondary); border: 1px solid var(--border);">
+                        <img src="{{ url_for('static', filename='uploads/' + product.image_path) }}" alt="{{ product.name }}" style="width: 80px; height: 80px; object-fit: cover; border: 1px solid var(--border);">
+                        <div>
+                            <div style="font-size: 0.8rem; color: var(--text-secondary); margin-bottom: 0.5rem;">Mevcut görsel</div>
+                            <button type="button" class="lw-admin-btn-sm danger" onclick="if(confirm('Görseli silmek istediğinizden emin misiniz?')) { var f=document.createElement('form'); f.method='POST'; f.action='/admin/products/{{ product.id }}/delete-image'; document.body.appendChild(f); f.submit(); }">
+                                <i class="fa-regular fa-trash-can"></i> Görseli Sil
                             </button>
-                            <small class="text-muted d-block mt-2">Yeni görsel yüklemek eski görselin üzerine yazacaktır.</small>
                         </div>
-                        {% endif %}
-                        <input type="file" class="form-control" id="image" name="image" accept="image/*">
-                        <div class="form-text">PNG, JPG, JPEG formatında, maksimum 16MB</div>
                     </div>
-                    
-                    <div class="d-flex gap-2">
-                        <button type="submit" class="btn btn-primary">
-                            <i class="bi bi-save"></i> Kaydet
-                        </button>
-                        <a href="{{ url_for('admin.products') }}" class="btn btn-secondary">
-                            İptal
-                        </a>
+                    {% endif %}
+                    <div class="lw-form-group">
+                        <label class="lw-label">{% if product and product.image_path %}Yeni Görsel Yükle{% else %}Görsel Yükle{% endif %}</label>
+                        <input type="file" name="image" class="lw-input" accept="image/*">
+                        <div style="font-size: 0.72rem; color: var(--text-muted); margin-top: 0.35rem;">PNG, JPG, JPEG, AVIF, WEBP — Maks. 16MB</div>
                     </div>
+                </div>
+
+                <!-- Ek Görseller bölümü ana formun dışında -->
+
+                <!-- Submit -->
+                <div style="display: flex; gap: 1rem; padding: 1.5rem 2rem; border-top: 1px solid var(--border); background: var(--bg-secondary);">
+                    <button type="submit" class="lw-admin-btn-gold">
+                        <i class="fa-solid fa-floppy-disk"></i>
+                        {% if product %}Kaydet{% else %}Ürün Ekle{% endif %}
+                    </button>
+                    <a href="{{ url_for('admin.products') }}" class="lw-admin-btn-sm" style="padding: 0.5rem 1.25rem;">İptal</a>
+                </div>
+            </form>
+
+            <!-- Ek Görseller (ana formun dışında — iç içe form olmaması için) -->
+            {% if product %}
+            <div class="lw-admin-section-header" style="margin-top: 0.5rem;">Ek Görseller</div>
+            <div style="padding: 0 2rem 2rem;">
+                {% if product.images %}
+                <div style="display: flex; flex-wrap: wrap; gap: 1rem; margin-bottom: 1.5rem;">
+                    {% for img in product.images %}
+                    <div style="position: relative; width: 100px;">
+                        <img src="{{ url_for('static', filename='uploads/' + img.image_path) }}" style="width: 100px; height: 100px; object-fit: cover; border: 1px solid var(--border); display: block;">
+                        <form method="POST" action="{{ url_for('admin.product_image_delete', product_id=product.id, image_id=img.id) }}" style="margin: 0;">
+                            <button type="submit" style="position: absolute; top: 4px; right: 4px; background: rgba(0,0,0,0.7); border: none; color: #e07070; width: 22px; height: 22px; cursor: pointer; font-size: 0.7rem; display: flex; align-items: center; justify-content: center;">
+                                <i class="fa-solid fa-xmark"></i>
+                            </button>
+                        </form>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% endif %}
+                <form method="POST" action="{{ url_for('admin.product_image_upload', product_id=product.id) }}" enctype="multipart/form-data" style="display: flex; flex-direction: column; gap: 0.75rem;">
+                    <div class="lw-form-group" style="margin: 0;">
+                        <label class="lw-label">Yeni Görseller Ekle (çoklu seçim)</label>
+                        <input type="file" name="images" class="lw-input" accept="image/*" multiple>
+                        <div style="font-size: 0.72rem; color: var(--text-muted); margin-top: 0.35rem;">Birden fazla dosya seçebilirsiniz</div>
+                    </div>
+                    <button type="submit" class="lw-admin-btn-gold" style="align-self: flex-start;">
+                        <i class="fa-solid fa-arrow-up-from-bracket"></i> Görselleri Yükle
+                    </button>
                 </form>
             </div>
-        </div>
-    </div>
-</div>
-{% endblock %}
+            {% endif %}
 
-{% block extra_js %}
-<script>
-function deleteImage(productId) {
-    if (!confirm('Bu görseli silmek istediğinizden emin misiniz?')) {
-        return;
-    }
-    
-    const form = document.createElement('form');
-    form.method = 'POST';
-    form.action = `/admin/products/${productId}/delete-image`;
-    document.body.appendChild(form);
-    form.submit();
-}
-</script>
+            <!-- Video -->
+            {% if product %}
+            <div class="lw-admin-section-header" style="margin-top: 0.5rem;">Ürün Videosu</div>
+            <div style="padding: 0 2rem 2rem;">
+                {% if product.video_path %}
+                <div style="margin-bottom: 1rem;">
+                    <video src="{{ url_for('static', filename='uploads/' + product.video_path) }}"
+                           controls style="max-width: 320px; border: 1px solid var(--border); display: block; margin-bottom: 0.75rem;"></video>
+                    <form method="POST" action="{{ url_for('admin.product_video_delete', product_id=product.id) }}" style="display: inline;">
+                        <button type="submit" class="lw-admin-btn-sm danger">
+                            <i class="fa-regular fa-trash-can"></i> Videoyu Sil
+                        </button>
+                    </form>
+                </div>
+                {% endif %}
+                <form method="POST" action="{{ url_for('admin.product_video_upload', product_id=product.id) }}" enctype="multipart/form-data" style="display: flex; flex-direction: column; gap: 0.75rem;">
+                    <div class="lw-form-group" style="margin: 0;">
+                        <label class="lw-label">{% if product.video_path %}Videoyu Değiştir{% else %}Video Yükle{% endif %}</label>
+                        <input type="file" name="video" class="lw-input" accept="video/mp4,video/webm,video/quicktime">
+                        <div style="font-size: 0.72rem; color: var(--text-muted); margin-top: 0.35rem;">MP4, WEBM, MOV — Maks. 50MB</div>
+                    </div>
+                    <button type="submit" class="lw-admin-btn-gold" style="align-self: flex-start;">
+                        <i class="fa-solid fa-arrow-up-from-bracket"></i> Videoyu Yükle
+                    </button>
+                </form>
+            </div>
+            {% endif %}
+        </div>
+
+    </main>
+</div>
 {% endblock %}

@@ -1,0 +1,112 @@
+{% extends "base.html" %}
+{% block title %}E-bülten — Admin LuxWatch{% endblock %}
+{% block extra_css %}<link rel="stylesheet" href="{{ url_for('static', filename='css/admin.css') }}">{% endblock %}
+
+{% block content %}
+<div class="lw-admin-wrap">
+    {% include 'admin/_sidebar.html' %}
+    <main class="lw-admin-main">
+
+        <div class="lw-admin-page-header">
+            <div class="lw-admin-page-title">E-bülten Yönetimi</div>
+        </div>
+
+        <!-- Stats -->
+        <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem; margin-bottom: 1.5rem;">
+            <div class="lw-stat-card">
+                <div class="lw-stat-icon"><i class="fa-regular fa-envelope"></i></div>
+                <div>
+                    <div class="lw-stat-value">{{ subscribers|length }}</div>
+                    <div class="lw-stat-label">Toplam Abone</div>
+                </div>
+            </div>
+            <div class="lw-stat-card">
+                <div class="lw-stat-icon" style="color: var(--gold);"><i class="fa-solid fa-percent"></i></div>
+                <div>
+                    <div class="lw-stat-value">{{ coupons|length }}</div>
+                    <div class="lw-stat-label">Oluşturulan Kupon</div>
+                </div>
+            </div>
+            <div class="lw-stat-card">
+                <div class="lw-stat-icon" style="color: #4ade80;"><i class="fa-solid fa-check-circle"></i></div>
+                <div>
+                    <div class="lw-stat-value">{{ coupons|selectattr('is_used')|list|length }}</div>
+                    <div class="lw-stat-label">Kullanılan Kupon</div>
+                </div>
+            </div>
+        </div>
+
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem;">
+
+            <!-- Subscribers -->
+            <div class="lw-admin-section">
+                <div class="lw-admin-section-header">Aboneler</div>
+                <div style="overflow-y: auto; max-height: 500px;">
+                    <table class="lw-admin-table">
+                        <thead>
+                            <tr>
+                                <th>E-posta</th>
+                                <th>Tarih</th>
+                                <th>Kupon Kodu</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for sub in subscribers %}
+                            <tr>
+                                <td style="color: var(--text-primary);">{{ sub.email }}</td>
+                                <td style="color: var(--text-muted); font-size: 0.78rem;">{{ sub.subscribed_at.strftime('%d.%m.%Y') }}</td>
+                                <td>
+                                    {% if sub.coupon_code %}
+                                    <span style="font-family: monospace; font-size: 0.75rem; color: var(--gold);">{{ sub.coupon_code }}</span>
+                                    {% else %}
+                                    <span style="color: var(--text-muted);">—</span>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% else %}
+                            <tr><td colspan="3" style="text-align: center; padding: 2rem; color: var(--text-muted);">Henüz abone yok.</td></tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Coupons -->
+            <div class="lw-admin-section">
+                <div class="lw-admin-section-header">Kupon Kodları</div>
+                <div style="overflow-y: auto; max-height: 500px;">
+                    <table class="lw-admin-table">
+                        <thead>
+                            <tr>
+                                <th>Kod</th>
+                                <th>İndirim</th>
+                                <th>Durum</th>
+                                <th>Tarih</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for coupon in coupons %}
+                            <tr>
+                                <td style="font-family: monospace; font-size: 0.82rem; color: var(--gold);">{{ coupon.code }}</td>
+                                <td>%{{ coupon.discount_percent }}</td>
+                                <td>
+                                    {% if coupon.is_used %}
+                                    <span style="font-size: 0.65rem; color: #4ade80; background: rgba(74,222,128,0.1); padding: 0.2rem 0.5rem; border: 1px solid rgba(74,222,128,0.2);">Kullanıldı</span>
+                                    {% else %}
+                                    <span style="font-size: 0.65rem; color: var(--text-muted); background: var(--bg-secondary); padding: 0.2rem 0.5rem; border: 1px solid var(--border);">Bekliyor</span>
+                                    {% endif %}
+                                </td>
+                                <td style="color: var(--text-muted); font-size: 0.78rem;">{{ coupon.created_at.strftime('%d.%m.%Y') }}</td>
+                            </tr>
+                            {% else %}
+                            <tr><td colspan="4" style="text-align: center; padding: 2rem; color: var(--text-muted);">Henüz kupon yok.</td></tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+    </main>
+</div>
+{% endblock %}

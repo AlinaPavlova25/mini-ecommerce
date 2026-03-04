@@ -1,177 +1,358 @@
 {% extends 'base.html' %}
 
-{% block title %}{{ product.name }} - FlowerShop{% endblock %}
+{% block title %}{{ product.get_name(current_lang) }} — {{ product.brand.name }} — LuxWatch{% endblock %}
+
+{% block extra_css %}
+<style>
+.product-detail-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 4rem;
+    align-items: start;
+}
+
+.product-image-main {
+    position: relative;
+    aspect-ratio: 1;
+    background: var(--bg-elevated);
+    overflow: hidden;
+    border: 1px solid var(--border-subtle);
+}
+
+.product-image-main img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.product-thumbs {
+    display: flex;
+    gap: 0.5rem;
+    margin-top: 0.75rem;
+    flex-wrap: wrap;
+}
+
+.product-thumb {
+    width: 70px;
+    height: 70px;
+    object-fit: cover;
+    border: 2px solid var(--border-subtle);
+    cursor: pointer;
+    transition: border-color 0.2s;
+    opacity: 0.65;
+}
+
+.product-thumb:hover,
+.product-thumb.active {
+    border-color: var(--gold);
+    opacity: 1;
+}
+
+.product-specs-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0;
+    border: 1px solid var(--border-subtle);
+    margin: 2rem 0;
+}
+
+.spec-item {
+    padding: 1rem 1.25rem;
+    border-right: 1px solid var(--border-subtle);
+    border-bottom: 1px solid var(--border-subtle);
+}
+
+.spec-item:nth-child(2n) { border-right: none; }
+.spec-item:nth-last-child(-n+2) { border-bottom: none; }
+
+.spec-label {
+    font-size: 0.6rem;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--gold);
+    font-family: var(--font-sans);
+    margin-bottom: 0.3rem;
+}
+
+.spec-value {
+    font-size: 0.85rem;
+    color: var(--text-primary);
+}
+
+.qty-control {
+    display: flex;
+    align-items: center;
+    border: 1px solid var(--border-subtle);
+    width: fit-content;
+}
+
+.qty-btn {
+    width: 40px;
+    height: 40px;
+    background: none;
+    border: none;
+    color: var(--text-secondary);
+    font-size: 1rem;
+    cursor: pointer;
+    transition: var(--transition-fast);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.qty-btn:hover { color: var(--gold); background: rgba(198,167,94,0.05); }
+
+.qty-input {
+    width: 50px;
+    height: 40px;
+    border: none;
+    border-left: 1px solid var(--border-subtle);
+    border-right: 1px solid var(--border-subtle);
+    background: none;
+    color: var(--text-primary);
+    text-align: center;
+    font-size: 0.9rem;
+    font-family: var(--font-sans);
+    outline: none;
+}
+
+@media (max-width: 768px) {
+    .product-detail-grid { grid-template-columns: 1fr; gap: 2rem; }
+    .product-specs-grid { grid-template-columns: 1fr; }
+    .spec-item:nth-child(2n) { border-right: 1px solid var(--border-subtle); }
+    .spec-item { border-bottom: 1px solid var(--border-subtle); }
+    .spec-item:last-child { border-bottom: none; }
+}
+</style>
+{% endblock %}
 
 {% block content %}
-<div class="container product-detail-container">
-    <div class="row">
-        <!-- Product Image -->
-        <div class="col-md-6 mb-4">
-            <div class="product-detail-image">
-                <img src="{{ url_for('static', filename='uploads/' + product.image_path) if product.image_path else 'https://via.placeholder.com/400x400' or 'https://via.placeholder.com/600x600?text=' + product.name }}" alt="{{ product.name }}">
+<div class="lw-container" style="padding-top: 2rem; padding-bottom: 4rem;">
+    <!-- BREADCRUMB -->
+    <nav class="lw-breadcrumb">
+        <a href="{{ url_for('shop.home') }}">{% if current_lang == 'en' %}Home{% else %}Ana Sayfa{% endif %}</a>
+        <span class="separator">—</span>
+        <a href="{{ url_for('shop.product_list') }}">{% if current_lang == 'en' %}Watches{% else %}Saatler{% endif %}</a>
+        <span class="separator">—</span>
+        <a href="{{ url_for('shop.product_list', brand=product.brand.slug) }}">{{ product.brand.name }}</a>
+        <span class="separator">—</span>
+        <span class="current">{{ product.get_name(current_lang) }}</span>
+    </nav>
+
+    <div class="product-detail-grid">
+        <!-- IMAGE -->
+        <div>
+            <div class="product-image-main">
+                {% if product.image_path %}
+                <img id="main-product-img" src="{{ url_for('static', filename='uploads/' + product.image_path) }}" alt="{{ product.get_name(current_lang) }}">
+                {% else %}
+                <div class="lw-product-placeholder" style="height: 100%; min-height: 450px;">
+                    <i class="fa-regular fa-clock" style="font-size: 4rem; opacity: 0.2; color: var(--gold);"></i>
+                    <span style="font-size: 0.75rem; letter-spacing: 0.2em;">{{ product.brand.name }}</span>
+                </div>
+                {% endif %}
+                {% if product.is_featured %}
+                <span class="lw-badge-featured">{% if current_lang == 'en' %}Featured{% else %}Öne Çıkan{% endif %}</span>
+                {% endif %}
             </div>
+            {% set all_images = [] %}
+            {% if product.image_path %}{% set _ = all_images.append(product.image_path) %}{% endif %}
+            {% for img in product.images %}{% set _ = all_images.append(img.image_path) %}{% endfor %}
+            {% if all_images|length > 1 %}
+            <div class="product-thumbs">
+                {% for path in all_images %}
+                <img src="{{ url_for('static', filename='uploads/' + path) }}"
+                     class="product-thumb {% if loop.first %}active{% endif %}"
+                     onclick="setMainImage(this, '{{ url_for('static', filename='uploads/' + path) }}')">
+                {% endfor %}
+            </div>
+            {% endif %}
+
+            {% if product.video_path %}
+            <div style="margin-top: 1.5rem;">
+                <div style="font-size: 0.6rem; letter-spacing: 0.2em; text-transform: uppercase; color: var(--gold); font-family: var(--font-sans); margin-bottom: 0.75rem;">
+                    {% if current_lang == 'en' %}Product Video{% else %}Ürün Videosu{% endif %}
+                </div>
+                <video controls autoplay muted loop
+                       style="width: 100%; border: 1px solid var(--border-subtle); display: block;"
+                       preload="auto">
+                    <source src="{{ url_for('static', filename='uploads/' + product.video_path) }}" type="video/mp4">
+                </video>
+            </div>
+            {% endif %}
         </div>
-        
-        <!-- Product Info -->
-        <div class="col-md-6">
-            <div class="product-detail-info">
-                <!-- Breadcrumb -->
-                <nav aria-label="breadcrumb" class="mb-3">
-                    <ol class="breadcrumb" style="background: none; padding: 0;">
-                        <li class="breadcrumb-item"><a href="{{ url_for('shop.home') }}" style="color: var(--primary-pink);">Ana Sayfa</a></li>
-                        <li class="breadcrumb-item"><a href="{{ url_for('shop.product_list', category=product.category.slug) }}" style="color: var(--primary-pink);">{{ product.category.name }}</a></li>
-                        <li class="breadcrumb-item active">{{ product.name }}</li>
-                    </ol>
-                </nav>
-                
-                <!-- Product Title -->
-                <h1 class="product-detail-title">{{ product.name }}</h1>
-                
-                <!-- Category -->
-                <p class="product-category" style="font-size: 16px;">
-                    <i class="bi bi-tag-fill"></i> {{ product.category.name }}
-                </p>
-                
-                <!-- Stock Status -->
-                {% if product.stock_qty > 5 %}
-                <span class="stock-status stock-available">
-                    <i class="bi bi-check-circle-fill"></i> Stokta var
-                </span>
-                {% elif product.stock_qty > 0 %}
-                <span class="stock-status stock-low">
-                    <i class="bi bi-exclamation-triangle-fill"></i> Son {{ product.stock_qty }} adet
-                </span>
-                {% else %}
-                <span class="stock-status stock-out">
-                    <i class="bi bi-x-circle-fill"></i> Tükendi
-                </span>
-                {% endif %}
-                
-                <!-- Price -->
-                <div class="product-price" style="margin: 30px 0;">
-                    {% if product.active_discount %}
-                    <span class="price-current product-detail-price">{{ "%.2f"|format(product.discounted_price) }} TL</span>
-                    <span class="price-old" style="font-size: 24px;">{{ "%.2f"|format(product.price) }} TL</span>
-                    <span class="product-badge badge-discount" style="position: static; margin-left: 10px;">
-                        -%{{ product.active_discount.percent }}
+
+        <!-- INFO -->
+        <div>
+            <div style="margin-bottom: 1.5rem;">
+                <div style="font-size: 0.65rem; letter-spacing: 0.3em; text-transform: uppercase; color: var(--gold); font-family: var(--font-sans); margin-bottom: 0.5rem;">
+                    {{ product.brand.name }}
+                    <span style="color: var(--text-muted); margin-left: 0.75rem;">
+                        {% if product.gender == 'erkek' %}{% if current_lang == 'en' %}Men{% else %}Erkek{% endif %}
+                        {% elif product.gender == 'kadin' %}{% if current_lang == 'en' %}Women{% else %}Kadın{% endif %}
+                        {% else %}Unisex{% endif %}
                     </span>
-                    {% else %}
-                    <span class="price-current product-detail-price">{{ "%.2f"|format(product.price) }} TL</span>
-                    {% endif %}
                 </div>
-                
-                <!-- Description -->
-                {% if product.description %}
-                <div class="mb-4">
-                    <h5 style="color: var(--dark-text); margin-bottom: 15px;">Ürün Açıklaması</h5>
-                    <p style="color: #666; line-height: 1.8;">{{ product.description }}</p>
-                </div>
+                <h1 style="font-size: 2.2rem; font-weight: 400; margin-bottom: 0.5rem; line-height: 1.2;">
+                    {{ product.get_name(current_lang) }}
+                </h1>
+                {% if product.reference_number %}
+                <div style="font-size: 0.7rem; color: var(--text-muted); letter-spacing: 0.15em;">Ref. {{ product.reference_number }}</div>
                 {% endif %}
-                
-                <!-- Add to Cart Form -->
-                {% if product.stock_qty > 0 %}
-                <form method="POST" action="{{ url_for('shop.cart_add', product_id=product.id) }}">
-                    <div class="quantity-selector">
-                        <label for="quantity" style="font-weight: 600; color: var(--dark-text);">Adet:</label>
-                        <input type="number" id="quantity" name="quantity" value="1" min="1" max="{{ product.stock_qty }}" required>
-                    </div>
-                    
-                    <div class="d-flex gap-3 mt-3">
-                        <button type="submit" class="btn-add-cart flex-grow-1" style="max-width: 400px; font-size: 18px; padding: 15px;">
-                            <i class="bi bi-bag-heart-fill"></i> Sepete Ekle
-                        </button>
-                        
-                        {% if current_user.is_authenticated %}
-                        <form method="POST" action="{{ url_for('profile.wishlist_add', product_id=product.id) }}" class="d-inline">
-                            <button type="submit" class="btn btn-outline-danger" style="font-size: 18px; padding: 15px 25px;">
-                                <i class="bi bi-heart-fill"></i>
-                            </button>
-                        </form>
-                        {% endif %}
-                    </div>
-                </form>
-                    </button>
-                </form>
+            </div>
+
+            <div style="border-top: 1px solid var(--border-subtle); border-bottom: 1px solid var(--border-subtle); padding: 1.5rem 0; margin-bottom: 1.5rem;">
+                {% if product.active_discount %}
+                <div style="font-size: 0.85rem; color: var(--text-muted); text-decoration: line-through; margin-bottom: 0.25rem;">
+                    ₺{{ "{:,.0f}".format(product.price) }}
+                </div>
+                <div style="font-family: var(--font-serif); font-size: 2.2rem; color: var(--gold);">
+                    ₺{{ "{:,.0f}".format(product.discounted_price) }}
+                </div>
+                <div style="display: inline-block; background: var(--gold); color: var(--bg-primary); font-size: 0.65rem; font-weight: 600; letter-spacing: 0.1em; padding: 0.2rem 0.6rem; margin-top: 0.5rem;">
+                    %{{ product.active_discount.percent }} {% if current_lang == 'en' %}OFF{% else %}İNDİRİM{% endif %}
+                </div>
                 {% else %}
-                <button class="btn-add-cart" disabled style="max-width: 400px; font-size: 18px; padding: 15px;">
-                    <i class="bi bi-x-circle"></i> Ürün Tükendi
-                </button>
+                <div style="font-family: var(--font-serif); font-size: 2.2rem; color: var(--gold);">
+                    ₺{{ "{:,.0f}".format(product.price) }}
+                </div>
                 {% endif %}
-                
-                <!-- Additional Info -->
-                <div class="mt-4 p-3" style="background: var(--light-gray); border-radius: 10px;">
-                    <div class="d-flex align-items-center gap-2 mb-2">
-                        <i class="bi bi-truck" style="color: var(--primary-pink); font-size: 20px;"></i>
-                        <span><strong>Hızlı Teslimat:</strong> Aynı gün içinde teslim</span>
+            </div>
+
+            <!-- DESCRIPTION -->
+            {% if product.get_description(current_lang) %}
+            <p style="font-size: 0.88rem; color: var(--text-secondary); line-height: 1.9; margin-bottom: 2rem;">
+                {{ product.get_description(current_lang) }}
+            </p>
+            {% endif %}
+
+            <!-- SPECS -->
+            <div class="product-specs-grid">
+                {% if product.case_material %}
+                <div class="spec-item">
+                    <div class="spec-label">{% if current_lang == 'en' %}Case Material{% else %}Kasa Malzemesi{% endif %}</div>
+                    <div class="spec-value">{{ product.case_material }}</div>
+                </div>
+                {% endif %}
+                {% if product.case_diameter %}
+                <div class="spec-item">
+                    <div class="spec-label">{% if current_lang == 'en' %}Case Diameter{% else %}Kasa Çapı{% endif %}</div>
+                    <div class="spec-value">{{ product.case_diameter }}</div>
+                </div>
+                {% endif %}
+                {% if product.movement %}
+                <div class="spec-item">
+                    <div class="spec-label">{% if current_lang == 'en' %}Movement{% else %}Mekanizma{% endif %}</div>
+                    <div class="spec-value">{{ product.movement }}</div>
+                </div>
+                {% endif %}
+                {% if product.water_resistance %}
+                <div class="spec-item">
+                    <div class="spec-label">{% if current_lang == 'en' %}Water Resistance{% else %}Su Direnci{% endif %}</div>
+                    <div class="spec-value">{{ product.water_resistance }}</div>
+                </div>
+                {% endif %}
+            </div>
+
+            <!-- ADD TO CART -->
+            {% if product.stock_qty > 0 %}
+            <form action="{{ url_for('shop.cart_add') }}" method="POST">
+                <input type="hidden" name="product_id" value="{{ product.id }}">
+                <div style="display: flex; gap: 1rem; align-items: center; flex-wrap: wrap; margin-bottom: 1rem;">
+                    <div class="qty-control">
+                        <button type="button" class="qty-btn" onclick="changeQty(-1)">−</button>
+                        <input type="number" name="quantity" id="qty" value="1" min="1" max="{{ product.stock_qty }}" class="qty-input">
+                        <button type="button" class="qty-btn" onclick="changeQty(1)">+</button>
                     </div>
-                    <div class="d-flex align-items-center gap-2 mb-2">
-                        <i class="bi bi-shield-check" style="color: var(--primary-pink); font-size: 20px;"></i>
-                        <span><strong>Güvenli Ödeme:</strong> SSL sertifikalı</span>
-                    </div>
-                    <div class="d-flex align-items-center gap-2">
-                        <i class="bi bi-headset" style="color: var(--primary-pink); font-size: 20px;"></i>
-                        <span><strong>Destek:</strong> 7/24 WhatsApp</span>
-                    </div>
+                    <button type="submit" class="btn-gold-solid" style="flex: 1; justify-content: center;">
+                        <i class="fa-solid fa-bag-shopping"></i>
+                        {% if current_lang == 'en' %}Add to Bag{% else %}Sepete Ekle{% endif %}
+                    </button>
+                </div>
+            </form>
+            <div style="font-size: 0.7rem; color: var(--text-muted); margin-bottom: 1rem;">
+                <i class="fa-solid fa-circle-check" style="color: #5a9a5a; margin-right: 0.4rem;"></i>
+                {{ product.stock_qty }} {% if current_lang == 'en' %}pieces in stock{% else %}adet stokta{% endif %}
+            </div>
+            {% else %}
+            <div style="border: 1px solid rgba(180,60,60,0.3); padding: 1rem; text-align: center; margin-bottom: 1rem;">
+                <span style="font-size: 0.75rem; color: #e07070; letter-spacing: 0.1em; text-transform: uppercase;">
+                    {% if current_lang == 'en' %}Out of Stock{% else %}Stokta Yok{% endif %}
+                </span>
+            </div>
+            {% endif %}
+
+            <!-- FEATURES -->
+            <div style="display: flex; flex-direction: column; gap: 0.5rem; padding-top: 1rem; border-top: 1px solid var(--border-subtle);">
+                <div style="display: flex; align-items: center; gap: 0.75rem; font-size: 0.75rem; color: var(--text-secondary);">
+                    <i class="fa-solid fa-shield-halved" style="color: var(--gold); width: 16px;"></i>
+                    {% if current_lang == 'en' %}Certificate of Authenticity Included{% else %}Özgünlük Sertifikası Dahil{% endif %}
+                </div>
+                <div style="display: flex; align-items: center; gap: 0.75rem; font-size: 0.75rem; color: var(--text-secondary);">
+                    <i class="fa-solid fa-truck" style="color: var(--gold); width: 16px;"></i>
+                    {% if current_lang == 'en' %}Complimentary Insured Shipping{% else %}Ücretsiz Sigortalı Kargo{% endif %}
+                </div>
+                <div style="display: flex; align-items: center; gap: 0.75rem; font-size: 0.75rem; color: var(--text-secondary);">
+                    <i class="fa-solid fa-rotate-left" style="color: var(--gold); width: 16px;"></i>
+                    {% if current_lang == 'en' %}14-Day Return Policy{% else %}14 Gün İade Hakkı{% endif %}
                 </div>
             </div>
         </div>
     </div>
-    
-    <!-- Related Products -->
+
+    <!-- RELATED PRODUCTS -->
     {% if related_products %}
-    <div class="mt-5">
-        <h2 style="color: var(--dark-text); font-size: 32px; font-weight: 700; margin-bottom: 30px; text-align: center;">
-            Benzer Ürünler
-        </h2>
-        
-        <div class="product-grid">
-            {% for rel_product in related_products[:4] %}
-            <div class="product-card fade-in-up">
-                <div class="product-image">
-                    <a href="{{ url_for('shop.product_detail', product_id=rel_product.id) }}">
-                        <img src="{{ url_for('static', filename='uploads/' + rel_product.image_path) if rel_product.image_path else 'https://via.placeholder.com/400x400?text=' + rel_product.name }}" alt="{{ rel_product.name }}">
-                    </a>
-                    
-                    {% if rel_product.active_discount %}
-                    <span class="product-badge badge-discount">-%{{ rel_product.active_discount.percent }}</span>
-                    {% elif rel_product.stock_qty < 5 and rel_product.stock_qty > 0 %}
-                    <span class="product-badge badge-stock-low">Son {{ rel_product.stock_qty }} adet</span>
-                    {% elif rel_product.stock_qty == 0 %}
-                    <span class="product-badge badge-out-of-stock">Tükendi</span>
-                    {% endif %}
-                </div>
-                
-                <div class="product-info">
-                    <a href="{{ url_for('shop.product_detail', product_id=rel_product.id) }}" style="text-decoration: none;">
-                        <h3 class="product-title">{{ rel_product.name }}</h3>
-                    </a>
-                    <p class="product-category">{{ rel_product.category.name }}</p>
-                    
-                    <div class="product-price">
-                        {% if rel_product.active_discount %}
-                        <span class="price-current">{{ "%.2f"|format(rel_product.discounted_price) }} TL</span>
-                        <span class="price-old">{{ "%.2f"|format(rel_product.price) }} TL</span>
-                        {% else %}
-                        <span class="price-current">{{ "%.2f"|format(rel_product.price) }} TL</span>
-                        {% endif %}
-                    </div>
-                    
-                    {% if rel_product.stock_qty > 0 %}
-                    <form method="POST" action="{{ url_for('shop.cart_add', product_id=rel_product.id) }}">
-                        <button type="submit" class="btn-add-cart">
-                            <i class="bi bi-bag-heart-fill"></i> Sepete Ekle
-                        </button>
-                    </form>
+    <div style="margin-top: 5rem;">
+        <div class="lw-section-header" style="text-align: left; margin-bottom: 2rem;">
+            <span class="eyebrow">{{ product.brand.name }}</span>
+            <h2 style="font-size: 1.6rem;">{% if current_lang == 'en' %}From the Same Maison{% else %}Aynı Markadan{% endif %}</h2>
+            <div class="lw-divider" style="margin-left: 0;"></div>
+        </div>
+        <div class="lw-product-grid">
+            {% for rp in related_products %}
+            <a href="{{ url_for('shop.product_detail', product_id=rp.id) }}" class="lw-product-card" style="text-decoration: none;">
+                <div class="lw-product-card-image">
+                    <span class="lw-badge-gender">
+                        {% if rp.gender == 'erkek' %}{% if current_lang == 'en' %}Men{% else %}Erkek{% endif %}
+                        {% elif rp.gender == 'kadin' %}{% if current_lang == 'en' %}Women{% else %}Kadın{% endif %}
+                        {% else %}Unisex{% endif %}
+                    </span>
+                    {% if rp.image_path %}
+                    <img src="{{ url_for('static', filename='uploads/' + rp.image_path) }}" alt="{{ rp.get_name(current_lang) }}">
                     {% else %}
-                    <button class="btn-add-cart" disabled>
-                        <i class="bi bi-x-circle"></i> Tükendi
-                    </button>
+                    <div class="lw-product-placeholder">
+                        <i class="fa-regular fa-clock"></i>
+                        <span>{{ rp.brand.name }}</span>
+                    </div>
                     {% endif %}
                 </div>
-            </div>
+                <div class="lw-product-card-body">
+                    <div class="lw-product-brand">{{ rp.brand.name }}</div>
+                    <div class="lw-product-name">{{ rp.get_name(current_lang) }}</div>
+                    {% if rp.reference_number %}<div class="lw-product-ref">Ref. {{ rp.reference_number }}</div>{% endif %}
+                    <div class="lw-product-price">₺{{ "{:,.0f}".format(rp.discounted_price) }}</div>
+                </div>
+            </a>
             {% endfor %}
         </div>
     </div>
     {% endif %}
 </div>
+
+<script>
+function changeQty(delta) {
+    var input = document.getElementById('qty');
+    var val = parseInt(input.value) + delta;
+    var max = parseInt(input.max);
+    if (val < 1) val = 1;
+    if (val > max) val = max;
+    input.value = val;
+}
+
+function setMainImage(thumb, src) {
+    document.getElementById('main-product-img').src = src;
+    document.querySelectorAll('.product-thumb').forEach(function(t) { t.classList.remove('active'); });
+    thumb.classList.add('active');
+}
+</script>
 {% endblock %}

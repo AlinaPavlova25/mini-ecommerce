@@ -1,62 +1,103 @@
 {% extends "base.html" %}
 
-{% block title %}{{ t('register') }} - {{ t('site_name') }}{% endblock %}
+{% block title %}{% if current_lang == 'en' %}Create Account{% else %}Kayıt Ol{% endif %} — LuxWatch{% endblock %}
 
 {% block content %}
-<div class="row justify-content-center">
-    <div class="col-md-6">
-        <div class="card shadow">
-            <div class="card-body">
-                <h3 class="card-title text-center mb-4">
-                    <i class="bi bi-person-plus-fill"></i> {{ t('register') }}
-                </h3>
-                
-                <form method="POST" action="{{ url_for('auth.register') }}">
-                    <div class="mb-3">
-                        <label for="email" class="form-label">{{ t('email') }} *</label>
-                        <input type="email" class="form-control" id="email" name="email" required placeholder="example@email.com">
-                    </div>
-                    
-                    <div class="mb-3">
-                        <label for="password" class="form-label">{{ t('password') }} *</label>
-                        <input type="password" class="form-control" id="password" name="password" required minlength="6" placeholder="{% if current_lang == 'en' %}At least 6 characters{% else %}En az 6 karakter{% endif %}">
-                        <div class="form-text">{% if current_lang == 'en' %}Use a secure password{% else %}Güvenli bir şifre kullanın{% endif %}</div>
-                    </div>
-                    
-                    <div class="mb-3">
-                        <label for="full_name" class="form-label">{{ t('full_name') }}</label>
-                        <input type="text" class="form-control" id="full_name" name="full_name" placeholder="{% if current_lang == 'en' %}John Doe{% else %}Ayşe Yılmaz{% endif %}">
-                    </div>
-                    
-                    <div class="mb-3">
-                        <label for="phone" class="form-label">{{ t('phone') }}</label>
-                        <input type="tel" class="form-control" id="phone" name="phone" placeholder="05XX XXX XX XX">
-                        <div class="form-text">{% if current_lang == 'en' %}Will be used for order updates{% else %}Sipariş güncellemeleri için kullanılacak{% endif %}</div>
-                    </div>
-                    
-                    <div class="alert alert-info">
-                        <i class="bi bi-info-circle-fill"></i>
-                        <small><strong>{% if current_lang == 'en' %}Note{% else %}Not{% endif %}:</strong> {% if current_lang == 'en' %}You can add your address information from your profile page after registration.{% else %}Adres bilgilerinizi kayıt olduktan sonra profil sayfanızdan ekleyebilirsiniz.{% endif %}</small>
-                    </div>
-                    
-                    <div class="d-grid">
-                        <button type="submit" class="btn btn-primary btn-lg">
-                            <i class="bi bi-check-circle-fill"></i> {{ t('register') }}
-                        </button>
-                    </div>
-                </form>
-                
-                <hr class="my-4">
-                
-                <p class="text-center mb-0">
-                    {% if current_lang == 'en' %}
-                    Already have an account? <a href="{{ url_for('auth.login') }}">Login</a>
-                    {% else %}
-                    Zaten hesabınız var mı? <a href="{{ url_for('auth.login') }}">Giriş yapın</a>
-                    {% endif %}
-                </p>
+<div class="lw-auth-page">
+    <div class="lw-auth-card">
+        <div class="lw-auth-header">
+            <div class="lw-auth-logo">LuxWatch</div>
+            <div class="lw-divider"></div>
+            <h1 class="lw-auth-title">
+                {% if current_lang == 'en' %}Create Account{% else %}Hesap Oluştur{% endif %}
+            </h1>
+            <p class="lw-auth-subtitle">
+                {% if current_lang == 'en' %}Join the LuxWatch community{% else %}LuxWatch ailesine katılın{% endif %}
+            </p>
+        </div>
+
+        <form method="POST" action="{{ url_for('auth.register') }}" class="lw-auth-form">
+            <div class="lw-form-group">
+                <label class="lw-label">{% if current_lang == 'en' %}Full Name{% else %}Ad Soyad{% endif %}</label>
+                <input type="text" name="full_name" class="lw-input" placeholder="{% if current_lang == 'en' %}Your full name{% else %}Adınız Soyadınız{% endif %}" autocomplete="name">
             </div>
+
+            <div class="lw-form-group">
+                <label class="lw-label">{% if current_lang == 'en' %}E-mail{% else %}E-posta{% endif %} *</label>
+                <input type="email" name="email" class="lw-input" placeholder="ornek@email.com" required autocomplete="email">
+            </div>
+
+            <div class="lw-form-group">
+                <label class="lw-label">{% if current_lang == 'en' %}Phone{% else %}Telefon{% endif %}</label>
+                <input type="tel" name="phone" class="lw-input" placeholder="05XX XXX XX XX" autocomplete="tel">
+            </div>
+
+            <div class="lw-form-group">
+                <label class="lw-label">{% if current_lang == 'en' %}Password{% else %}Şifre{% endif %} *</label>
+                <input type="password" name="password" class="lw-input" placeholder="{% if current_lang == 'en' %}Min. 6 characters{% else %}En az 6 karakter{% endif %}" required autocomplete="new-password">
+            </div>
+
+            <button type="submit" class="btn-gold-solid w-100" style="justify-content: center; margin-top: 0.5rem;">
+                <span>{% if current_lang == 'en' %}Create Account{% else %}Kayıt Ol{% endif %}</span>
+                <i class="fa-solid fa-arrow-right"></i>
+            </button>
+        </form>
+
+        <div class="lw-auth-footer">
+            {% if current_lang == 'en' %}
+            Already have an account?
+            <a href="{{ url_for('auth.login') }}" class="lw-auth-link">Sign in</a>
+            {% else %}
+            Zaten hesabınız var mı?
+            <a href="{{ url_for('auth.login') }}" class="lw-auth-link">Giriş yapın</a>
+            {% endif %}
         </div>
     </div>
 </div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+.lw-auth-page {
+    min-height: 80vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 3rem 1rem;
+    background: radial-gradient(ellipse at 50% 0%, rgba(198,167,94,0.06) 0%, transparent 60%);
+}
+.lw-auth-card {
+    width: 100%;
+    max-width: 440px;
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    padding: 3rem;
+}
+.lw-auth-header { text-align: center; margin-bottom: 2.5rem; }
+.lw-auth-logo {
+    font-family: var(--font-serif);
+    font-size: 1.6rem;
+    color: var(--gold);
+    letter-spacing: 0.1em;
+    margin-bottom: 1rem;
+}
+.lw-auth-title {
+    font-size: 1.5rem;
+    font-family: var(--font-serif);
+    color: var(--text-primary);
+    margin: 1rem 0 0.5rem;
+}
+.lw-auth-subtitle { color: var(--text-muted); font-size: 0.8rem; letter-spacing: 0.05em; }
+.lw-auth-form { display: flex; flex-direction: column; gap: 1.25rem; }
+.lw-auth-footer {
+    text-align: center;
+    margin-top: 2rem;
+    color: var(--text-muted);
+    font-size: 0.8rem;
+    letter-spacing: 0.03em;
+}
+.lw-auth-link { color: var(--gold); text-decoration: none; }
+.lw-auth-link:hover { color: var(--gold-light); text-decoration: underline; }
+.w-100 { width: 100%; }
+</style>
 {% endblock %}

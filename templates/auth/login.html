@@ -1,44 +1,105 @@
 {% extends "base.html" %}
 
-{% block title %}{{ t('login') }} - {{ t('site_name') }}{% endblock %}
+{% block title %}{% if current_lang == 'en' %}Sign In{% else %}Giriş Yap{% endif %} — LuxWatch{% endblock %}
 
 {% block content %}
-<div class="row justify-content-center">
-    <div class="col-md-5">
-        <div class="card shadow">
-            <div class="card-body">
-                <h3 class="card-title text-center mb-4">{{ t('login') }}</h3>
-                
-                <form method="POST" action="{{ url_for('auth.login') }}">
-                    <div class="mb-3">
-                        <label for="email" class="form-label">{{ t('email') }}</label>
-                        <input type="email" class="form-control" id="email" name="email" required>
-                    </div>
-                    
-                    <div class="mb-3">
-                        <label for="password" class="form-label">{{ t('password') }}</label>
-                        <input type="password" class="form-control" id="password" name="password" required>
-                        <div class="text-end mt-2">
-                            <a href="{{ url_for('auth.forgot_password') }}" class="small text-muted">{{ t('forgot_password') }}</a>
-                        </div>
-                    </div>
-                    
-                    <div class="d-grid">
-                        <button type="submit" class="btn btn-primary">{{ t('login') }}</button>
-                    </div>
-                </form>
-                
-                <hr class="my-4">
-                
-                <p class="text-center mb-0">
-                    {% if current_lang == 'en' %}
-                    Don't have an account? <a href="{{ url_for('auth.register') }}">Register</a>
-                    {% else %}
-                    Hesabınız yok mu? <a href="{{ url_for('auth.register') }}">Kayıt olun</a>
-                    {% endif %}
-                </p>
+<div class="lw-auth-page">
+    <div class="lw-auth-card">
+        <div class="lw-auth-header">
+            <div class="lw-auth-logo">LuxWatch</div>
+            <div class="lw-divider"></div>
+            <h1 class="lw-auth-title">
+                {% if current_lang == 'en' %}Welcome Back{% else %}Hoş Geldiniz{% endif %}
+            </h1>
+            <p class="lw-auth-subtitle">
+                {% if current_lang == 'en' %}Sign in to your account{% else %}Hesabınıza giriş yapın{% endif %}
+            </p>
+        </div>
+
+        <form method="POST" action="{{ url_for('auth.login') }}" class="lw-auth-form">
+            <div class="lw-form-group">
+                <label class="lw-label">{% if current_lang == 'en' %}E-mail{% else %}E-posta{% endif %}</label>
+                <input type="email" name="email" class="lw-input" placeholder="ornek@email.com" required autocomplete="email">
             </div>
+
+            <div class="lw-form-group">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
+                    <label class="lw-label" style="margin-bottom: 0;">{% if current_lang == 'en' %}Password{% else %}Şifre{% endif %}</label>
+                    <a href="{{ url_for('auth.forgot_password') }}" class="lw-auth-link" style="font-size: 0.75rem;">
+                        {% if current_lang == 'en' %}Forgot password?{% else %}Şifremi unuttum{% endif %}
+                    </a>
+                </div>
+                <input type="password" name="password" class="lw-input" placeholder="••••••••" required autocomplete="current-password">
+            </div>
+
+            <button type="submit" class="btn-gold-solid w-100" style="justify-content: center; margin-top: 0.5rem;">
+                <span>{% if current_lang == 'en' %}Sign In{% else %}Giriş Yap{% endif %}</span>
+                <i class="fa-solid fa-arrow-right"></i>
+            </button>
+        </form>
+
+        <div class="lw-auth-footer">
+            {% if current_lang == 'en' %}
+            Don't have an account?
+            <a href="{{ url_for('auth.register') }}" class="lw-auth-link">Create one</a>
+            {% else %}
+            Hesabınız yok mu?
+            <a href="{{ url_for('auth.register') }}" class="lw-auth-link">Kayıt olun</a>
+            {% endif %}
         </div>
     </div>
 </div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+.lw-auth-page {
+    min-height: 80vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 3rem 1rem;
+    background: radial-gradient(ellipse at 50% 0%, rgba(198,167,94,0.06) 0%, transparent 60%);
+}
+.lw-auth-card {
+    width: 100%;
+    max-width: 440px;
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    padding: 3rem;
+}
+.lw-auth-header {
+    text-align: center;
+    margin-bottom: 2.5rem;
+}
+.lw-auth-logo {
+    font-family: var(--font-serif);
+    font-size: 1.6rem;
+    color: var(--gold);
+    letter-spacing: 0.1em;
+    margin-bottom: 1rem;
+}
+.lw-auth-title {
+    font-size: 1.5rem;
+    font-family: var(--font-serif);
+    color: var(--text-primary);
+    margin: 1rem 0 0.5rem;
+}
+.lw-auth-subtitle {
+    color: var(--text-muted);
+    font-size: 0.8rem;
+    letter-spacing: 0.05em;
+}
+.lw-auth-form { display: flex; flex-direction: column; gap: 1.25rem; }
+.lw-auth-footer {
+    text-align: center;
+    margin-top: 2rem;
+    color: var(--text-muted);
+    font-size: 0.8rem;
+    letter-spacing: 0.03em;
+}
+.lw-auth-link { color: var(--gold); text-decoration: none; }
+.lw-auth-link:hover { color: var(--gold-light); text-decoration: underline; }
+.w-100 { width: 100%; }
+</style>
 {% endblock %}

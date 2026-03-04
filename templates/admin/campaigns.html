@@ -1,118 +1,106 @@
 {% extends "base.html" %}
-
-{% block title %}Kampanya Yönetimi - Admin{% endblock %}
+{% block title %}Kampanya Yönetimi — Admin LuxWatch{% endblock %}
+{% block extra_css %}<link rel="stylesheet" href="{{ url_for('static', filename='css/admin.css') }}">{% endblock %}
 
 {% block content %}
-<h2 class="mb-4">
-    <i class="bi bi-percent"></i> Kampanya Yönetimi
-</h2>
+<div class="lw-admin-wrap">
+    {% include 'admin/_sidebar.html' %}
+    <main class="lw-admin-main">
 
-<div class="row mb-4">
-    <div class="col-md-6">
-        <div class="card shadow">
-            <div class="card-body">
-                <h5 class="card-title">Yeni Kampanya Oluştur</h5>
-                <form method="POST" action="{{ url_for('admin.campaign_new') }}">
-                    <div class="mb-3">
-                        <label for="product_id" class="form-label">Ürün *</label>
-                        <select class="form-select" id="product_id" name="product_id" required>
+        <div class="lw-admin-page-header">
+            <div class="lw-admin-page-title">Kampanya Yönetimi</div>
+        </div>
+
+        <div style="display: grid; grid-template-columns: 1fr 320px; gap: 1.5rem; align-items: start;">
+
+            <!-- Campaigns Table -->
+            <div class="lw-admin-section">
+                <div class="lw-admin-section-header">Mevcut Kampanyalar</div>
+                <div style="overflow-x: auto;">
+                    <table class="lw-admin-table">
+                        <thead>
+                            <tr>
+                                <th>Kampanya Adı</th>
+                                <th>Ürün</th>
+                                <th>İndirim</th>
+                                <th>Durum</th>
+                                <th>İşlemler</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for campaign in campaigns %}
+                            <tr>
+                                <td style="color: var(--text-primary);">{{ campaign.name }}</td>
+                                <td style="color: var(--text-secondary);">{{ campaign.product.name }}</td>
+                                <td>
+                                    <span style="color: var(--gold); font-family: var(--font-serif);">%{{ campaign.percent }}</span>
+                                </td>
+                                <td>
+                                    <form method="POST" action="{{ url_for('admin.campaign_toggle', campaign_id=campaign.id) }}" style="display: inline;">
+                                        <button type="submit" class="lw-admin-btn-sm" style="{% if campaign.active %}color: #4ade80; border-color: #4ade8040;{% endif %}">
+                                            {% if campaign.active %}Aktif{% else %}Pasif{% endif %}
+                                        </button>
+                                    </form>
+                                </td>
+                                <td>
+                                    <div style="display: flex; gap: 0.5rem; align-items: center;">
+                                        <form method="POST" action="{{ url_for('admin.campaign_edit', campaign_id=campaign.id) }}" style="display: flex; gap: 0.4rem; align-items: center;" id="cedit-{{ campaign.id }}">
+                                            <input type="text" name="name" value="{{ campaign.name }}" class="lw-input" style="width: 110px; padding: 0.3rem 0.5rem; font-size: 0.78rem;">
+                                            <input type="number" name="percent" value="{{ campaign.percent }}" class="lw-input" style="width: 55px; padding: 0.3rem 0.5rem; font-size: 0.78rem;" min="1" max="100">
+                                            <button type="submit" class="lw-admin-btn-sm"><i class="fa-solid fa-check"></i></button>
+                                        </form>
+                                        <form method="POST" action="{{ url_for('admin.campaign_delete', campaign_id=campaign.id) }}" onsubmit="return confirm('Bu kampanyayı silmek istediğinizden emin misiniz?');" style="display: inline;">
+                                            <button type="submit" class="lw-admin-btn-sm danger"><i class="fa-regular fa-trash-can"></i></button>
+                                        </form>
+                                    </div>
+                                </td>
+                            </tr>
+                            {% else %}
+                            <tr><td colspan="5" style="text-align: center; padding: 3rem; color: var(--text-muted);">Henüz kampanya yok.</td></tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- New Campaign Form -->
+            <div class="lw-admin-section">
+                <div class="lw-admin-section-header">Yeni Kampanya Oluştur</div>
+                <form method="POST" action="{{ url_for('admin.campaign_new') }}" style="padding: 1.5rem; display: flex; flex-direction: column; gap: 1rem;">
+
+                    <div class="lw-form-group">
+                        <label class="lw-label">Ürün *</label>
+                        <select name="product_id" class="lw-input" required>
                             <option value="">Seçiniz...</option>
                             {% for product in products %}
-                            <option value="{{ product.id }}">{{ product.name }} ({{ product.category.name }})</option>
+                            <option value="{{ product.id }}">{{ product.name }} ({{ product.brand.name }})</option>
                             {% endfor %}
                         </select>
                     </div>
-                    
-                    <div class="mb-3">
-                        <label for="percent" class="form-label">İndirim Yüzdesi (%) *</label>
-                        <input type="number" class="form-control" id="percent" name="percent" min="0" max="100" required>
-                        <div class="form-text">0-100 arası bir değer girin</div>
+
+                    <div class="lw-form-group">
+                        <label class="lw-label">Kampanya Adı *</label>
+                        <input type="text" name="name" class="lw-input" placeholder="ör: Yaz İndirimi" required>
                     </div>
-                    
-                    <div class="mb-3">
-                        <label for="name" class="form-label">Kampanya Adı *</label>
-                        <input type="text" class="form-control" id="name" name="name" placeholder="Örn: Sevgililer Günü" required>
+
+                    <div class="lw-form-group">
+                        <label class="lw-label">İndirim Yüzdesi (%) *</label>
+                        <input type="number" name="percent" class="lw-input" min="1" max="100" placeholder="ör: 20" required>
+                        <div style="font-size: 0.72rem; color: var(--text-muted); margin-top: 0.35rem;">1-100 arası bir değer girin</div>
                     </div>
-                    
-                    <button type="submit" class="btn btn-success">
-                        <i class="bi bi-plus-circle"></i> Kampanya Oluştur
+
+                    <div style="padding: 1rem; background: rgba(198,167,94,0.05); border: 1px solid rgba(198,167,94,0.15); font-size: 0.78rem; color: var(--text-muted); line-height: 1.6;">
+                        <i class="fa-solid fa-circle-info" style="color: var(--gold); margin-right: 0.4rem;"></i>
+                        Her ürün için sadece 1 aktif kampanya olabilir.
+                    </div>
+
+                    <button type="submit" class="lw-admin-btn-gold" style="justify-content: center;">
+                        <i class="fa-solid fa-plus"></i> Kampanya Oluştur
                     </button>
                 </form>
             </div>
         </div>
-    </div>
-    
-    <div class="col-md-6">
-        <div class="alert alert-info">
-            <h6><i class="bi bi-info-circle"></i> Kampanya Kuralları</h6>
-            <ul class="mb-0">
-                <li>Her ürün için sadece 1 aktif kampanya olabilir</li>
-                <li>İndirim yüzdesi 0-100 arasında olmalıdır</li>
-                <li>Kampanyayı aktif/pasif yapabilirsiniz</li>
-                <li>Sipariş anında kampanya bilgisi kaydedilir</li>
-            </ul>
-        </div>
-    </div>
-</div>
 
-<div class="card shadow">
-    <div class="card-body">
-        <h5 class="card-title">Mevcut Kampanyalar</h5>
-        <div class="table-responsive">
-            <table class="table table-hover">
-                <thead class="table-light">
-                    <tr>
-                        <th>Kampanya Adı</th>
-                        <th>Ürün</th>
-                        <th>İndirim</th>
-                        <th>Durum</th>
-                        <th>İşlemler</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for campaign in campaigns %}
-                    <tr>
-                        <td>
-                            <form method="POST" action="{{ url_for('admin.campaign_edit', campaign_id=campaign.id) }}" class="d-inline" id="edit-form-{{ campaign.id }}">
-                                <input type="text" class="form-control form-control-sm d-inline-block" name="name" value="{{ campaign.name }}" style="width: auto; min-width: 150px;" required>
-                            </form>
-                        </td>
-                        <td>{{ campaign.product.name }}</td>
-                        <td>
-                            <form method="POST" action="{{ url_for('admin.campaign_edit', campaign_id=campaign.id) }}" class="d-inline" id="percent-form-{{ campaign.id }}">
-                                <input type="hidden" name="name" value="{{ campaign.name }}">
-                                <div class="input-group input-group-sm" style="width: 100px;">
-                                    <input type="number" class="form-control" name="percent" value="{{ campaign.percent }}" min="0" max="100" required>
-                                    <span class="input-group-text">%</span>
-                                </div>
-                            </form>
-                        </td>
-                        <td>
-                            <form method="POST" action="{{ url_for('admin.campaign_toggle', campaign_id=campaign.id) }}" class="d-inline">
-                                <button type="submit" class="btn btn-sm {% if campaign.active %}btn-success{% else %}btn-secondary{% endif %}">
-                                    {% if campaign.active %}Aktif{% else %}Pasif{% endif %}
-                                </button>
-                            </form>
-                        </td>
-                        <td>
-                            <button type="button" class="btn btn-sm btn-outline-primary" onclick="document.getElementById('edit-form-{{ campaign.id }}').submit(); document.getElementById('percent-form-{{ campaign.id }}').submit();">
-                                <i class="bi bi-check-lg"></i> Kaydet
-                            </button>
-                            <form method="POST" action="{{ url_for('admin.campaign_delete', campaign_id=campaign.id) }}" class="d-inline" onsubmit="return confirm('Bu kampanyayı silmek istediğinizden emin misiniz?');">
-                                <button type="submit" class="btn btn-sm btn-outline-danger">
-                                    <i class="bi bi-trash"></i>
-                                </button>
-                            </form>
-                        </td>
-                    </tr>
-                    {% else %}
-                    <tr>
-                        <td colspan="5" class="text-center text-muted">Henüz kampanya bulunmuyor</td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
-        </div>
-    </div>
+    </main>
 </div>
 {% endblock %}

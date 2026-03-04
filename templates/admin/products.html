@@ -1,76 +1,128 @@
 {% extends "base.html" %}
-
-{% block title %}Ürün Yönetimi - Admin{% endblock %}
+{% block title %}Ürün Yönetimi — Admin LuxWatch{% endblock %}
+{% block extra_css %}<link rel="stylesheet" href="{{ url_for('static', filename='css/admin.css') }}">{% endblock %}
 
 {% block content %}
-<div class="d-flex justify-content-between align-items-center mb-4">
-    <h2>
-        <i class="bi bi-box"></i> Ürün Yönetimi
-    </h2>
-    <a href="{{ url_for('admin.product_new') }}" class="btn btn-success">
-        <i class="bi bi-plus-circle"></i> Yeni Ürün Ekle
-    </a>
-</div>
+<div class="lw-admin-wrap">
+    {% include 'admin/_sidebar.html' %}
+    <main class="lw-admin-main">
 
-<div class="card shadow">
-    <div class="card-body">
-        <div class="table-responsive">
-            <table class="table table-hover">
-                <thead class="table-light">
-                    <tr>
-                        <th>ID</th>
-                        <th>Resim</th>
-                        <th>Ürün Adı</th>
-                        <th>Kategori</th>
-                        <th>Fiyat</th>
-                        <th>Stok</th>
-                        <th>Durum</th>
-                        <th>İşlemler</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for product in products %}
-                    <tr>
-                        <td>{{ product.id }}</td>
-                        <td>
-                            {% if product.image_path %}
-                            <img src="{{ url_for('static', filename='uploads/' + product.image_path) }}" alt="{{ product.name }}" style="width: 50px; height: 50px; object-fit: cover;" class="rounded">
-                            {% else %}
-                            <div class="bg-secondary text-white d-flex align-items-center justify-content-center rounded" style="width: 50px; height: 50px;">
-                                <i class="bi bi-image"></i>
-                            </div>
-                            {% endif %}
-                        </td>
-                        <td>
-                            <strong>{{ product.name }}</strong><br>
-                            {% if product.product_type %}
-                            <small class="text-muted">{{ product.product_type }}</small>
-                            {% endif %}
-                        </td>
-                        <td>{{ product.category.name }}</td>
-                        <td>{{ "%.2f"|format(product.price) }} TL</td>
-                        <td>
-                            <span class="badge {% if product.stock_qty == 0 %}bg-danger{% elif product.stock_qty <= 5 %}bg-warning text-dark{% else %}bg-success{% endif %}">
-                                {{ product.stock_qty }}
-                            </span>
-                        </td>
-                        <td>
-                            <form method="POST" action="{{ url_for('admin.product_toggle', product_id=product.id) }}" class="d-inline">
-                                <button type="submit" class="btn btn-sm {% if product.is_active %}btn-success{% else %}btn-secondary{% endif %}">
-                                    {% if product.is_active %}Aktif{% else %}Pasif{% endif %}
-                                </button>
-                            </form>
-                        </td>
-                        <td>
-                            <a href="{{ url_for('admin.product_edit', product_id=product.id) }}" class="btn btn-sm btn-outline-primary">
-                                <i class="bi bi-pencil"></i>
-                            </a>
-                        </td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
+        <div class="lw-admin-page-header">
+            <div class="lw-admin-page-title">Ürün Yönetimi</div>
+            <a href="{{ url_for('admin.product_new') }}" class="lw-admin-btn-gold">
+                <i class="fa-solid fa-plus"></i> Yeni Ürün Ekle
+            </a>
         </div>
-    </div>
+
+        <!-- Filtre & Arama -->
+        <form method="GET" action="{{ url_for('admin.products') }}" style="display: flex; gap: 0.75rem; flex-wrap: wrap; margin-bottom: 1.25rem; align-items: center;">
+            <input type="text" name="q" value="{{ search }}" placeholder="Ürün adı ara..." class="lw-input" style="width: 200px; padding: 0.45rem 0.75rem; font-size: 0.8rem;">
+            <select name="brand" class="lw-input" style="width: 160px; padding: 0.45rem 0.75rem; font-size: 0.8rem;">
+                <option value="">Tüm Markalar</option>
+                {% for b in all_brands %}
+                <option value="{{ b.id }}" {% if brand_filter == b.id %}selected{% endif %}>{{ b.name }}</option>
+                {% endfor %}
+            </select>
+            <select name="gender" class="lw-input" style="width: 130px; padding: 0.45rem 0.75rem; font-size: 0.8rem;">
+                <option value="">Tüm Cinsiyetler</option>
+                <option value="erkek" {% if gender_filter == 'erkek' %}selected{% endif %}>Erkek</option>
+                <option value="kadin" {% if gender_filter == 'kadin' %}selected{% endif %}>Kadın</option>
+                <option value="unisex" {% if gender_filter == 'unisex' %}selected{% endif %}>Unisex</option>
+            </select>
+            <input type="hidden" name="sort" value="{{ sort }}">
+            <button type="submit" class="lw-admin-btn-gold" style="padding: 0.45rem 1rem; font-size: 0.8rem;">
+                <i class="fa-solid fa-filter"></i> Filtrele
+            </button>
+            {% if search or brand_filter or gender_filter %}
+            <a href="{{ url_for('admin.products', sort=sort) }}" class="lw-admin-btn-sm" style="padding: 0.45rem 0.75rem; font-size: 0.8rem;">
+                <i class="fa-solid fa-xmark"></i> Temizle
+            </a>
+            {% endif %}
+            <span style="font-size: 0.75rem; color: var(--text-muted); margin-left: auto;">{{ products|length }} ürün</span>
+        </form>
+
+        <div class="lw-admin-section">
+            <div style="overflow-x: auto;">
+                <table class="lw-admin-table">
+                    <thead>
+                        <tr>
+                            {% macro sort_th(label, key) %}
+                            <th>
+                                <a href="{{ url_for('admin.products', sort=key+'_asc' if sort == key+'_desc' else key+'_desc', brand=brand_filter, gender=gender_filter, q=search) }}"
+                                   style="color: inherit; text-decoration: none; display: flex; align-items: center; gap: 0.3rem;">
+                                    {{ label }}
+                                    {% if sort.startswith(key) %}
+                                        <i class="fa-solid fa-sort-{{ 'up' if sort == key+'_asc' else 'down' }}" style="color: var(--gold); font-size: 0.65rem;"></i>
+                                    {% else %}
+                                        <i class="fa-solid fa-sort" style="color: var(--border); font-size: 0.65rem;"></i>
+                                    {% endif %}
+                                </a>
+                            </th>
+                            {% endmacro %}
+                            <th>ID</th>
+                            <th>Görsel</th>
+                            {{ sort_th('Ürün Adı', 'name') }}
+                            <th>Marka</th>
+                            <th>Cinsiyet</th>
+                            {{ sort_th('Fiyat', 'price') }}
+                            {{ sort_th('Stok', 'stock') }}
+                            {{ sort_th('Eklenme', 'created') }}
+                            <th>Durum</th>
+                            <th>İşlemler</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for product in products %}
+                        <tr>
+                            <td style="color: var(--text-muted);">{{ product.id }}</td>
+                            <td>
+                                {% if product.image_path %}
+                                <img src="{{ url_for('static', filename='uploads/' + product.image_path) }}" alt="{{ product.name }}" style="width: 44px; height: 44px; object-fit: cover; border: 1px solid var(--border);">
+                                {% else %}
+                                <div style="width: 44px; height: 44px; background: var(--bg-secondary); border: 1px solid var(--border); display: flex; align-items: center; justify-content: center; color: var(--border);">
+                                    <i class="fa-regular fa-image"></i>
+                                </div>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <div style="color: var(--text-primary);">{{ product.name }}</div>
+                                {% if product.reference_number %}
+                                <div style="font-size: 0.72rem; color: var(--text-muted);">Ref: {{ product.reference_number }}</div>
+                                {% endif %}
+                                {% if product.is_featured %}
+                                <span style="font-size: 0.6rem; letter-spacing: 0.1em; text-transform: uppercase; color: var(--gold); background: rgba(198,167,94,0.1); padding: 0.1rem 0.4rem;">Öne Çıkan</span>
+                                {% endif %}
+                            </td>
+                            <td>{{ product.brand.name }}</td>
+                            <td style="text-transform: capitalize; font-size: 0.8rem;">{{ product.gender }}</td>
+                            <td style="color: var(--gold); font-family: var(--font-serif);">{{ "%.2f"|format(product.price) }} TL</td>
+                            <td>
+                                <span class="lw-stock-badge {% if product.stock_qty == 0 %}lw-stock-zero{% elif product.stock_qty <= 5 %}lw-stock-low{% else %}lw-stock-ok{% endif %}">
+                                    {{ product.stock_qty }}
+                                </span>
+                            </td>
+                            <td style="font-size: 0.75rem; color: var(--text-muted);">{{ product.created_at.strftime('%d.%m.%Y') }}</td>
+                            <td>
+                                <form method="POST" action="{{ url_for('admin.product_toggle', product_id=product.id) }}" style="display: inline;">
+                                    <button type="submit" class="lw-admin-btn-sm" style="{% if product.is_active %}color: #4ade80; border-color: #4ade8040;{% endif %}">
+                                        {% if product.is_active %}Aktif{% else %}Pasif{% endif %}
+                                    </button>
+                                </form>
+                            </td>
+                            <td>
+                                <a href="{{ url_for('admin.product_edit', product_id=product.id) }}" class="lw-admin-btn-sm">
+                                    <i class="fa-solid fa-pen-to-square"></i> Düzenle
+                                </a>
+                            </td>
+                        </tr>
+                        {% else %}
+                        <tr><td colspan="10" style="text-align: center; padding: 3rem; color: var(--text-muted);">Ürün bulunamadı.</td></tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+    </main>
 </div>
 {% endblock %}

@@ -1,67 +1,106 @@
 {% extends "base.html" %}
 
-{% block title %}Siparişlerim - Mini E-Ticaret{% endblock %}
+{% block title %}{% if current_lang == 'en' %}My Orders{% else %}Siparişlerim{% endif %} — LuxWatch{% endblock %}
 
 {% block content %}
-<h2 class="mb-4">
-    <i class="bi bi-box-seam"></i> Siparişlerim
-</h2>
+<div class="lw-container" style="padding: 3rem 2rem;">
 
-{% if orders %}
-<div class="row">
-    {% for order in orders %}
-    <div class="col-md-6 mb-4">
-        <div class="card shadow-sm">
-            <div class="card-body">
-                <div class="d-flex justify-content-between align-items-start mb-3">
-                    <div>
-                        <h5 class="card-title mb-1">Sipariş #{{ order.id }}</h5>
-                        <small class="text-muted">
-                            <i class="bi bi-calendar"></i> {{ order.created_at.strftime('%d.%m.%Y %H:%M') }}
-                        </small>
+    <div style="margin-bottom: 2.5rem;">
+        <div class="lw-eyebrow">{% if current_lang == 'en' %}Account{% else %}Hesabım{% endif %}</div>
+        <h1 class="lw-section-title" style="text-align: left; font-size: 2rem; margin-bottom: 0;">
+            {% if current_lang == 'en' %}My Orders{% else %}Siparişlerim{% endif %}
+        </h1>
+    </div>
+
+    {% if orders %}
+    <div style="display: flex; flex-direction: column; gap: 1rem;">
+        {% for order in orders %}
+        <div style="background: var(--bg-card); border: 1px solid var(--border); padding: 1.75rem 2rem;">
+            <div style="display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 1rem; margin-bottom: 1.25rem;">
+                <div>
+                    <div style="font-family: var(--font-serif); font-size: 1.1rem; color: var(--text-primary); margin-bottom: 0.25rem;">
+                        {% if current_lang == 'en' %}Order{% else %}Sipariş{% endif %} #{{ order.id }}
                     </div>
-                    <div>
-                        {% if order.status == 'PAID' %}
-                        <span class="badge bg-info">Ödendi</span>
-                        {% elif order.status == 'PREPARING' %}
-                        <span class="badge bg-warning text-dark">Hazırlanıyor</span>
-                        {% elif order.status == 'SHIPPED' %}
-                        <span class="badge bg-primary">Kargoda</span>
-                        {% elif order.status == 'OUT_FOR_DELIVERY' %}
-                        <span class="badge bg-primary">Dağıtımda</span>
-                        {% elif order.status == 'DELIVERED' %}
-                        <span class="badge bg-success">Teslim Edildi</span>
-                        {% elif order.status == 'CANCEL_REQUESTED' %}
-                        <span class="badge bg-secondary">İptal Talep Edildi</span>
-                        {% elif order.status == 'CANCELED' %}
-                        <span class="badge bg-danger">İptal Edildi</span>
-                        {% elif order.status == 'RETURN_ARRIVED' %}
-                        <span class="badge bg-dark">İade Tamamlandı</span>
-                        {% endif %}
+                    <div style="font-size: 0.75rem; color: var(--text-muted); letter-spacing: 0.05em;">
+                        <i class="fa-regular fa-calendar" style="margin-right: 0.4rem;"></i>
+                        {{ order.created_at.strftime('%d.%m.%Y — %H:%M') }}
                     </div>
                 </div>
-                
-                <p class="mb-2">
-                    <strong>Ürünler:</strong> {{ order.items|length }} çeşit ürün
-                </p>
-                <p class="mb-3">
-                    <strong>Toplam:</strong> <span class="text-primary">{{ "%.2f"|format(order.total_amount) }} TL</span>
-                </p>
-                
-                <a href="{{ url_for('shop.order_detail', order_id=order.id) }}" class="btn btn-sm btn-primary">
-                    <i class="bi bi-eye"></i> Detayları Gör
+                <div style="display: flex; align-items: center; gap: 1rem;">
+                    <span class="lw-order-badge lw-order-{{ order.status.lower() }}">
+                        {% if order.status == 'PAID' %}{% if current_lang == 'en' %}Paid{% else %}Ödendi{% endif %}
+                        {% elif order.status == 'PREPARING' %}{% if current_lang == 'en' %}Preparing{% else %}Hazırlanıyor{% endif %}
+                        {% elif order.status == 'SHIPPED' %}{% if current_lang == 'en' %}Shipped{% else %}Kargoda{% endif %}
+                        {% elif order.status == 'OUT_FOR_DELIVERY' %}{% if current_lang == 'en' %}Out for Delivery{% else %}Dağıtımda{% endif %}
+                        {% elif order.status == 'DELIVERED' %}{% if current_lang == 'en' %}Delivered{% else %}Teslim Edildi{% endif %}
+                        {% elif order.status == 'CANCEL_REQUESTED' %}{% if current_lang == 'en' %}Cancel Requested{% else %}İptal Talep Edildi{% endif %}
+                        {% elif order.status == 'CANCELED' %}{% if current_lang == 'en' %}Canceled{% else %}İptal Edildi{% endif %}
+                        {% elif order.status == 'RETURN_ARRIVED' %}{% if current_lang == 'en' %}Returned{% else %}İade Edildi{% endif %}
+                        {% else %}{{ order.status }}{% endif %}
+                    </span>
+                </div>
+            </div>
+
+            <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem; padding-top: 1.25rem; border-top: 1px solid var(--border);">
+                <div style="color: var(--text-secondary); font-size: 0.82rem;">
+                    <span>{{ order.items|length }} {% if current_lang == 'en' %}item(s){% else %}çeşit ürün{% endif %}</span>
+                    <span style="margin: 0 0.75rem; color: var(--border);">|</span>
+                    <span style="color: var(--gold); font-family: var(--font-serif); font-size: 1rem;">
+                        {{ "%.2f"|format(order.total_amount) }} TL
+                    </span>
+                    {% if order.coupon_discount and order.coupon_discount > 0 %}
+                    <span style="margin-left: 0.5rem; font-size: 0.75rem; color: var(--text-muted);">
+                        ({{ "%.2f"|format(order.coupon_discount) }} TL {% if current_lang == 'en' %}coupon discount{% else %}kupon indirimi{% endif %})
+                    </span>
+                    {% endif %}
+                </div>
+                <a href="{{ url_for('shop.order_detail', order_id=order.id) }}" class="btn-ghost" style="padding: 0.5rem 1.25rem; font-size: 0.75rem;">
+                    <span>{% if current_lang == 'en' %}View Details{% else %}Detayları Gör{% endif %}</span>
+                    <i class="fa-solid fa-arrow-right"></i>
                 </a>
             </div>
         </div>
+        {% endfor %}
     </div>
-    {% endfor %}
+
+    {% else %}
+    <div style="text-align: center; padding: 6rem 2rem;">
+        <div style="font-size: 3rem; color: var(--border); margin-bottom: 1.5rem;">
+            <i class="fa-regular fa-box-open"></i>
+        </div>
+        <h3 style="font-family: var(--font-serif); font-size: 1.5rem; color: var(--text-primary); margin-bottom: 0.75rem;">
+            {% if current_lang == 'en' %}No orders yet{% else %}Henüz siparişiniz yok{% endif %}
+        </h3>
+        <p style="color: var(--text-muted); font-size: 0.85rem; margin-bottom: 2rem;">
+            {% if current_lang == 'en' %}Explore our collection and place your first order{% else %}Koleksiyonumuzu keşfedin ve ilk siparişinizi verin{% endif %}
+        </p>
+        <a href="{{ url_for('shop.product_list') }}" class="btn-gold-solid">
+            <span>{% if current_lang == 'en' %}Explore Watches{% else %}Saatleri Keşfet{% endif %}</span>
+            <i class="fa-solid fa-arrow-right"></i>
+        </a>
+    </div>
+    {% endif %}
 </div>
-{% else %}
-<div class="alert alert-info">
-    <i class="bi bi-info-circle"></i> Henüz siparişiniz bulunmuyor.
-</div>
-<a href="{{ url_for('shop.product_list') }}" class="btn btn-primary">
-    Alışverişe Başla
-</a>
-{% endif %}
+{% endblock %}
+
+{% block extra_css %}
+<style>
+.lw-order-badge {
+    display: inline-block;
+    font-size: 0.65rem;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    font-family: var(--font-sans);
+    padding: 0.3rem 0.85rem;
+    border: 1px solid;
+}
+.lw-order-paid { color: #4ade80; border-color: #4ade8040; background: #4ade8010; }
+.lw-order-preparing { color: var(--gold); border-color: var(--gold-dark); background: rgba(198,167,94,0.08); }
+.lw-order-shipped { color: #60a5fa; border-color: #60a5fa40; background: #60a5fa10; }
+.lw-order-out_for_delivery { color: #a78bfa; border-color: #a78bfa40; background: #a78bfa10; }
+.lw-order-delivered { color: #34d399; border-color: #34d39940; background: #34d39910; }
+.lw-order-cancel_requested { color: #fb923c; border-color: #fb923c40; background: #fb923c10; }
+.lw-order-canceled { color: #f87171; border-color: #f8717140; background: #f8717110; }
+.lw-order-return_arrived { color: var(--text-muted); border-color: var(--border); background: var(--bg-secondary); }
+</style>
 {% endblock %}
