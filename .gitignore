@@ -4,8 +4,6 @@ __pycache__/
 *.pyo
 instance/
 migrations/
-static/uploads/*.png
-static/uploads/*.jpg
-static/uploads/*.jpeg
+static/uploads/
 .env
 .DS_Store
