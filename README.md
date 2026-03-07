@@ -6,7 +6,10 @@ Flask tabanlı lüks saat satış ve yönetim sistemi.
 
 ```bash
 cd mini-ecommerce
+python -m venv venv
 venv\Scripts\activate
+pip install -r requirements.txt
+python seed.py
 python app.py
 ```
 
@@ -24,34 +27,40 @@ Tarayıcıda aç: http://127.0.0.1:5000
 ## Özellikler
 
 ### Kullanıcı Tarafı
-- Ürün listeleme, arama ve filtreleme (marka, cinsiyet, fiyat)
+- Ürün listeleme, arama (ürün adına göre) ve filtreleme (marka, cinsiyet, fiyat aralığı)
+- Fiyat filtresi indirimli fiyatı baz alır
 - Çoklu ürün fotoğrafı galerisi + video oynatıcı
 - Sepet sistemi
-- Checkout (81 il)
-- Sipariş takibi ve iptal yönetimi
-- Adres defteri ve profil yönetimi
+- Checkout (81 il, taksit seçeneği — backend faiz hesabı dahil)
+- Sipariş takibi ve iptal / iade yönetimi
+- Adres defteri (ekleme, düzenleme, silme)
+- Profil yönetimi
 - Favori listesi
 - Çift dil desteği (TR / EN)
-- Newsletter aboneliği
+- Newsletter aboneliği (otomatik kupon kodu)
+- Hakkımızda ve SSS/Garanti sayfaları
+- WhatsApp iletişim yönlendirmesi
 
 ### Admin Tarafı
 - Dashboard (sipariş ve stok özeti)
-- Ürün yönetimi (CRUD, çoklu görsel, video)
+- Ürün yönetimi (CRUD, çoklu görsel, video, komple silme)
+- Kampanya yönetimi (arama + marka/cinsiyet/alfabe filtrelemeli ürün seçici)
 - Marka yönetimi
 - Stok yönetimi
-- Kampanya / indirim kodu yönetimi
+- İndirim / kupon kodu yönetimi
 - Sipariş yönetimi ve durum güncelleme
-- Site görselleri yönetimi (hero banner, vs.)
+- Site görselleri yönetimi (hero banner, vb.)
 - Newsletter yönetimi
 
 ---
 
 ## Teknolojiler
 
-- **Backend:** Flask, SQLAlchemy, Flask-Login
+- **Backend:** Flask, SQLAlchemy, Flask-Login, Flask-Migrate, Flask-Mail, Flask-Limiter
 - **Database:** SQLite
-- **Frontend:** Jinja2, Bootstrap 5, Custom CSS
-- **Görsel İşleme:** Pillow (pillow-avif-plugin dahil)
+- **Frontend:** Jinja2, Custom CSS (Bootstrap bağımlılığı yok)
+- **Görsel İşleme:** Pillow
+- **Güvenlik:** python-dotenv (.env), rate limiting, rol bazlı yetkilendirme
 
 ---
 
@@ -62,6 +71,7 @@ mini-ecommerce/
 ├── app.py                  # Ana uygulama ve konfigürasyon
 ├── models.py               # Veritabanı modelleri
 ├── seed.py                 # Veritabanı seed scripti
+├── .env                    # Ortam değişkenleri (gitignore'da)
 ├── routes/
 │   ├── admin.py            # Admin paneli route'ları
 │   ├── auth.py             # Kimlik doğrulama
@@ -76,8 +86,10 @@ mini-ecommerce/
 ├── utils/
 │   ├── cart.py
 │   ├── i18n.py
+│   ├── mail.py
 │   ├── stock.py
 │   └── upload.py
+├── migrations/             # Flask-Migrate migration dosyaları
 └── translations/
     ├── tr.json
     └── en.json
@@ -85,9 +97,31 @@ mini-ecommerce/
 
 ---
 
+## Ortam Değişkenleri
+
+`.env` dosyası oluşturun (`.env` örneği):
+
+```
+SECRET_KEY=gizli-anahtar-buraya
+MAIL_SERVER=smtp.gmail.com
+MAIL_PORT=587
+MAIL_USE_TLS=true
+MAIL_USERNAME=
+MAIL_PASSWORD=
+MAIL_DEFAULT_SENDER=noreply@luxwatch.com
+```
+
+---
+
 ## Veritabanı
 
-Veritabanı ilk çalıştırmada otomatik oluşturulur. Sıfırdan oluşturmak için:
+Migration ile güncel şemayı uygulayın:
+
+```bash
+flask db upgrade
+```
+
+Sıfırdan oluşturmak için:
 
 ```bash
 python seed.py
@@ -99,17 +133,20 @@ python seed.py
 
 ```
 PAID → PREPARING → SHIPPED → OUT_FOR_DELIVERY → DELIVERED
-            ↓ (iptal)     ↓ (admin onayı ile)
-        CANCELED    CANCEL_REQUESTED → RETURN_ARRIVED → CANCELED
+            ↓ (iptal)
+        CANCELED
+        CANCEL_REQUESTED → RETURN_ARRIVED → CANCELED
 ```
 
 ---
 
-## Kurulum
+## Rol Sistemi
 
-```bash
-pip install -r requirements.txt
-```
+| Rol       | Yetki                          |
+|-----------|-------------------------------|
+| user      | Standart müşteri               |
+| moderator | Admin paneline erişim          |
+| admin     | Tam yetki                      |
 
 ---
 
@@ -123,6 +160,7 @@ taskkill /F /PID <pid>
 
 **Veritabanı hatası:**
 ```bash
+flask db upgrade
 python seed.py
 ```
 
