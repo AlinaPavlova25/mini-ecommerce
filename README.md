@@ -2,7 +2,7 @@
 
 Flask tabanlı lüks saat satış ve yönetim sistemi.
 
-**Canlı Demo:** https://web-production-86f29.up.railway.app
+**Canlı Demo:** https://lux-watch.up.railway.app
 
 ---
 
