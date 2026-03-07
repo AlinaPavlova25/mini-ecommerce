@@ -69,6 +69,14 @@ def debug_uploads():
         return json.dumps({'exists': True, 'count': len(files), 'sample': files[:5]})
     return json.dumps({'exists': False})
 
+@app.route('/debug-products')
+def debug_products():
+    import json
+    from models import Product
+    products = Product.query.all()
+    data = [{'id': p.id, 'name': p.name, 'image_path': p.image_path} for p in products]
+    return json.dumps(data, ensure_ascii=False)
+
 @app.route('/set-newsletter-shown', methods=['POST'])
 def set_newsletter_shown():
     session['newsletter_popup_shown'] = True
