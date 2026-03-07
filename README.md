@@ -17,10 +17,9 @@ Tarayıcıda aç: http://127.0.0.1:5000
 
 ### Test Hesapları
 
-| Rol   | Email             | Şifre    |
-|-------|-------------------|----------|
-| Admin | admin@example.com | admin123 |
-| User  | user@example.com  | user123  |
+| Rol   | Email                | Şifre    |
+|-------|----------------------|----------|
+| Admin | admin@luxwatch.com   | admin123 |
 
 ---
 
