@@ -1,10 +1,13 @@
 from app import app, db
 from flask_migrate import stamp
-from models import Brand
+from models import Brand, Product
 
 with app.app_context():
     db.create_all()
     stamp()
-    if Brand.query.count() == 0:
+    if Brand.query.count() == 0 or Product.query.filter(Product.image_path == None).count() > 0:
+        db.drop_all()
+        db.create_all()
+        stamp()
         from seed import seed
         seed()
