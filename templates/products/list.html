@@ -183,7 +183,7 @@
         <a href="{{ url_for('shop.product_list', brand=selected_brand.slug if selected_brand else '', gender=gender, sort=sort) }}" class="filter-option {% if not price_range %}active{% endif %}" onclick="closeFilterDrawer()">{% if current_lang == 'en' %}All Prices{% else %}Tüm Fiyatlar{% endif %}</a>
         {% for key, low, high in price_ranges %}
         <a href="{{ url_for('shop.product_list', brand=selected_brand.slug if selected_brand else '', gender=gender, sort=sort, price_range=key) }}" class="filter-option {% if price_range == key %}active{% endif %}" onclick="closeFilterDrawer()">
-            {% if high is none %}₺{{ "{:,.0f}".format(low) }}+{% else %}₺{{ "{:,.0f}".format(low) }} — ₺{{ "{:,.0f}".format(high) }}{% endif %}
+            {% if high is none %}₺{{ low|tl }}+{% else %}₺{{ low|tl }} — ₺{{ high|tl }}{% endif %}
         </a>
         {% endfor %}
     </div>
@@ -270,9 +270,9 @@
                 <a href="{{ url_for('shop.product_list', brand=selected_brand.slug if selected_brand else '', gender=gender, sort=sort, price_range=key) }}"
                    class="filter-option {% if price_range == key %}active{% endif %}">
                     {% if high is none %}
-                        ₺{{ "{:,.0f}".format(low) }}{% if current_lang == 'en' %}+{% else %}+{% endif %}
+                        ₺{{ low|tl }}{% if current_lang == 'en' %}+{% else %}+{% endif %}
                     {% else %}
-                        ₺{{ "{:,.0f}".format(low) }} — ₺{{ "{:,.0f}".format(high) }}
+                        ₺{{ low|tl }} — ₺{{ high|tl }}
                     {% endif %}
                 </a>
                 {% endfor %}
@@ -390,10 +390,10 @@
                         </div>
                         <div class="lw-product-price">
                             {% if product.active_discount %}
-                            <span class="original">₺{{ "{:,.0f}".format(product.price) }}</span>
-                            ₺{{ "{:,.0f}".format(product.discounted_price) }}
+                            <span class="original">₺{{ product.price|tl }}</span>
+                            ₺{{ product.discounted_price|tl }}
                             {% else %}
-                            ₺{{ "{:,.0f}".format(product.price) }}
+                            ₺{{ product.price|tl }}
                             {% endif %}
                         </div>
                     </div>

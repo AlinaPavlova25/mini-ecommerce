@@ -131,7 +131,7 @@
                             <td>{{ order.user.full_name or order.user.email }}</td>
                             <td style="color: var(--text-muted); font-size: 0.8rem;">{{ order.created_at.strftime('%d.%m.%Y %H:%M') }}</td>
                             <td><span class="lw-order-badge-sm lw-order-{{ order.status.lower() }}">{{ order.status }}</span></td>
-                            <td style="color: var(--gold); font-family: var(--font-serif);">{{ "%.2f"|format(order.total_amount) }} TL</td>
+                            <td style="color: var(--gold); font-family: var(--font-serif);">₺{{ order.total_amount|tl }}</td>
                             <td>
                                 <a href="{{ url_for('admin.order_detail', order_id=order.id) }}" class="lw-admin-btn-sm">Detay</a>
                             </td>

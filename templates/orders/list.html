@@ -46,11 +46,11 @@
                     <span>{{ order.items|length }} {% if current_lang == 'en' %}item(s){% else %}çeşit ürün{% endif %}</span>
                     <span style="margin: 0 0.75rem; color: var(--border);">|</span>
                     <span style="color: var(--gold); font-family: var(--font-serif); font-size: 1rem;">
-                        {{ "%.2f"|format(order.total_amount) }} TL
+                        ₺{{ order.total_amount|tl }}
                     </span>
                     {% if order.coupon_discount and order.coupon_discount > 0 %}
                     <span style="margin-left: 0.5rem; font-size: 0.75rem; color: var(--text-muted);">
-                        ({{ "%.2f"|format(order.coupon_discount) }} TL {% if current_lang == 'en' %}coupon discount{% else %}kupon indirimi{% endif %})
+                        (₺{{ order.coupon_discount|tl }} {% if current_lang == 'en' %}coupon discount{% else %}kupon indirimi{% endif %})
                     </span>
                     {% endif %}
                 </div>

@@ -224,14 +224,14 @@
                 <td class="product-col {% if products|length > 1 and product.discounted_price == products|map(attribute='discounted_price')|min %}diff-highlight{% endif %}">
                     {% if product.active_discount %}
                     <span class="compare-price">
-                        <span class="original">₺{{ "{:,.0f}".format(product.price) }}</span>
-                        ₺{{ "{:,.0f}".format(product.discounted_price) }}
+                        <span class="original">₺{{ product.price|tl }}</span>
+                        ₺{{ product.discounted_price|tl }}
                     </span>
                     <div style="font-size: 0.65rem; background: var(--gold); color: var(--bg-primary); display: inline-block; padding: 0.15rem 0.5rem; margin-top: 0.4rem;">
                         %{{ product.active_discount.percent }} {% if current_lang == 'en' %}OFF{% else %}İNDİRİM{% endif %}
                     </div>
                     {% else %}
-                    <span class="compare-price">₺{{ "{:,.0f}".format(product.price) }}</span>
+                    <span class="compare-price">₺{{ product.price|tl }}</span>
                     {% endif %}
                 </td>
                 {% endfor %}

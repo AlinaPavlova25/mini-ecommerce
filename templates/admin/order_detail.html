@@ -78,10 +78,10 @@
                                     <td style="color: var(--text-primary);">{{ item.product.name }}</td>
                                     <td>
                                         {% if item.discount_percent_at_purchase > 0 %}
-                                        <span style="text-decoration: line-through; color: var(--text-muted); font-size: 0.78rem;">{{ "%.2f"|format(item.unit_price_at_purchase) }} TL</span><br>
-                                        <span style="color: var(--gold);">{{ "%.2f"|format(item.effective_price) }} TL</span>
+                                        <span style="text-decoration: line-through; color: var(--text-muted); font-size: 0.78rem;">₺{{ item.unit_price_at_purchase|tl }}</span><br>
+                                        <span style="color: var(--gold);">₺{{ item.effective_price|tl }}</span>
                                         {% else %}
-                                        {{ "%.2f"|format(item.unit_price_at_purchase) }} TL
+                                        ₺{{ item.unit_price_at_purchase|tl }}
                                         {% endif %}
                                     </td>
                                     <td>
@@ -90,7 +90,7 @@
                                         {% else %}—{% endif %}
                                     </td>
                                     <td>{{ item.quantity }}</td>
-                                    <td style="color: var(--gold); font-family: var(--font-serif);">{{ "%.2f"|format(item.subtotal) }} TL</td>
+                                    <td style="color: var(--gold); font-family: var(--font-serif);">₺{{ item.subtotal|tl }}</td>
                                 </tr>
                                 {% endfor %}
                             </tbody>
@@ -98,12 +98,12 @@
                                 {% if order.coupon_code %}
                                 <tr>
                                     <td colspan="4" style="text-align: right; color: var(--text-muted); font-size: 0.82rem;">Kupon ({{ order.coupon_code }})</td>
-                                    <td style="color: #4ade80;">-{{ "%.2f"|format(order.coupon_discount) }} TL</td>
+                                    <td style="color: #4ade80;">-₺{{ order.coupon_discount|tl }}</td>
                                 </tr>
                                 {% endif %}
                                 <tr>
                                     <td colspan="4" style="text-align: right; color: var(--text-primary); padding-top: 0.75rem; border-top: 1px solid var(--border);">Genel Toplam</td>
-                                    <td style="color: var(--gold); font-family: var(--font-serif); font-size: 1.05rem; padding-top: 0.75rem; border-top: 1px solid var(--border);">{{ "%.2f"|format(order.total_amount) }} TL</td>
+                                    <td style="color: var(--gold); font-family: var(--font-serif); font-size: 1.05rem; padding-top: 0.75rem; border-top: 1px solid var(--border);">₺{{ order.total_amount|tl }}</td>
                                 </tr>
                             </tfoot>
                         </table>

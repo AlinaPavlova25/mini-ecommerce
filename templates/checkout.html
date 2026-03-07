@@ -313,7 +313,7 @@
                         <div style="font-size: 0.8rem; color: var(--text-primary); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">{{ item.product.get_name(current_lang) }}</div>
                         <div style="font-size: 0.7rem; color: var(--text-muted);">×{{ item.quantity }}</div>
                     </div>
-                    <div style="font-size: 0.85rem; color: var(--gold); white-space: nowrap;">₺{{ "{:,.0f}".format(item.subtotal) }}</div>
+                    <div style="font-size: 0.85rem; color: var(--gold); white-space: nowrap;">₺{{ item.subtotal|tl }}</div>
                 </div>
                 {% endfor %}
 
@@ -321,12 +321,12 @@
                 <div style="padding-top: 0.75rem;">
                     <div style="display: flex; justify-content: space-between; margin-bottom: 0.6rem; font-size: 0.82rem; color: var(--text-secondary);">
                         <span>{% if current_lang == 'en' %}Subtotal{% else %}Ara Toplam{% endif %}</span>
-                        <span>₺{{ "{:,.0f}".format(total) }}</span>
+                        <span>₺{{ total|tl }}</span>
                     </div>
                     {% if coupon_discount > 0 %}
                     <div style="display: flex; justify-content: space-between; margin-bottom: 0.6rem; font-size: 0.82rem; color: #5a9a5a;">
                         <span>{% if current_lang == 'en' %}Discount{% else %}İndirim{% endif %}</span>
-                        <span>−₺{{ "{:,.0f}".format(coupon_discount) }}</span>
+                        <span>−₺{{ coupon_discount|tl }}</span>
                     </div>
                     {% endif %}
                     <div style="display: flex; justify-content: space-between; margin-bottom: 0.6rem; font-size: 0.82rem; color: var(--text-secondary);">
@@ -335,7 +335,7 @@
                     </div>
                     <div style="display: flex; justify-content: space-between; padding-top: 1rem; border-top: 1px solid var(--border-subtle);">
                         <span style="font-family: var(--font-serif); font-size: 1rem;">{% if current_lang == 'en' %}Total{% else %}Toplam{% endif %}</span>
-                        <span id="summary-total" style="font-family: var(--font-serif); font-size: 1.3rem; color: var(--gold);">₺{{ "{:,.0f}".format(final_total) }}</span>
+                        <span id="summary-total" style="font-family: var(--font-serif); font-size: 1.3rem; color: var(--gold);">₺{{ final_total|tl }}</span>
                     </div>
                     <div id="summary-installment" style="display: none; margin-top: 0.6rem; padding: 0.6rem 0.75rem; background: rgba(198,167,94,0.06); border: 1px solid rgba(198,167,94,0.2); font-size: 0.78rem; color: var(--text-secondary);">
                         <span id="summary-installment-text"></span>

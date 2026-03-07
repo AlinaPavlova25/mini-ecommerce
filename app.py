@@ -36,6 +36,13 @@ mail.init_app(app)
 limiter.init_app(app)
 migrate = Migrate(app, db)
 
+@app.template_filter('tl')
+def tl_format(value):
+    try:
+        return '{:,.0f}'.format(float(value)).replace(',', '.')
+    except (ValueError, TypeError):
+        return value
+
 login_manager = LoginManager()
 login_manager.init_app(app)
 login_manager.login_view = 'auth.login'

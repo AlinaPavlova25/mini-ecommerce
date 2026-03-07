@@ -493,10 +493,10 @@
                     </div>
                     <div class="lw-product-price">
                         {% if product.active_discount %}
-                        <span class="original">₺{{ "{:,.0f}".format(product.price) }}</span>
-                        ₺{{ "{:,.0f}".format(product.discounted_price) }}
+                        <span class="original">₺{{ product.price|tl }}</span>
+                        ₺{{ product.discounted_price|tl }}
                         {% else %}
-                        ₺{{ "{:,.0f}".format(product.price) }}
+                        ₺{{ product.price|tl }}
                         {% endif %}
                     </div>
                 </div>

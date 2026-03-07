@@ -210,17 +210,17 @@
             <div style="border-top: 1px solid var(--border-subtle); border-bottom: 1px solid var(--border-subtle); padding: 1.5rem 0; margin-bottom: 1.5rem;">
                 {% if product.active_discount %}
                 <div style="font-size: 0.85rem; color: var(--text-muted); text-decoration: line-through; margin-bottom: 0.25rem;">
-                    ₺{{ "{:,.0f}".format(product.price) }}
+                    ₺{{ product.price|tl }}
                 </div>
                 <div style="font-family: var(--font-serif); font-size: 2.2rem; color: var(--gold);">
-                    ₺{{ "{:,.0f}".format(product.discounted_price) }}
+                    ₺{{ product.discounted_price|tl }}
                 </div>
                 <div style="display: inline-block; background: var(--gold); color: var(--bg-primary); font-size: 0.65rem; font-weight: 600; letter-spacing: 0.1em; padding: 0.2rem 0.6rem; margin-top: 0.5rem;">
                     %{{ product.active_discount.percent }} {% if current_lang == 'en' %}OFF{% else %}İNDİRİM{% endif %}
                 </div>
                 {% else %}
                 <div style="font-family: var(--font-serif); font-size: 2.2rem; color: var(--gold);">
-                    ₺{{ "{:,.0f}".format(product.price) }}
+                    ₺{{ product.price|tl }}
                 </div>
                 {% endif %}
             </div>
@@ -399,7 +399,7 @@
                     <div class="lw-product-brand">{{ rp.brand.name }}</div>
                     <div class="lw-product-name">{{ rp.get_name(current_lang) }}</div>
                     {% if rp.reference_number %}<div class="lw-product-ref">Ref. {{ rp.reference_number }}</div>{% endif %}
-                    <div class="lw-product-price">₺{{ "{:,.0f}".format(rp.discounted_price) }}</div>
+                    <div class="lw-product-price">₺{{ rp.discounted_price|tl }}</div>
                 </div>
             </a>
             {% endfor %}

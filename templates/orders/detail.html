@@ -63,13 +63,13 @@
                     </div>
                     <div style="text-align: right; flex-shrink: 0;">
                         {% if item.discount_percent_at_purchase > 0 %}
-                        <div style="font-size: 0.75rem; color: var(--text-muted); text-decoration: line-through;">₺{{ "{:,.0f}".format(item.unit_price_at_purchase) }}</div>
-                        <div style="color: var(--gold); font-family: var(--font-serif);">₺{{ "{:,.0f}".format(item.effective_price) }}</div>
+                        <div style="font-size: 0.75rem; color: var(--text-muted); text-decoration: line-through;">₺{{ item.unit_price_at_purchase|tl }}</div>
+                        <div style="color: var(--gold); font-family: var(--font-serif);">₺{{ item.effective_price|tl }}</div>
                         {% else %}
-                        <div style="color: var(--text-primary); font-family: var(--font-serif);">₺{{ "{:,.0f}".format(item.unit_price_at_purchase) }}</div>
+                        <div style="color: var(--text-primary); font-family: var(--font-serif);">₺{{ item.unit_price_at_purchase|tl }}</div>
                         {% endif %}
                         <div style="font-size: 0.75rem; color: var(--text-muted); margin-top: 0.25rem;">× {{ item.quantity }}</div>
-                        <div style="font-size: 0.85rem; color: var(--text-primary); font-weight: 600; margin-top: 0.25rem;">₺{{ "{:,.0f}".format(item.subtotal) }}</div>
+                        <div style="font-size: 0.85rem; color: var(--text-primary); font-weight: 600; margin-top: 0.25rem;">₺{{ item.subtotal|tl }}</div>
                     </div>
                 </div>
                 {% endfor %}
@@ -78,7 +78,7 @@
                     {% if order.coupon_code %}
                     <div style="display: flex; justify-content: space-between; font-size: 0.82rem; color: var(--text-secondary);">
                         <span>{% if current_lang == 'en' %}Coupon ({{ order.coupon_code }}){% else %}Kupon ({{ order.coupon_code }}){% endif %}</span>
-                        <span style="color: #4ade80;">-₺{{ "{:,.0f}".format(order.coupon_discount) }}</span>
+                        <span style="color: #4ade80;">-₺{{ order.coupon_discount|tl }}</span>
                     </div>
                     {% endif %}
                     {% if order.installment_count and order.installment_count > 1 %}
@@ -89,7 +89,7 @@
                     {% endif %}
                     <div style="display: flex; justify-content: space-between; padding-top: 0.75rem; border-top: 1px solid var(--border);">
                         <span style="font-family: var(--font-serif); color: var(--text-primary);">{% if current_lang == 'en' %}Total{% else %}Toplam{% endif %}</span>
-                        <span style="font-family: var(--font-serif); font-size: 1.1rem; color: var(--gold);">₺{{ "{:,.0f}".format(order.total_amount) }}</span>
+                        <span style="font-family: var(--font-serif); font-size: 1.1rem; color: var(--gold);">₺{{ order.total_amount|tl }}</span>
                     </div>
                 </div>
             </div>

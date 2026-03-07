@@ -95,7 +95,7 @@
                             </td>
                             <td>{{ product.brand.name }}</td>
                             <td style="text-transform: capitalize; font-size: 0.8rem;">{{ product.gender }}</td>
-                            <td style="color: var(--gold); font-family: var(--font-serif);">{{ "%.2f"|format(product.price) }} TL</td>
+                            <td style="color: var(--gold); font-family: var(--font-serif);">₺{{ product.price|tl }}</td>
                             <td>
                                 <span class="lw-stock-badge {% if product.stock_qty == 0 %}lw-stock-zero{% elif product.stock_qty <= 5 %}lw-stock-low{% else %}lw-stock-ok{% endif %}">
                                     {{ product.stock_qty }}
