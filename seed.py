@@ -335,16 +335,20 @@ PRODUCT_EXTRA_IMAGES = {
 }
 
 SITE_IMAGES = [
-    {'key': 'hero_banner', 'label': 'Ana Sayfa Hero Banner'},
-    {'key': 'hero_banner_2', 'label': 'Ana Sayfa İkinci Banner'},
+    {'key': 'hero_banner', 'label': 'Ana Sayfa Hero Banner', 'image_path': 'patek-blp-dektop-mar26_1772693585904.jpg'},
+    {'key': 'hero_banner_2', 'label': 'Ana Sayfa İkinci Banner', 'image_path': 'omega-blp-desktop-dec25_1772694082696.jpg'},
+    {'key': 'hero_banner_3', 'label': 'Ana Sayfa Üçüncü Banner', 'image_path': 'patek-hp-carousel-desktop-feb26_1_1772693410533.jpg'},
+    {'key': 'hero_banner_4', 'label': 'Ana Sayfa Dördüncü Banner', 'image_path': 'wos-hp-tag-heuer-aquaracer-limited-edition-desktop-feb26_1772694262551.jpg'},
     {'key': 'about_banner', 'label': 'Hakkımızda Banner'},
-    {'key': 'brand_rolex', 'label': 'Rolex Marka Görseli'},
-    {'key': 'brand_patek', 'label': 'Patek Philippe Marka Görseli'},
-    {'key': 'brand_cartier', 'label': 'Cartier Marka Görseli'},
-    {'key': 'brand_grandseiko', 'label': 'Grand Seiko Marka Görseli'},
-    {'key': 'brand_omega', 'label': 'Omega Marka Görseli'},
-    {'key': 'brand_tagheuer', 'label': 'TAG Heuer Marka Görseli'},
-    {'key': 'brand_breitling', 'label': 'Breitling Marka Görseli'},
+    {'key': 'men_banner', 'label': 'Erkek Saatler Banner', 'image_path': 'm126710grnr-0004_v01_1772692793891.jpg'},
+    {'key': 'women_banner', 'label': 'Kadın Saatler Banner', 'image_path': 'm279135rbr-0001_v01_1772541601313.jpg'},
+    {'key': 'brand_rolex', 'label': 'Rolex Marka Görseli', 'image_path': 'rolex_1772463946155.jpg'},
+    {'key': 'brand_patek', 'label': 'Patek Philippe Marka Görseli', 'image_path': 'patek-philippe_1772463939085.jpg'},
+    {'key': 'brand_cartier', 'label': 'Cartier Marka Görseli', 'image_path': 'cartier_1772463907387.jpg'},
+    {'key': 'brand_grandseiko', 'label': 'Grand Seiko Marka Görseli', 'image_path': 'grand-seiko_1772463914560.jpg'},
+    {'key': 'brand_omega', 'label': 'Omega Marka Görseli', 'image_path': 'omega_1772463932983.jpg'},
+    {'key': 'brand_tagheuer', 'label': 'TAG Heuer Marka Görseli', 'image_path': 'tag-heuer_1772463952463.jpg'},
+    {'key': 'brand_breitling', 'label': 'Breitling Marka Görseli', 'image_path': 'breitling_1772463870425.jpg'},
 ]
 
 
