@@ -15,6 +15,7 @@ BRANDS = [
         'sort_order': 1,
         'description': '1905 yılında Cenevre\'de kurulan Rolex, dünyanın en prestijli saat markasıdır.',
         'description_en': 'Founded in Geneva in 1905, Rolex is the world\'s most prestigious watch brand.',
+        'cover_image_path': '17532052_2_1772730608895.jpg',
     },
     {
         'name': 'Patek Philippe',
@@ -24,6 +25,7 @@ BRANDS = [
         'sort_order': 2,
         'description': '1839\'dan bu yana üretilen her Patek Philippe saati, saat yapım sanatının zirvesini temsil eder.',
         'description_en': 'Every Patek Philippe watch made since 1839 represents the pinnacle of watchmaking art.',
+        'cover_image_path': '44214300-mpl4db17pw8ibi1qa25qvcdk-ExtraLarge_1772730697264.jpg',
     },
     {
         'name': 'Cartier',
@@ -33,6 +35,7 @@ BRANDS = [
         'sort_order': 3,
         'description': 'Cartier, 1847\'den bu yana mücevher ve saatçilikte zarafet ile lüksün simgesidir.',
         'description_en': 'Cartier has been the symbol of elegance and luxury in jewelry and watchmaking since 1847.',
+        'cover_image_path': '17311304_2_1772730739147.jpg',
     },
     {
         'name': 'Grand Seiko',
@@ -42,6 +45,7 @@ BRANDS = [
         'sort_order': 4,
         'description': 'Japonya\'nın zanaatkarlık geleneğini modern teknolojiyle harmanlayan Grand Seiko, eşsiz bir hassasiyet sunar.',
         'description_en': 'Grand Seiko blends Japan\'s craftsmanship tradition with modern technology for unparalleled precision.',
+        'cover_image_path': '18400346_3_1772730767637.jpg',
     },
     {
         'name': 'Omega',
@@ -51,6 +55,7 @@ BRANDS = [
         'sort_order': 5,
         'description': 'NASA\'nın resmi saati ve James Bond\'un tercihi olan Omega, 1848\'den bu yana mükemmeliyeti temsil eder.',
         'description_en': 'Official watch of NASA and James Bond\'s choice, Omega has represented excellence since 1848.',
+        'cover_image_path': '17331958_3_1772731091940.jpg',
     },
     {
         'name': 'TAG Heuer',
@@ -60,6 +65,7 @@ BRANDS = [
         'sort_order': 6,
         'description': '1860\'dan bu yana spor ve hassasiyetin simgesi olan TAG Heuer, kronograf saatlerin öncüsüdür.',
         'description_en': 'A symbol of sport and precision since 1860, TAG Heuer is the pioneer of chronograph watches.',
+        'cover_image_path': '17382259_3_1772730819209.jpg',
     },
     {
         'name': 'Breitling',
@@ -69,6 +75,7 @@ BRANDS = [
         'sort_order': 7,
         'description': 'Havacılar ve deniz adamları için tasarlanan Breitling saatleri, 1884\'ten bu yana güvenilirliğin sembolüdür.',
         'description_en': 'Designed for aviators and seafarers, Breitling watches have been a symbol of reliability since 1884.',
+        'cover_image_path': '17531831_3_1772730855685.jpg',
     },
 ]
 

@@ -7,6 +7,7 @@ with app.app_context():
     stamp()
     needs_seed = (
         Brand.query.count() == 0 or
+        Brand.query.filter(Brand.cover_image_path == None).count() > 0 or
         Product.query.filter(Product.image_path == None).count() > 0 or
         ProductImage.query.count() == 0 or
         SiteImage.query.filter(SiteImage.image_path == None).count() > 0
