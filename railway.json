@@ -4,7 +4,7 @@
     "builder": "NIXPACKS"
   },
   "deploy": {
-    "startCommand": "flask db upgrade && gunicorn app:app",
+    "startCommand": "mkdir -p instance && flask db upgrade && gunicorn app:app",
     "healthcheckPath": "/",
     "restartPolicyType": "ON_FAILURE"
   }
