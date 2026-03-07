@@ -60,6 +60,15 @@ limiter.limit('10 per hour')(app.view_functions['auth.register'])
 limiter.limit('5 per hour')(app.view_functions['auth.forgot_password'])
 limiter.limit('20 per hour')(app.view_functions['shop.newsletter_subscribe'])
 
+@app.route('/debug-uploads')
+def debug_uploads():
+    import json
+    uploads = os.path.join(app.root_path, 'static', 'uploads')
+    if os.path.exists(uploads):
+        files = os.listdir(uploads)
+        return json.dumps({'exists': True, 'count': len(files), 'sample': files[:5]})
+    return json.dumps({'exists': False})
+
 @app.route('/set-newsletter-shown', methods=['POST'])
 def set_newsletter_shown():
     session['newsletter_popup_shown'] = True
