@@ -5,4 +5,4 @@ instance/
 venv/
 *.egg-info/
 .DS_Store
-static/uploads/
+

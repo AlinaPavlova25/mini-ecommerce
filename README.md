@@ -2,6 +2,10 @@
 
 Flask tabanlı lüks saat satış ve yönetim sistemi.
 
+**Canlı Demo:** https://web-production-86f29.up.railway.app
+
+---
+
 ## Hızlı Başlangıç
 
 ```bash
@@ -60,6 +64,7 @@ Tarayıcıda aç: http://127.0.0.1:5000
 - **Frontend:** Jinja2, Custom CSS (Bootstrap bağımlılığı yok)
 - **Görsel İşleme:** Pillow
 - **Güvenlik:** python-dotenv (.env), rate limiting, rol bazlı yetkilendirme
+- **Deploy:** Railway (gunicorn)
 
 ---
 
@@ -69,7 +74,10 @@ Tarayıcıda aç: http://127.0.0.1:5000
 mini-ecommerce/
 ├── app.py                  # Ana uygulama ve konfigürasyon
 ├── models.py               # Veritabanı modelleri
-├── seed.py                 # Veritabanı seed scripti
+├── seed.py                 # Veritabanı seed scripti (görsel yolları dahil)
+├── init_db.py              # Railway başlangıç scripti
+├── Procfile                # Railway/gunicorn başlatma
+├── railway.json            # Railway deploy konfigürasyonu
 ├── .env                    # Ortam değişkenleri (gitignore'da)
 ├── routes/
 │   ├── admin.py            # Admin paneli route'ları
@@ -81,7 +89,7 @@ mini-ecommerce/
 │   ├── css/
 │   │   ├── custom.css
 │   │   └── admin.css
-│   └── uploads/            # Yüklenen görseller (gitignore'da)
+│   └── uploads/            # Ürün ve site görselleri
 ├── utils/
 │   ├── cart.py
 │   ├── i18n.py
@@ -98,7 +106,7 @@ mini-ecommerce/
 
 ## Ortam Değişkenleri
 
-`.env` dosyası oluşturun (`.env` örneği):
+`.env` dosyası oluşturun:
 
 ```
 SECRET_KEY=gizli-anahtar-buraya
@@ -110,21 +118,32 @@ MAIL_PASSWORD=
 MAIL_DEFAULT_SENDER=noreply@luxwatch.com
 ```
 
+Railway'de **Variables** sekmesinden `SECRET_KEY` ekleyin.
+
 ---
 
 ## Veritabanı
 
-Migration ile güncel şemayı uygulayın:
+İlk kurulumda:
+
+```bash
+python seed.py
+```
+
+Migration uygulamak için:
 
 ```bash
 flask db upgrade
 ```
 
-Sıfırdan oluşturmak için:
+---
 
-```bash
-python seed.py
-```
+## Railway Deploy
+
+1. GitHub reposunu Railway'e bağlayın
+2. Variables sekmesinden `SECRET_KEY` ekleyin
+3. Deploy otomatik başlar — `init_db.py` tabloları oluşturur ve seed çalıştırır
+4. Admin panelinden görsel ve banner yükleyin
 
 ---
 
@@ -141,11 +160,11 @@ PAID → PREPARING → SHIPPED → OUT_FOR_DELIVERY → DELIVERED
 
 ## Rol Sistemi
 
-| Rol       | Yetki                          |
-|-----------|-------------------------------|
-| user      | Standart müşteri               |
-| moderator | Admin paneline erişim          |
-| admin     | Tam yetki                      |
+| Rol       | Yetki                 |
+|-----------|-----------------------|
+| user      | Standart müşteri      |
+| moderator | Admin paneline erişim |
+| admin     | Tam yetki             |
 
 ---
 
