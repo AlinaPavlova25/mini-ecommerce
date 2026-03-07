@@ -1,6 +1,27 @@
 {% extends "base.html" %}
 {% block title %}Kampanya Yönetimi — Admin LuxWatch{% endblock %}
-{% block extra_css %}<link rel="stylesheet" href="{{ url_for('static', filename='css/admin.css') }}">{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/admin.css') }}">
+<style>
+.cp-filter {
+    background: none;
+    border: 1px solid var(--border-subtle);
+    color: var(--text-muted);
+    font-size: 0.65rem;
+    letter-spacing: 0.08em;
+    padding: 0.2rem 0.6rem;
+    cursor: pointer;
+    font-family: var(--font-sans);
+    transition: all 0.15s;
+    white-space: nowrap;
+}
+.cp-filter:hover { color: var(--gold); border-color: rgba(198,167,94,0.4); }
+.cp-filter.active { background: rgba(198,167,94,0.12); color: var(--gold); border-color: var(--gold-dark); }
+.cp-item:hover { background: rgba(198,167,94,0.06); }
+.cp-item.selected { background: rgba(198,167,94,0.12); color: var(--gold); }
+</style>
+{% endblock %}
 
 {% block content %}
 <div class="lw-admin-wrap">
@@ -70,12 +91,49 @@
 
                     <div class="lw-form-group">
                         <label class="lw-label">Ürün *</label>
-                        <select name="product_id" class="lw-input" required>
-                            <option value="">Seçiniz...</option>
-                            {% for product in products %}
-                            <option value="{{ product.id }}">{{ product.name }} ({{ product.brand.name }})</option>
-                            {% endfor %}
-                        </select>
+                        <input type="hidden" name="product_id" id="cp-product-id">
+
+                        <div id="cp-selected-display"
+                             onclick="toggleProductPicker()"
+                             style="display:flex; justify-content:space-between; align-items:center; cursor:pointer; padding:0.55rem 0.85rem; background:var(--bg-elevated); border:1px solid var(--border-subtle); color:var(--text-muted); font-size:0.82rem; user-select:none;">
+                            <span id="cp-selected-text">Seçiniz...</span>
+                            <i class="fa-solid fa-chevron-down" id="cp-chevron" style="font-size:0.7rem; transition:transform 0.2s;"></i>
+                        </div>
+
+                        <div id="cp-picker" style="display:none; border:1px solid var(--border-subtle); border-top:none; background:var(--bg-elevated); max-height:360px; overflow:hidden; flex-direction:column;">
+                            <div style="padding:0.6rem 0.75rem; border-bottom:1px solid var(--border-subtle); background:var(--bg-secondary);">
+                                <input type="text" id="cp-search" placeholder="Ürün adı veya marka ara..." autocomplete="off"
+                                       style="width:100%; background:var(--bg-primary); border:1px solid var(--border-subtle); color:var(--text-primary); padding:0.4rem 0.7rem; font-size:0.8rem; outline:none;">
+                            </div>
+                            <div style="display:flex; gap:0.4rem; flex-wrap:wrap; padding:0.5rem 0.75rem; border-bottom:1px solid var(--border-subtle); background:var(--bg-secondary);">
+                                <button type="button" class="cp-filter active" data-filter="all" onclick="setCpFilter('all',this)">Tümü</button>
+                                <button type="button" class="cp-filter" data-filter="erkek" onclick="setCpFilter('erkek',this)">Erkek</button>
+                                <button type="button" class="cp-filter" data-filter="kadin" onclick="setCpFilter('kadin',this)">Kadın</button>
+                                <button type="button" class="cp-filter" data-filter="unisex" onclick="setCpFilter('unisex',this)">Unisex</button>
+                                <div style="width:1px; background:var(--border-subtle); margin:0 0.2rem;"></div>
+                                {% for brand in products | map(attribute='brand') | unique(attribute='id') | sort(attribute='name') %}
+                                <button type="button" class="cp-filter" data-filter="brand-{{ brand.id }}" onclick="setCpFilter('brand-{{ brand.id }}',this)">{{ brand.name }}</button>
+                                {% endfor %}
+                                <div style="width:1px; background:var(--border-subtle); margin:0 0.2rem;"></div>
+                                <button type="button" class="cp-filter" data-filter="alpha" onclick="setCpFilter('alpha',this)">A–Z</button>
+                            </div>
+                            <div id="cp-list" style="overflow-y:auto; max-height:230px; font-size:0.82rem;">
+                                {% for product in products | sort(attribute='name') %}
+                                <div class="cp-item"
+                                     data-id="{{ product.id }}"
+                                     data-name="{{ product.name | lower }}"
+                                     data-brand="{{ product.brand.name | lower }}"
+                                     data-brand-id="{{ product.brand.id }}"
+                                     data-gender="{{ product.gender }}"
+                                     onclick="selectCpProduct({{ product.id }}, {{ (product.name ~ ' (' ~ product.brand.name ~ ')') | tojson }})"
+                                     style="padding:0.55rem 0.85rem; cursor:pointer; border-bottom:1px solid rgba(198,167,94,0.07); display:flex; justify-content:space-between; align-items:center; transition:background 0.15s;">
+                                    <span>{{ product.name }}</span>
+                                    <span style="font-size:0.7rem; color:var(--text-muted);">{{ product.brand.name }} · {{ product.gender }}</span>
+                                </div>
+                                {% endfor %}
+                                <div id="cp-empty" style="display:none; padding:1.5rem; text-align:center; color:var(--text-muted); font-size:0.8rem;">Sonuç bulunamadı.</div>
+                            </div>
+                        </div>
                     </div>
 
                     <div class="lw-form-group">
@@ -103,4 +161,87 @@
 
     </main>
 </div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+var cpOpen = false;
+var cpActiveFilter = 'all';
+
+function toggleProductPicker() {
+    var panel = document.getElementById('cp-picker');
+    var chevron = document.getElementById('cp-chevron');
+    cpOpen = !cpOpen;
+    panel.style.display = cpOpen ? 'flex' : 'none';
+    panel.style.flexDirection = 'column';
+    chevron.style.transform = cpOpen ? 'rotate(180deg)' : '';
+    if (cpOpen) { setTimeout(function(){ document.getElementById('cp-search').focus(); }, 50); renderCpList(); }
+}
+
+function setCpFilter(filter, btn) {
+    cpActiveFilter = filter;
+    document.querySelectorAll('.cp-filter').forEach(function(b) { b.classList.remove('active'); });
+    btn.classList.add('active');
+    renderCpList();
+}
+
+function renderCpList() {
+    var search = document.getElementById('cp-search').value.toLowerCase().trim();
+    var list = document.getElementById('cp-list');
+    var items = Array.from(list.querySelectorAll('.cp-item'));
+
+    if (cpActiveFilter === 'alpha') {
+        items.sort(function(a, b) { return a.dataset.name.localeCompare(b.dataset.name, 'tr'); });
+        items.forEach(function(item) { list.insertBefore(item, document.getElementById('cp-empty')); });
+    }
+
+    var visible = 0;
+    items.forEach(function(item) {
+        var matchSearch = !search || item.dataset.name.includes(search) || item.dataset.brand.includes(search);
+        var matchFilter = true;
+        if (cpActiveFilter === 'erkek')  matchFilter = item.dataset.gender === 'erkek';
+        else if (cpActiveFilter === 'kadin')  matchFilter = item.dataset.gender === 'kadin';
+        else if (cpActiveFilter === 'unisex') matchFilter = item.dataset.gender === 'unisex';
+        else if (cpActiveFilter.startsWith('brand-')) matchFilter = item.dataset.brandId === cpActiveFilter.replace('brand-', '');
+        var show = matchSearch && matchFilter;
+        item.style.display = show ? '' : 'none';
+        if (show) visible++;
+    });
+
+    document.getElementById('cp-empty').style.display = visible === 0 ? 'block' : 'none';
+}
+
+function selectCpProduct(id, label) {
+    document.getElementById('cp-product-id').value = id;
+    document.getElementById('cp-selected-text').textContent = label;
+    document.getElementById('cp-selected-text').style.color = 'var(--text-primary)';
+    document.getElementById('cp-selected-display').style.borderColor = '';
+    document.querySelectorAll('.cp-item').forEach(function(i) {
+        i.classList.toggle('selected', parseInt(i.dataset.id) === id);
+    });
+    cpOpen = true;
+    toggleProductPicker();
+}
+
+document.getElementById('cp-search').addEventListener('input', renderCpList);
+
+document.addEventListener('click', function(e) {
+    if (!cpOpen) return;
+    var wrap = document.getElementById('cp-selected-display').parentElement;
+    if (!wrap.contains(e.target)) {
+        cpOpen = true;
+        toggleProductPicker();
+    }
+});
+
+document.querySelector('form[action*="campaign_new"]').addEventListener('submit', function(e) {
+    if (!document.getElementById('cp-product-id').value) {
+        e.preventDefault();
+        document.getElementById('cp-selected-display').style.borderColor = '#f87171';
+        document.getElementById('cp-selected-text').textContent = 'Lütfen bir ürün seçin';
+        document.getElementById('cp-selected-text').style.color = '#f87171';
+        if (!cpOpen) toggleProductPicker();
+    }
+});
+</script>
 {% endblock %}

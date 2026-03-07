@@ -9,10 +9,13 @@ db = SQLAlchemy()
 class User(UserMixin, db.Model):
     __tablename__ = 'users'
 
+    ROLES = ['user', 'moderator', 'admin']
+
     id = db.Column(db.Integer, primary_key=True)
     email = db.Column(db.String(120), unique=True, nullable=False, index=True)
     password_hash = db.Column(db.String(256), nullable=False)
     is_admin = db.Column(db.Boolean, default=False, nullable=False)
+    role = db.Column(db.String(20), nullable=False, default='user')
     full_name = db.Column(db.String(100))
     phone = db.Column(db.String(20))
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
@@ -28,6 +31,11 @@ class User(UserMixin, db.Model):
 
     def check_password(self, password):
         return check_password_hash(self.password_hash, password)
+
+    def has_role(self, *roles):
+        if self.is_admin:
+            return True
+        return self.role in roles
 
     def __repr__(self):
         return f'<User {self.email}>'
@@ -79,6 +87,7 @@ class Brand(db.Model):
     description = db.Column(db.Text)
     description_en = db.Column(db.Text)
     logo_path = db.Column(db.String(200))
+    cover_image_path = db.Column(db.String(200))
     founded_year = db.Column(db.Integer)
     country = db.Column(db.String(100))
     sort_order = db.Column(db.Integer, default=0)
@@ -170,6 +179,24 @@ class ProductImage(db.Model):
         return f'<ProductImage {self.id} - Product {self.product_id}>'
 
 
+class CartItem(db.Model):
+    __tablename__ = 'cart_items'
+
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
+    product_id = db.Column(db.Integer, db.ForeignKey('products.id'), nullable=False)
+    quantity = db.Column(db.Integer, nullable=False, default=1)
+    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+
+    user = db.relationship('User', backref=db.backref('cart_items', cascade='all, delete-orphan'))
+    product = db.relationship('Product')
+
+    __table_args__ = (db.UniqueConstraint('user_id', 'product_id', name='_user_product_cart_uc'),)
+
+    def __repr__(self):
+        return f'<CartItem User:{self.user_id} Product:{self.product_id} Qty:{self.quantity}>'
+
+
 class DiscountRule(db.Model):
     __tablename__ = 'discount_rules'
 
@@ -227,12 +254,30 @@ class SiteImage(db.Model):
         return f'<SiteImage {self.key}>'
 
 
+class StockNotification(db.Model):
+    __tablename__ = 'stock_notifications'
+
+    id = db.Column(db.Integer, primary_key=True)
+    product_id = db.Column(db.Integer, db.ForeignKey('products.id'), nullable=False)
+    email = db.Column(db.String(120), nullable=False)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    notified = db.Column(db.Boolean, default=False, nullable=False)
+
+    product = db.relationship('Product')
+
+    __table_args__ = (db.UniqueConstraint('product_id', 'email', name='_product_email_notif_uc'),)
+
+    def __repr__(self):
+        return f'<StockNotification Product:{self.product_id} Email:{self.email}>'
+
+
 class Order(db.Model):
     __tablename__ = 'orders'
 
     STATUS_CHOICES = [
         'PAID', 'PREPARING', 'SHIPPED', 'OUT_FOR_DELIVERY',
-        'DELIVERED', 'CANCEL_REQUESTED', 'CANCELED', 'RETURN_ARRIVED'
+        'DELIVERED', 'CANCEL_REQUESTED', 'CANCELED',
+        'RETURN_REQUESTED', 'RETURN_ARRIVED'
     ]
 
     id = db.Column(db.Integer, primary_key=True)
@@ -245,6 +290,10 @@ class Order(db.Model):
     coupon_discount = db.Column(db.Numeric(10, 2), default=0)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    delivered_at = db.Column(db.DateTime, nullable=True)
+    return_code = db.Column(db.String(20), nullable=True)
+    return_requested_at = db.Column(db.DateTime, nullable=True)
+    installment_count = db.Column(db.Integer, default=1, nullable=False)
 
     user = db.relationship('User', back_populates='orders')
     items = db.relationship('OrderItem', back_populates='order', cascade='all, delete-orphan')
@@ -253,7 +302,22 @@ class Order(db.Model):
         return self.status in ['PAID', 'PREPARING']
 
     def can_request_cancel(self):
-        return self.status not in ['DELIVERED', 'CANCELED', 'RETURN_ARRIVED']
+        return self.status in ['PAID', 'PREPARING', 'CANCEL_REQUESTED']
+
+    def can_request_return(self):
+        if self.status != 'DELIVERED':
+            return False
+        if self.return_requested_at:
+            return False
+        deadline = self.delivered_at or self.updated_at
+        return (datetime.utcnow() - deadline).days <= 14
+
+    def return_deadline_days_left(self):
+        if self.status != 'DELIVERED':
+            return 0
+        deadline = self.delivered_at or self.updated_at
+        left = 14 - (datetime.utcnow() - deadline).days
+        return max(0, left)
 
     def __repr__(self):
         return f'<Order {self.id} - {self.status}>'
@@ -264,7 +328,7 @@ class OrderItem(db.Model):
 
     id = db.Column(db.Integer, primary_key=True)
     order_id = db.Column(db.Integer, db.ForeignKey('orders.id'), nullable=False)
-    product_id = db.Column(db.Integer, db.ForeignKey('products.id'), nullable=False)
+    product_id = db.Column(db.Integer, db.ForeignKey('products.id'), nullable=True)
     quantity = db.Column(db.Integer, nullable=False)
     unit_price_at_purchase = db.Column(db.Numeric(10, 2), nullable=False)
     discount_percent_at_purchase = db.Column(db.Integer, default=0, nullable=False)

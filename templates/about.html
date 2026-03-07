@@ -1,0 +1,240 @@
+{% extends "base.html" %}
+
+{% block title %}{% if current_lang == 'en' %}About Us{% else %}Hakkımızda{% endif %} — LuxWatch{% endblock %}
+
+{% block content %}
+
+<!-- Hero -->
+<div style="position: relative; background: linear-gradient(180deg, var(--bg-secondary) 0%, var(--bg-primary) 100%); border-bottom: 1px solid var(--border-subtle); padding: 5rem 2rem 4rem; text-align: center; overflow: hidden;">
+    <div style="position: absolute; inset: 0; background: radial-gradient(ellipse at 50% 0%, rgba(198,167,94,0.07) 0%, transparent 65%); pointer-events: none;"></div>
+    <div style="position: relative; z-index: 1;">
+        <div style="font-size: 0.62rem; letter-spacing: 0.35em; text-transform: uppercase; color: var(--gold); font-family: var(--font-sans); margin-bottom: 1rem;">
+            {% if current_lang == 'en' %}Our Story{% else %}Hikayemiz{% endif %}
+        </div>
+        <h1 style="font-family: var(--font-serif); font-size: clamp(2.5rem, 6vw, 4rem); margin-bottom: 1.5rem; letter-spacing: 0.03em;">
+            {% if current_lang == 'en' %}About LuxWatch{% else %}LuxWatch Hakkında{% endif %}
+        </h1>
+        <div class="lw-divider"></div>
+        <p style="max-width: 580px; margin: 1.5rem auto 0; color: var(--text-secondary); font-size: 0.9rem; line-height: 1.9;">
+            {% if current_lang == 'en' %}
+                We are a curated platform dedicated to connecting discerning collectors with the world's finest timepieces.
+            {% else %}
+                Dünyanın en seçkin saatlerini ayrımcı koleksiyonerlere ulaştırmak için kurulmuş özenli bir platform.
+            {% endif %}
+        </p>
+    </div>
+</div>
+
+<!-- Misyon -->
+<section style="padding: 5rem 2rem; background: var(--bg-primary);">
+    <div class="lw-container">
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 5rem; align-items: center;">
+            <div>
+                <div style="font-size: 0.62rem; letter-spacing: 0.3em; text-transform: uppercase; color: var(--gold); font-family: var(--font-sans); margin-bottom: 1rem;">
+                    {% if current_lang == 'en' %}Mission{% else %}Misyon{% endif %}
+                </div>
+                <h2 style="font-family: var(--font-serif); font-size: clamp(1.6rem, 3vw, 2.4rem); margin-bottom: 1.5rem; line-height: 1.2;">
+                    {% if current_lang == 'en' %}The Art of Timeless Precision{% else %}Zamansız Hassasiyetin Sanatı{% endif %}
+                </h2>
+                <div class="lw-divider" style="margin-bottom: 1.5rem;"></div>
+                <p style="color: var(--text-secondary); font-size: 0.88rem; line-height: 2; margin-bottom: 1.25rem;">
+                    {% if current_lang == 'en' %}
+                        LuxWatch was founded with a singular vision: to make the world's most prestigious timepieces accessible to true enthusiasts. Every watch in our collection is carefully authenticated, documented, and presented with the respect it deserves.
+                    {% else %}
+                        LuxWatch, dünyanın en prestijli saatlerini gerçek meraklılara ulaştırma hedefiyle kuruldu. Koleksiyonumuzdaki her saat özenle doğrulanmış, belgelenmiş ve hak ettiği özenle sunulmaktadır.
+                    {% endif %}
+                </p>
+                <p style="color: var(--text-secondary); font-size: 0.88rem; line-height: 2;">
+                    {% if current_lang == 'en' %}
+                        We believe that a fine timepiece is more than an instrument — it is a statement of craftsmanship, history, and personal expression that transcends generations.
+                    {% else %}
+                        İnce bir saatin bir araçtan çok daha fazlası olduğuna inanıyoruz; o, nesiller boyu aktarılan ustalık, tarih ve kişisel ifadenin bir simgesidir.
+                    {% endif %}
+                </p>
+            </div>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                <div style="background: var(--bg-card); border: 1px solid var(--border-subtle); padding: 2rem; text-align: center;">
+                    <div style="font-family: var(--font-serif); font-size: 2.5rem; color: var(--gold); line-height: 1;">500+</div>
+                    <div style="font-size: 0.6rem; letter-spacing: 0.2em; text-transform: uppercase; color: var(--text-muted); margin-top: 0.5rem;">
+                        {% if current_lang == 'en' %}Timepieces{% else %}Saat Modeli{% endif %}
+                    </div>
+                </div>
+                <div style="background: var(--bg-card); border: 1px solid var(--border-subtle); padding: 2rem; text-align: center;">
+                    <div style="font-family: var(--font-serif); font-size: 2.5rem; color: var(--gold); line-height: 1;">15+</div>
+                    <div style="font-size: 0.6rem; letter-spacing: 0.2em; text-transform: uppercase; color: var(--text-muted); margin-top: 0.5rem;">
+                        {% if current_lang == 'en' %}Brands{% else %}Marka{% endif %}
+                    </div>
+                </div>
+                <div style="background: var(--bg-card); border: 1px solid var(--border-subtle); padding: 2rem; text-align: center;">
+                    <div style="font-family: var(--font-serif); font-size: 2.5rem; color: var(--gold); line-height: 1;">10K+</div>
+                    <div style="font-size: 0.6rem; letter-spacing: 0.2em; text-transform: uppercase; color: var(--text-muted); margin-top: 0.5rem;">
+                        {% if current_lang == 'en' %}Happy Clients{% else %}Mutlu Müşteri{% endif %}
+                    </div>
+                </div>
+                <div style="background: var(--bg-card); border: 1px solid var(--border-subtle); padding: 2rem; text-align: center;">
+                    <div style="font-family: var(--font-serif); font-size: 2.5rem; color: var(--gold); line-height: 1;">%100</div>
+                    <div style="font-size: 0.6rem; letter-spacing: 0.2em; text-transform: uppercase; color: var(--text-muted); margin-top: 0.5rem;">
+                        {% if current_lang == 'en' %}Authentic{% else %}Orijinal{% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Değerler -->
+<section style="padding: 5rem 2rem; background: var(--bg-secondary); border-top: 1px solid var(--border-subtle); border-bottom: 1px solid var(--border-subtle);">
+    <div class="lw-container">
+        <div style="text-align: center; margin-bottom: 3.5rem;">
+            <div class="lw-eyebrow">{% if current_lang == 'en' %}What We Stand For{% else %}Değerlerimiz{% endif %}</div>
+            <h2 style="font-family: var(--font-serif); font-size: 2rem;">
+                {% if current_lang == 'en' %}Our Principles{% else %}İlkelerimiz{% endif %}
+            </h2>
+        </div>
+        <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 1.5rem;">
+            <div style="background: var(--bg-card); border: 1px solid var(--border-subtle); padding: 2.5rem; text-align: center;">
+                <div style="font-size: 1.8rem; color: var(--gold); margin-bottom: 1.25rem;"><i class="fa-solid fa-shield-halved"></i></div>
+                <h3 style="font-family: var(--font-serif); font-size: 1.1rem; margin-bottom: 0.75rem;">
+                    {% if current_lang == 'en' %}Authenticity{% else %}Özgünlük{% endif %}
+                </h3>
+                <p style="color: var(--text-secondary); font-size: 0.82rem; line-height: 1.8;">
+                    {% if current_lang == 'en' %}Every timepiece is verified by our expert team and accompanied by full documentation.{% else %}Her saat uzman ekibimiz tarafından doğrulanmış ve eksiksiz belgesiyle teslim edilmektedir.{% endif %}
+                </p>
+            </div>
+            <div style="background: var(--bg-card); border: 1px solid var(--border-subtle); padding: 2.5rem; text-align: center;">
+                <div style="font-size: 1.8rem; color: var(--gold); margin-bottom: 1.25rem;"><i class="fa-solid fa-gem"></i></div>
+                <h3 style="font-family: var(--font-serif); font-size: 1.1rem; margin-bottom: 0.75rem;">
+                    {% if current_lang == 'en' %}Excellence{% else %}Mükemmellik{% endif %}
+                </h3>
+                <p style="color: var(--text-secondary); font-size: 0.82rem; line-height: 1.8;">
+                    {% if current_lang == 'en' %}We source only from authorized distributors and certified dealers to guarantee quality.{% else %}Kaliteyi garanti etmek için yalnızca yetkili distribütörlerden ve sertifikalı bayilerden temin ediyoruz.{% endif %}
+                </p>
+            </div>
+            <div style="background: var(--bg-card); border: 1px solid var(--border-subtle); padding: 2.5rem; text-align: center;">
+                <div style="font-size: 1.8rem; color: var(--gold); margin-bottom: 1.25rem;"><i class="fa-solid fa-handshake"></i></div>
+                <h3 style="font-family: var(--font-serif); font-size: 1.1rem; margin-bottom: 0.75rem;">
+                    {% if current_lang == 'en' %}Trust{% else %}Güven{% endif %}
+                </h3>
+                <p style="color: var(--text-secondary); font-size: 0.82rem; line-height: 1.8;">
+                    {% if current_lang == 'en' %}A decade of trust with thousands of satisfied collectors across Turkey and beyond.{% else %}Türkiye ve ötesinde binlerce memnun koleksiyoner ile onlarca yıllık güven ilişkisi.{% endif %}
+                </p>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- İletişim -->
+<section style="padding: 5rem 2rem; background: var(--bg-primary);">
+    <div class="lw-container">
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 4rem; align-items: start;">
+            <div>
+                <div style="font-size: 0.62rem; letter-spacing: 0.3em; text-transform: uppercase; color: var(--gold); font-family: var(--font-sans); margin-bottom: 1rem;">
+                    {% if current_lang == 'en' %}Contact{% else %}İletişim{% endif %}
+                </div>
+                <h2 style="font-family: var(--font-serif); font-size: clamp(1.6rem, 3vw, 2.2rem); margin-bottom: 1.5rem;">
+                    {% if current_lang == 'en' %}Get in Touch{% else %}Bize Ulaşın{% endif %}
+                </h2>
+                <div class="lw-divider" style="margin-bottom: 2rem;"></div>
+
+                <div style="display: flex; flex-direction: column; gap: 1.5rem;">
+                    <div style="display: flex; gap: 1.25rem; align-items: flex-start;">
+                        <div style="width: 40px; height: 40px; border: 1px solid var(--border-subtle); display: flex; align-items: center; justify-content: center; flex-shrink: 0; color: var(--gold);">
+                            <i class="fa-brands fa-whatsapp"></i>
+                        </div>
+                        <div>
+                            <div style="font-size: 0.65rem; letter-spacing: 0.15em; text-transform: uppercase; color: var(--text-muted); margin-bottom: 0.3rem;">WhatsApp</div>
+                            <a href="https://wa.me/905056361208" target="_blank" rel="noopener noreferrer" style="color: var(--text-primary); font-size: 0.95rem;">+90 505 636 12 08</a>
+                        </div>
+                    </div>
+                    <div style="display: flex; gap: 1.25rem; align-items: flex-start;">
+                        <div style="width: 40px; height: 40px; border: 1px solid var(--border-subtle); display: flex; align-items: center; justify-content: center; flex-shrink: 0; color: var(--gold);">
+                            <i class="fa-regular fa-clock"></i>
+                        </div>
+                        <div>
+                            <div style="font-size: 0.65rem; letter-spacing: 0.15em; text-transform: uppercase; color: var(--text-muted); margin-bottom: 0.3rem;">
+                                {% if current_lang == 'en' %}Working Hours{% else %}Çalışma Saatleri{% endif %}
+                            </div>
+                            <div style="color: var(--text-primary); font-size: 0.88rem; line-height: 1.8;">
+                                {% if current_lang == 'en' %}Monday – Saturday: 09:00 – 20:00{% else %}Pazartesi – Cumartesi: 09:00 – 20:00{% endif %}<br>
+                                {% if current_lang == 'en' %}Sunday: 10:00 – 18:00{% else %}Pazar: 10:00 – 18:00{% endif %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div style="margin-top: 2.5rem;">
+                    <a href="https://wa.me/905056361208" target="_blank" rel="noopener noreferrer"
+                       style="display: inline-flex; align-items: center; gap: 0.75rem; background: #25D366; color: #fff; padding: 0.85rem 2rem; font-family: var(--font-sans); font-size: 0.75rem; font-weight: 600; letter-spacing: 0.15em; text-transform: uppercase; text-decoration: none; border-radius: 2px; transition: background 0.2s;"
+                       onmouseover="this.style.background='#1ebe5d'"
+                       onmouseout="this.style.background='#25D366'">
+                        <i class="fa-brands fa-whatsapp" style="font-size: 1.1rem;"></i>
+                        <span>{% if current_lang == 'en' %}Chat on WhatsApp{% else %}WhatsApp'tan Yaz{% endif %}</span>
+                    </a>
+                </div>
+            </div>
+
+            <div style="background: var(--bg-card); border: 1px solid var(--border-subtle); padding: 2.5rem;">
+                <h3 style="font-family: var(--font-serif); font-size: 1.1rem; margin-bottom: 1.75rem; padding-bottom: 1rem; border-bottom: 1px solid var(--border-subtle);">
+                    {% if current_lang == 'en' %}Send a Message{% else %}Mesaj Gönderin{% endif %}
+                </h3>
+                <div style="display: flex; flex-direction: column; gap: 1.25rem;">
+                    <div class="lw-form-group">
+                        <label class="lw-label">{% if current_lang == 'en' %}Full Name{% else %}Ad Soyad{% endif %}</label>
+                        <input type="text" class="lw-input" placeholder="{% if current_lang == 'en' %}Your full name{% else %}Adınız Soyadınız{% endif %}">
+                    </div>
+                    <div class="lw-form-group">
+                        <label class="lw-label">{% if current_lang == 'en' %}E-mail{% else %}E-posta{% endif %}</label>
+                        <input type="email" class="lw-input" placeholder="{% if current_lang == 'en' %}your@email.com{% else %}e-posta@adresiniz.com{% endif %}">
+                    </div>
+                    <div class="lw-form-group">
+                        <label class="lw-label">{% if current_lang == 'en' %}Message{% else %}Mesaj{% endif %}</label>
+                        <textarea class="lw-input" rows="5" placeholder="{% if current_lang == 'en' %}How can we help you?{% else %}Size nasıl yardımcı olabiliriz?{% endif %}" style="resize: vertical;"></textarea>
+                    </div>
+                    <a href="https://wa.me/905056361208" target="_blank" rel="noopener noreferrer" class="btn-gold-solid" style="justify-content: center; text-align: center;">
+                        <i class="fa-brands fa-whatsapp"></i>
+                        <span>{% if current_lang == 'en' %}Send via WhatsApp{% else %}WhatsApp ile Gönder{% endif %}</span>
+                    </a>
+                    <p style="font-size: 0.72rem; color: var(--text-muted); text-align: center;">
+                        {% if current_lang == 'en' %}Clicking will open WhatsApp with your message pre-filled.{% else %}Butona tıklayınca WhatsApp otomatik açılır.{% endif %}
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+{% endblock %}
+
+{% block extra_css %}
+<style>
+@media (max-width: 768px) {
+    section > .lw-container > div[style*="grid-template-columns: 1fr 1fr"],
+    section > .lw-container > div[style*="grid-template-columns: repeat(3"] {
+        display: block !important;
+    }
+    section > .lw-container > div[style*="grid-template-columns: 1fr 1fr"] > div {
+        margin-bottom: 2rem;
+    }
+}
+</style>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+(function() {
+    var nameInput = document.querySelector('input[placeholder="{{ "Your full name" if current_lang == "en" else "Adınız Soyadınız" }}"]');
+    var msgInput = document.querySelector('textarea');
+    var waLink = document.querySelector('a[href^="https://wa.me"]');
+    if (!waLink || !msgInput) return;
+    waLink.addEventListener('click', function(e) {
+        var name = nameInput ? nameInput.value.trim() : '';
+        var msg = msgInput.value.trim();
+        if (msg) {
+            e.preventDefault();
+            var text = (name ? name + ': ' : '') + msg;
+            window.open('https://wa.me/905056361208?text=' + encodeURIComponent(text), '_blank');
+        }
+    });
+})();
+</script>
+{% endblock %}

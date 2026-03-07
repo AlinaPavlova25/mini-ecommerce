@@ -1,0 +1,349 @@
+{% extends 'base.html' %}
+
+{% block title %}{% if current_lang == 'en' %}Compare Watches{% else %}Saat Karşılaştır{% endif %} — LuxWatch{% endblock %}
+
+{% block extra_css %}
+<style>
+.compare-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.compare-table th,
+.compare-table td {
+    padding: 1rem 1.25rem;
+    border: 1px solid var(--border-subtle);
+    vertical-align: top;
+}
+
+.compare-table th {
+    background: var(--bg-secondary);
+    font-size: 0.6rem;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--gold);
+    font-family: var(--font-sans);
+    font-weight: 500;
+    width: 160px;
+    text-align: left;
+}
+
+.compare-table td {
+    font-size: 0.85rem;
+    color: var(--text-secondary);
+    background: var(--bg-card);
+}
+
+.compare-table .product-col {
+    text-align: center;
+    vertical-align: top;
+}
+
+.compare-product-img {
+    width: 100%;
+    max-width: 200px;
+    aspect-ratio: 1;
+    object-fit: cover;
+    margin: 0 auto 1rem;
+    display: block;
+    border: 1px solid var(--border-subtle);
+}
+
+.compare-product-name {
+    font-family: var(--font-serif);
+    font-size: 1rem;
+    color: var(--text-primary);
+    margin-bottom: 0.25rem;
+    line-height: 1.3;
+}
+
+.compare-product-brand {
+    font-size: 0.65rem;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--gold);
+    font-family: var(--font-sans);
+    margin-bottom: 1rem;
+}
+
+.compare-price {
+    font-family: var(--font-serif);
+    font-size: 1.3rem;
+    color: var(--gold);
+}
+
+.compare-price .original {
+    font-size: 0.8rem;
+    color: var(--text-muted);
+    text-decoration: line-through;
+    display: block;
+    font-family: var(--font-sans);
+    margin-bottom: 0.2rem;
+}
+
+.compare-remove-btn {
+    background: none;
+    border: 1px solid rgba(248,113,113,0.35);
+    color: #f87171;
+    font-family: var(--font-sans);
+    font-size: 0.65rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    padding: 0.4rem 0.85rem;
+    cursor: pointer;
+    transition: all 0.2s;
+    margin-top: 1rem;
+}
+
+.compare-remove-btn:hover {
+    background: rgba(248,113,113,0.08);
+}
+
+.compare-empty {
+    text-align: center;
+    padding: 5rem 0;
+}
+
+.compare-placeholder {
+    background: var(--bg-card);
+    border: 1px dashed var(--border-subtle);
+    min-width: 220px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 2rem;
+    gap: 0.75rem;
+    color: var(--text-muted);
+    font-size: 0.75rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    font-family: var(--font-sans);
+}
+
+.diff-highlight {
+    background: rgba(198,167,94,0.06) !important;
+    color: var(--text-primary) !important;
+}
+
+@media (max-width: 768px) {
+    .compare-table { display: block; overflow-x: auto; }
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="lw-container" style="padding-top: 2rem; padding-bottom: 4rem;">
+    <nav class="lw-breadcrumb">
+        <a href="{{ url_for('shop.home') }}">{% if current_lang == 'en' %}Home{% else %}Ana Sayfa{% endif %}</a>
+        <span class="separator">—</span>
+        <a href="{{ url_for('shop.product_list') }}">{% if current_lang == 'en' %}Watches{% else %}Saatler{% endif %}</a>
+        <span class="separator">—</span>
+        <span class="current">{% if current_lang == 'en' %}Compare{% else %}Karşılaştır{% endif %}</span>
+    </nav>
+
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem; flex-wrap: wrap; gap: 1rem;">
+        <h1 style="font-size: 2rem; font-weight: 400;">
+            {% if current_lang == 'en' %}Compare Watches{% else %}Saatleri Karşılaştır{% endif %}
+        </h1>
+        {% if products %}
+        <form action="{{ url_for('shop.compare_clear') }}" method="POST">
+            <button type="submit" class="btn-ghost" style="font-size: 0.72rem;">
+                <i class="fa-solid fa-xmark"></i>
+                {% if current_lang == 'en' %}Clear All{% else %}Tümünü Temizle{% endif %}
+            </button>
+        </form>
+        {% endif %}
+    </div>
+
+    {% if not products %}
+    <div class="compare-empty">
+        <i class="fa-solid fa-scale-balanced" style="font-size: 3rem; color: var(--gold-dark); opacity: 0.3; margin-bottom: 1.5rem; display: block;"></i>
+        <p style="color: var(--text-secondary); font-size: 0.9rem; margin-bottom: 1.5rem;">
+            {% if current_lang == 'en' %}No watches selected for comparison yet.{% else %}Henüz karşılaştırmaya ürün eklenmedi.{% endif %}
+        </p>
+        <a href="{{ url_for('shop.product_list') }}" class="btn-gold">
+            <span>{% if current_lang == 'en' %}Browse Watches{% else %}Saatlere Göz At{% endif %}</span>
+        </a>
+    </div>
+    {% else %}
+
+    {% set max_slots = 3 %}
+    {% set empty_slots = max_slots - products|length %}
+
+    <table class="compare-table">
+        <thead>
+            <tr>
+                <th style="background: var(--bg-primary);">
+                    <span style="font-size: 0.6rem; letter-spacing: 0.2em; color: var(--text-muted);">
+                        {% if current_lang == 'en' %}Max 3 watches{% else %}En fazla 3 saat{% endif %}
+                    </span>
+                </th>
+                {% for product in products %}
+                <td class="product-col" style="background: var(--bg-card);">
+                    {% if product.image_path %}
+                    <img src="{{ url_for('static', filename='uploads/' + product.image_path) }}"
+                         alt="{{ product.get_name(current_lang) }}" class="compare-product-img">
+                    {% else %}
+                    <div style="width: 200px; aspect-ratio: 1; background: var(--bg-elevated); display: flex; align-items: center; justify-content: center; margin: 0 auto 1rem; border: 1px solid var(--border-subtle);">
+                        <i class="fa-regular fa-clock" style="font-size: 3rem; color: var(--gold-dark); opacity: 0.2;"></i>
+                    </div>
+                    {% endif %}
+                    <div class="compare-product-brand">{{ product.brand.name }}</div>
+                    <div class="compare-product-name">{{ product.get_name(current_lang) }}</div>
+                    {% if product.reference_number %}
+                    <div style="font-size: 0.7rem; color: var(--text-muted); margin-bottom: 0.75rem;">Ref. {{ product.reference_number }}</div>
+                    {% endif %}
+                    <form action="{{ url_for('shop.compare_remove', product_id=product.id) }}" method="POST">
+                        <button type="submit" class="compare-remove-btn">
+                            <i class="fa-solid fa-xmark"></i>
+                            {% if current_lang == 'en' %}Remove{% else %}Kaldır{% endif %}
+                        </button>
+                    </form>
+                </td>
+                {% endfor %}
+                {% for i in range(empty_slots) %}
+                <td class="product-col" style="background: var(--bg-card);">
+                    <div class="compare-placeholder">
+                        <i class="fa-solid fa-plus" style="font-size: 1.5rem; margin-bottom: 0.5rem;"></i>
+                        {% if current_lang == 'en' %}Add a watch{% else %}Saat ekle{% endif %}
+                    </div>
+                    <div style="margin-top: 1.25rem;">
+                        <a href="{{ url_for('shop.product_list') }}" class="btn-ghost" style="font-size: 0.7rem; justify-content: center; display: flex;">
+                            <span>{% if current_lang == 'en' %}Browse{% else %}Gözat{% endif %}</span>
+                        </a>
+                    </div>
+                </td>
+                {% endfor %}
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <th>{% if current_lang == 'en' %}Price{% else %}Fiyat{% endif %}</th>
+                {% for product in products %}
+                <td class="product-col {% if products|length > 1 and product.discounted_price == products|map(attribute='discounted_price')|min %}diff-highlight{% endif %}">
+                    {% if product.active_discount %}
+                    <span class="compare-price">
+                        <span class="original">₺{{ "{:,.0f}".format(product.price) }}</span>
+                        ₺{{ "{:,.0f}".format(product.discounted_price) }}
+                    </span>
+                    <div style="font-size: 0.65rem; background: var(--gold); color: var(--bg-primary); display: inline-block; padding: 0.15rem 0.5rem; margin-top: 0.4rem;">
+                        %{{ product.active_discount.percent }} {% if current_lang == 'en' %}OFF{% else %}İNDİRİM{% endif %}
+                    </div>
+                    {% else %}
+                    <span class="compare-price">₺{{ "{:,.0f}".format(product.price) }}</span>
+                    {% endif %}
+                </td>
+                {% endfor %}
+                {% for i in range(empty_slots) %}<td></td>{% endfor %}
+            </tr>
+
+            <tr>
+                <th>{% if current_lang == 'en' %}Brand{% else %}Marka{% endif %}</th>
+                {% for product in products %}
+                <td class="product-col">{{ product.brand.name }}</td>
+                {% endfor %}
+                {% for i in range(empty_slots) %}<td></td>{% endfor %}
+            </tr>
+
+            <tr>
+                <th>{% if current_lang == 'en' %}Gender{% else %}Cinsiyet{% endif %}</th>
+                {% for product in products %}
+                <td class="product-col">
+                    {% if product.gender == 'erkek' %}{% if current_lang == 'en' %}Men{% else %}Erkek{% endif %}
+                    {% elif product.gender == 'kadin' %}{% if current_lang == 'en' %}Women{% else %}Kadın{% endif %}
+                    {% else %}Unisex{% endif %}
+                </td>
+                {% endfor %}
+                {% for i in range(empty_slots) %}<td></td>{% endfor %}
+            </tr>
+
+            <tr>
+                <th>{% if current_lang == 'en' %}Case Material{% else %}Kasa Malzemesi{% endif %}</th>
+                {% for product in products %}
+                <td class="product-col {% if products|length > 1 and (products|map(attribute='case_material')|unique|list)|length > 1 %}diff-highlight{% endif %}">
+                    {{ product.case_material or '—' }}
+                </td>
+                {% endfor %}
+                {% for i in range(empty_slots) %}<td></td>{% endfor %}
+            </tr>
+
+            <tr>
+                <th>{% if current_lang == 'en' %}Case Diameter{% else %}Kasa Çapı{% endif %}</th>
+                {% for product in products %}
+                <td class="product-col {% if products|length > 1 and (products|map(attribute='case_diameter')|unique|list)|length > 1 %}diff-highlight{% endif %}">
+                    {{ product.case_diameter or '—' }}
+                </td>
+                {% endfor %}
+                {% for i in range(empty_slots) %}<td></td>{% endfor %}
+            </tr>
+
+            <tr>
+                <th>{% if current_lang == 'en' %}Movement{% else %}Mekanizma{% endif %}</th>
+                {% for product in products %}
+                <td class="product-col {% if products|length > 1 and (products|map(attribute='movement')|unique|list)|length > 1 %}diff-highlight{% endif %}">
+                    {{ product.movement or '—' }}
+                </td>
+                {% endfor %}
+                {% for i in range(empty_slots) %}<td></td>{% endfor %}
+            </tr>
+
+            <tr>
+                <th>{% if current_lang == 'en' %}Water Resistance{% else %}Su Direnci{% endif %}</th>
+                {% for product in products %}
+                <td class="product-col {% if products|length > 1 and (products|map(attribute='water_resistance')|unique|list)|length > 1 %}diff-highlight{% endif %}">
+                    {{ product.water_resistance or '—' }}
+                </td>
+                {% endfor %}
+                {% for i in range(empty_slots) %}<td></td>{% endfor %}
+            </tr>
+
+            <tr>
+                <th>{% if current_lang == 'en' %}Stock{% else %}Stok{% endif %}</th>
+                {% for product in products %}
+                <td class="product-col">
+                    {% if product.stock_qty > 0 %}
+                    <span style="color: #5a9a5a; font-size: 0.8rem;">
+                        <i class="fa-solid fa-circle-check" style="margin-right: 0.3rem;"></i>
+                        {% if current_lang == 'en' %}In Stock{% else %}Stokta Var{% endif %}
+                    </span>
+                    {% else %}
+                    <span style="color: #e07070; font-size: 0.8rem;">
+                        <i class="fa-solid fa-circle-xmark" style="margin-right: 0.3rem;"></i>
+                        {% if current_lang == 'en' %}Out of Stock{% else %}Stokta Yok{% endif %}
+                    </span>
+                    {% endif %}
+                </td>
+                {% endfor %}
+                {% for i in range(empty_slots) %}<td></td>{% endfor %}
+            </tr>
+
+            <tr>
+                <th></th>
+                {% for product in products %}
+                <td class="product-col">
+                    <div style="display: flex; flex-direction: column; gap: 0.65rem; align-items: center;">
+                        <a href="{{ url_for('shop.product_detail', product_id=product.id) }}" class="btn-gold" style="font-size: 0.72rem; justify-content: center; display: flex; width: 100%;">
+                            <span>{% if current_lang == 'en' %}View Details{% else %}İncele{% endif %}</span>
+                        </a>
+                        {% if product.stock_qty > 0 %}
+                        <form action="{{ url_for('shop.cart_add') }}" method="POST" style="width: 100%;">
+                            <input type="hidden" name="product_id" value="{{ product.id }}">
+                            <input type="hidden" name="quantity" value="1">
+                            <button type="submit" class="btn-ghost" style="font-size: 0.72rem; width: 100%; justify-content: center; display: flex;">
+                                <i class="fa-solid fa-bag-shopping"></i>
+                                {% if current_lang == 'en' %}Add to Bag{% else %}Sepete Ekle{% endif %}
+                            </button>
+                        </form>
+                        {% endif %}
+                    </div>
+                </td>
+                {% endfor %}
+                {% for i in range(empty_slots) %}<td></td>{% endfor %}
+            </tr>
+        </tbody>
+    </table>
+
+    {% endif %}
+</div>
+{% endblock %}

@@ -22,6 +22,31 @@
     z-index: 0;
 }
 
+.hero-slider {
+    position: absolute;
+    inset: 0;
+    z-index: 1;
+}
+
+.hero-slide {
+    position: absolute;
+    inset: 0;
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+    opacity: 0;
+    transition: opacity 2.5s ease-in-out;
+}
+
+.hero-slide.active {
+    opacity: 0.88;
+}
+
+.hero-slide.no-image {
+    opacity: 0.35;
+    background-color: #111;
+}
+
 .hero-image-overlay {
     position: absolute;
     inset: 0;
@@ -37,10 +62,33 @@
     opacity: 0.75;
 }
 
+.hero-dots {
+    position: absolute;
+    bottom: 5rem;
+    right: 2rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    z-index: 10;
+}
+
+.hero-dot {
+    width: 4px;
+    height: 24px;
+    background: rgba(255,255,255,0.25);
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.hero-dot.active {
+    background: var(--gold);
+    height: 36px;
+}
+
 .hero-gradient {
     position: absolute;
     inset: 0;
-    background: linear-gradient(to right, rgba(0,0,0,0.88) 25%, rgba(0,0,0,0) 45%);
+    background: linear-gradient(to right, rgba(0,0,0,0.88) 25%, rgba(0,0,0,0.15) 60%, rgba(0,0,0,0) 100%);
     z-index: 2;
 }
 
@@ -292,12 +340,24 @@
 {% block content %}
 
 <!-- HERO -->
+{% set hero_banners = [] %}
+{% for key in ['hero_banner', 'hero_banner_2', 'hero_banner_3', 'hero_banner_4'] %}
+    {% if site_images.get(key) and site_images[key].image_path %}
+        {% set _ = hero_banners.append(site_images[key].image_path) %}
+    {% endif %}
+{% endfor %}
+
 <section class="hero" id="hero-section">
     <div class="hero-bg"></div>
-    <div class="hero-image-overlay {% if site_images.get('hero_banner') and site_images['hero_banner'].image_path %}has-image{% endif %}"
-         {% if site_images.get('hero_banner') and site_images['hero_banner'].image_path %}
-         style="background-image: url('{{ url_for('static', filename='uploads/' + site_images['hero_banner'].image_path) }}');"
-         {% endif %}>
+    <div class="hero-slider" id="heroSlider">
+        {% if hero_banners %}
+            {% for path in hero_banners %}
+            <div class="hero-slide {% if loop.first %}active{% endif %}"
+                 style="background-image: url('{{ url_for('static', filename='uploads/' + path) }}');"></div>
+            {% endfor %}
+        {% else %}
+            <div class="hero-slide no-image active"></div>
+        {% endif %}
     </div>
     <div class="hero-gradient"></div>
     <div class="hero-content">
@@ -322,11 +382,15 @@
             <a href="{{ url_for('shop.product_list') }}" class="btn-gold">
                 <span>{% if current_lang == 'en' %}Explore Collection{% else %}Koleksiyonu Keşfet{% endif %}</span>
             </a>
-            <a href="{{ url_for('shop.product_list', gender='erkek') }}" class="btn-ghost">
-                {% if current_lang == 'en' %}Men's Watches{% else %}Erkek Saatleri{% endif %}
-            </a>
         </div>
     </div>
+    {% if hero_banners|length > 1 %}
+    <div class="hero-dots" id="heroDots">
+        {% for path in hero_banners %}
+        <div class="hero-dot {% if loop.first %}active{% endif %}" onclick="goToSlide({{ loop.index0 }})"></div>
+        {% endfor %}
+    </div>
+    {% endif %}
     <div class="hero-scroll" onclick="document.getElementById('brands-section').scrollIntoView({behavior:'smooth'})">
         <span>{% if current_lang == 'en' %}Discover{% else %}Keşfet{% endif %}</span>
         <i class="fa-solid fa-chevron-down"></i>
@@ -371,18 +435,18 @@
     <div class="features-grid">
         <div class="feature-item">
             <div class="feature-icon"><i class="fa-solid fa-shield-halved"></i></div>
-            <div class="feature-title">{% if current_lang == 'en' %}Guaranteed Authentic{% else %}Özgünlük Garantili{% endif %}</div>
-            <p class="feature-desc">{% if current_lang == 'en' %}Every timepiece is certified authentic with full documentation.{% else %}Her saat, tam belgeleme ile özgünlüğü sertifikalıdır.{% endif %}</p>
+            <div class="feature-title">{% if current_lang == 'en' %}Guaranteed Authentic{% else %}%100 Orijinal Ürün Garantisi{% endif %}</div>
+            <p class="feature-desc">{% if current_lang == 'en' %}Every timepiece is certified authentic with full documentation.{% else %}Tüm saatler orijinallik belgesi ve sertifikasıyla birlikte teslim edilir.{% endif %}</p>
         </div>
         <div class="feature-item">
             <div class="feature-icon"><i class="fa-solid fa-truck"></i></div>
-            <div class="feature-title">{% if current_lang == 'en' %}Complimentary Shipping{% else %}Ücretsiz Kargo{% endif %}</div>
-            <p class="feature-desc">{% if current_lang == 'en' %}Discreet, fully insured delivery on every order worldwide.{% else %}Her siparişe gizli, sigortalı teslimat dünya çapında.{% endif %}</p>
+            <div class="feature-title">{% if current_lang == 'en' %}Complimentary Shipping{% else %}Ücretsiz & Sigortalı Kargo{% endif %}</div>
+            <p class="feature-desc">{% if current_lang == 'en' %}Discreet, fully insured delivery on every order worldwide.{% else %}Tüm siparişleriniz sigortalı ve özenli paketlemeyle kapınıza teslim edilir.{% endif %}</p>
         </div>
         <div class="feature-item">
             <div class="feature-icon"><i class="fa-solid fa-rotate-left"></i></div>
-            <div class="feature-title">{% if current_lang == 'en' %}14-Day Returns{% else %}14 Gün İade{% endif %}</div>
-            <p class="feature-desc">{% if current_lang == 'en' %}Not satisfied? Return within 14 days, no questions asked.{% else %}Memnun değil misiniz? 14 gün içinde iade edin, soru sorulmaz.{% endif %}</p>
+            <div class="feature-title">{% if current_lang == 'en' %}14-Day Returns{% else %}14 Gün İade Hakkı{% endif %}</div>
+            <p class="feature-desc">{% if current_lang == 'en' %}Not satisfied? Return within 14 days, no questions asked.{% else %}Ürününüzden memnun kalmazsanız 14 gün içinde koşulsuz iade hakkınızı kullanabilirsiniz.{% endif %}</p>
         </div>
     </div>
 </div>
@@ -399,6 +463,7 @@
 
         <div class="lw-product-grid">
             {% for product in featured_products %}
+            <div class="lw-product-card-wrapper">
             <a href="{{ url_for('shop.product_detail', product_id=product.id) }}" class="lw-product-card" style="text-decoration: none;">
                 <div class="lw-product-card-image">
                     {% if product.is_featured %}<span class="lw-badge-featured">{% if current_lang == 'en' %}Featured{% else %}Öne Çıkan{% endif %}</span>{% endif %}
@@ -436,6 +501,26 @@
                     </div>
                 </div>
             </a>
+            {% if current_user.is_authenticated %}
+                {% if product.id in wishlist_ids %}
+                <form action="{{ url_for('profile.wishlist_remove', product_id=product.id) }}" method="POST" class="lw-wishlist-form">
+                    <button type="submit" class="lw-wishlist-btn active" title="{% if current_lang == 'en' %}Remove from wishlist{% else %}Favorilerden çıkar{% endif %}">
+                        <i class="fa-solid fa-heart"></i>
+                    </button>
+                </form>
+                {% else %}
+                <form action="{{ url_for('profile.wishlist_add', product_id=product.id) }}" method="POST" class="lw-wishlist-form">
+                    <button type="submit" class="lw-wishlist-btn" title="{% if current_lang == 'en' %}Add to wishlist{% else %}Favorilere ekle{% endif %}">
+                        <i class="fa-regular fa-heart"></i>
+                    </button>
+                </form>
+                {% endif %}
+            {% else %}
+            <a href="{{ url_for('auth.login') }}" class="lw-wishlist-btn" title="{% if current_lang == 'en' %}Sign in to save{% else %}Kaydetmek için giriş yap{% endif %}">
+                <i class="fa-regular fa-heart"></i>
+            </a>
+            {% endif %}
+            </div>
             {% endfor %}
         </div>
 
@@ -452,16 +537,20 @@
     <div class="lw-container">
         <div class="lw-section-header">
             <span class="eyebrow">{% if current_lang == 'en' %}Our Brands{% else %}Markalarımız{% endif %}</span>
-            <h2>{% if current_lang == 'en' %}World's Finest Maisons{% else %}Dünyanın En İyi Maisons'ları{% endif %}</h2>
+            <h2>{% if current_lang == 'en' %}World's Finest Watch Brands{% else %}Dünyanın En İyi Saat Markaları{% endif %}</h2>
             <div class="lw-divider"></div>
         </div>
         <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 1.5rem;">
             {% for brand in brands %}
             <a href="{{ url_for('shop.product_list', brand=brand.slug) }}"
-               style="display: block; background: var(--bg-card); border: 1px solid var(--border-subtle); padding: 2rem; text-decoration: none; transition: var(--transition);"
+               style="display: block; background: var(--bg-card); border: 1px solid var(--border-subtle); padding: 2rem; text-decoration: none; transition: var(--transition); position: relative; overflow: hidden; min-height: 220px;"
                onmouseover="this.style.borderColor='rgba(198,167,94,0.5)'"
                onmouseout="this.style.borderColor='rgba(198,167,94,0.15)'">
-                <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 1rem;">
+                {% if brand.cover_image_path %}
+                <div style="position: absolute; inset: 0; background-image: url('{{ url_for('static', filename='uploads/' + brand.cover_image_path) }}'); background-size: cover; background-position: center; opacity: 0.38; transition: opacity 0.4s ease;" class="brand-card-bg"></div>
+                <div style="position: absolute; inset: 0; background: linear-gradient(to bottom, rgba(10,10,10,0.15) 0%, rgba(10,10,10,0.55) 100%);"></div>
+                {% endif %}
+                <div style="position: relative; z-index: 1; display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 1rem;">
                     <div>
                         <div style="font-size: 0.6rem; letter-spacing: 0.25em; text-transform: uppercase; color: var(--gold); font-family: var(--font-sans); margin-bottom: 0.4rem;">{{ brand.country }}</div>
                         <h3 style="font-size: 1.4rem; font-weight: 400;">{{ brand.name }}</h3>
@@ -471,10 +560,10 @@
                     </div>
                     <i class="fa-regular fa-clock" style="font-size: 2rem; color: var(--gold-dark); opacity: 0.4;"></i>
                 </div>
-                <p style="font-size: 0.8rem; color: var(--text-secondary); line-height: 1.7; margin-bottom: 1.25rem;">
+                <p style="position: relative; z-index: 1; font-size: 0.92rem; color: var(--text-secondary); line-height: 1.7; margin-bottom: 1.25rem;">
                     {% if current_lang == 'en' and brand.description_en %}{{ brand.description_en }}{% else %}{{ brand.description }}{% endif %}
                 </p>
-                <span style="font-size: 0.65rem; letter-spacing: 0.15em; text-transform: uppercase; color: var(--gold); font-family: var(--font-sans);">
+                <span style="position: relative; z-index: 1; font-size: 0.65rem; letter-spacing: 0.15em; text-transform: uppercase; color: var(--gold); font-family: var(--font-sans);">
                     {% if current_lang == 'en' %}Explore →{% else %}Keşfet →{% endif %}
                 </span>
             </a>
@@ -490,8 +579,8 @@
             <!-- MEN -->
             <div style="position: relative; height: 400px; overflow: hidden; background: var(--bg-card); border: 1px solid var(--border-subtle); display: flex; align-items: flex-end;">
                 <div style="position: absolute; inset: 0; background: linear-gradient(to top, rgba(0,0,0,0.7) 30%, rgba(0,0,0,0) 70%); z-index: 1;"></div>
-                {% if site_images.get('hero_banner_2') and site_images['hero_banner_2'].image_path %}
-                <img src="{{ url_for('static', filename='uploads/' + site_images['hero_banner_2'].image_path) }}"
+                {% if site_images.get('men_banner') and site_images['men_banner'].image_path %}
+                <img src="{{ url_for('static', filename='uploads/' + site_images['men_banner'].image_path) }}"
                      style="position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; opacity: 0.9;" alt="">
                 {% else %}
                 <div style="position: absolute; inset: 0; background: linear-gradient(135deg, #141414, #1c1a18); display: flex; align-items: center; justify-content: center;">
@@ -529,4 +618,56 @@
     </div>
 </section>
 
+<!-- WHATSAPP CONTACT -->
+<section style="padding: 5rem 2rem; background: var(--bg-secondary); border-top: 1px solid var(--border-subtle);">
+    <div class="lw-container" style="text-align: center;">
+        <div class="lw-eyebrow" style="text-align: center;">{% if current_lang == 'en' %}Get in Touch{% else %}İletişim{% endif %}</div>
+        <h2 style="font-family: var(--font-serif); font-size: clamp(1.8rem, 4vw, 2.8rem); margin-bottom: 1rem;">
+            {% if current_lang == 'en' %}Have a question? We're here.{% else %}Sorunuz mu var? Buradayız.{% endif %}
+        </h2>
+        <div class="lw-divider"></div>
+        <p style="color: var(--text-secondary); font-size: 0.9rem; line-height: 1.9; max-width: 480px; margin: 1.5rem auto 2.5rem;">
+            {% if current_lang == 'en' %}
+                Reach us directly via WhatsApp for expert advice, availability inquiries or order support.
+            {% else %}
+                Ürün tavsiyesi, stok durumu veya sipariş desteği için bize WhatsApp üzerinden doğrudan ulaşın.
+            {% endif %}
+        </p>
+        <a href="https://wa.me/905056361208" target="_blank" rel="noopener noreferrer"
+           style="display: inline-flex; align-items: center; gap: 0.75rem; background: #25D366; color: #fff; padding: 0.95rem 2.25rem; font-family: var(--font-sans); font-size: 0.75rem; font-weight: 600; letter-spacing: 0.15em; text-transform: uppercase; text-decoration: none; transition: background 0.2s ease; border-radius: 2px;"
+           onmouseover="this.style.background='#1ebe5d'"
+           onmouseout="this.style.background='#25D366'">
+            <i class="fa-brands fa-whatsapp" style="font-size: 1.2rem;"></i>
+            <span>{% if current_lang == 'en' %}Chat on WhatsApp{% else %}WhatsApp'tan Yaz{% endif %}</span>
+        </a>
+        <div style="margin-top: 1.25rem; font-size: 0.75rem; color: var(--text-muted); font-family: var(--font-sans);">
+            +90 505 636 12 08
+        </div>
+    </div>
+</section>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+(function() {
+    var slides = document.querySelectorAll('#heroSlider .hero-slide');
+    var dots = document.querySelectorAll('#heroDots .hero-dot');
+    if (slides.length <= 1) return;
+
+    var current = 0;
+
+    window.goToSlide = function(index) {
+        slides[current].classList.remove('active');
+        if (dots[current]) dots[current].classList.remove('active');
+        current = index;
+        slides[current].classList.add('active');
+        if (dots[current]) dots[current].classList.add('active');
+    };
+
+    setInterval(function() {
+        goToSlide((current + 1) % slides.length);
+    }, 8000);
+})();
+</script>
 {% endblock %}

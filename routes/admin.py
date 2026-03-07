@@ -1,8 +1,8 @@
 from flask import Blueprint, render_template, request, redirect, url_for, flash, current_app, abort
 from flask_login import login_required, current_user
 from functools import wraps
-from models import db, Product, Brand, Order, OrderItem, DiscountRule, User, SiteImage, Coupon, NewsletterSubscriber, ProductImage
-from utils.upload import save_product_image, delete_product_image, save_product_video
+from models import db, Product, Brand, Order, OrderItem, DiscountRule, User, SiteImage, Coupon, NewsletterSubscriber, ProductImage, CartItem, Wishlist, StockNotification
+from utils.upload import save_product_image, delete_product_image, save_product_video, save_banner_image
 from datetime import datetime
 
 admin_bp = Blueprint('admin', __name__)
@@ -12,10 +12,22 @@ def admin_required(f):
     @wraps(f)
     @login_required
     def decorated_function(*args, **kwargs):
-        if not current_user.is_admin:
+        if not current_user.has_role('admin'):
             abort(403)
         return f(*args, **kwargs)
     return decorated_function
+
+
+def role_required(*roles):
+    def decorator(f):
+        @wraps(f)
+        @login_required
+        def decorated_function(*args, **kwargs):
+            if not current_user.has_role(*roles):
+                abort(403)
+            return f(*args, **kwargs)
+        return decorated_function
+    return decorator
 
 
 @admin_bp.route('/')
@@ -203,6 +215,26 @@ def product_image_delete(product_id, image_id):
     return redirect(url_for('admin.product_edit', product_id=product_id))
 
 
+@admin_bp.route('/products/<int:product_id>/delete', methods=['POST'])
+@admin_required
+def product_delete(product_id):
+    product = Product.query.get_or_404(product_id)
+    name = product.name
+    if product.image_path:
+        delete_product_image(product.image_path, current_app.config['UPLOAD_FOLDER'])
+    if product.video_path:
+        delete_product_image(product.video_path, current_app.config['UPLOAD_FOLDER'])
+    for img in product.images:
+        delete_product_image(img.image_path, current_app.config['UPLOAD_FOLDER'])
+    CartItem.query.filter_by(product_id=product_id).delete()
+    Wishlist.query.filter_by(product_id=product_id).delete()
+    StockNotification.query.filter_by(product_id=product_id).delete()
+    db.session.delete(product)
+    db.session.commit()
+    flash(f'"{name}" silindi.', 'success')
+    return redirect(url_for('admin.products'))
+
+
 @admin_bp.route('/products/<int:product_id>/video/upload', methods=['POST'])
 @admin_required
 def product_video_upload(product_id):
@@ -291,8 +323,15 @@ def brand_new():
             if file and file.filename:
                 logo_path = save_product_image(file, current_app.config['UPLOAD_FOLDER'])
 
+        cover_image_path = None
+        if 'cover_image' in request.files:
+            file = request.files['cover_image']
+            if file and file.filename:
+                cover_image_path = save_banner_image(file, current_app.config['UPLOAD_FOLDER'])
+
         brand = Brand(name=name, slug=slug, description=description, description_en=description_en,
-                      founded_year=founded_year, country=country, sort_order=sort_order, logo_path=logo_path)
+                      founded_year=founded_year, country=country, sort_order=sort_order,
+                      logo_path=logo_path, cover_image_path=cover_image_path)
         db.session.add(brand)
         db.session.commit()
         flash(f'{name} markası eklendi.', 'success')
@@ -321,6 +360,13 @@ def brand_edit(brand_id):
                 if brand.logo_path:
                     delete_product_image(brand.logo_path, current_app.config['UPLOAD_FOLDER'])
                 brand.logo_path = save_product_image(file, current_app.config['UPLOAD_FOLDER'])
+
+        if 'cover_image' in request.files:
+            file = request.files['cover_image']
+            if file and file.filename:
+                if brand.cover_image_path:
+                    delete_product_image(brand.cover_image_path, current_app.config['UPLOAD_FOLDER'])
+                brand.cover_image_path = save_banner_image(file, current_app.config['UPLOAD_FOLDER'])
 
         db.session.commit()
         flash(f'{brand.name} güncellendi.', 'success')
@@ -505,7 +551,7 @@ def order_return_arrived(order_id):
     order.updated_at = datetime.utcnow()
 
     for item in order.items:
-        product = Product.query.get(item.product_id)
+        product = db.session.get(Product, item.product_id)
         if product:
             product.stock_qty += item.quantity
 
@@ -538,7 +584,7 @@ def site_image_upload(image_id):
     if site_img.image_path:
         delete_product_image(site_img.image_path, current_app.config['UPLOAD_FOLDER'])
 
-    new_path = save_product_image(file, current_app.config['UPLOAD_FOLDER'])
+    new_path = save_banner_image(file, current_app.config['UPLOAD_FOLDER'])
     if new_path:
         site_img.image_path = new_path
         site_img.updated_at = datetime.utcnow()

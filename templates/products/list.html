@@ -84,11 +84,128 @@
 
 @media (max-width: 768px) {
     .filter-sidebar { display: none; }
+    .mobile-filter-btn { display: flex !important; }
 }
+
+/* MOBILE FILTER DRAWER */
+.filter-drawer-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.75);
+    z-index: 2000;
+    backdrop-filter: blur(4px);
+}
+.filter-drawer-overlay.open { display: block; }
+
+.filter-drawer {
+    position: fixed;
+    top: 0;
+    left: 0;
+    bottom: 0;
+    width: min(320px, 85vw);
+    background: var(--bg-card);
+    border-right: 1px solid var(--border-subtle);
+    z-index: 2001;
+    overflow-y: auto;
+    transform: translateX(-100%);
+    transition: transform 0.35s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+    padding: 1.5rem;
+}
+.filter-drawer.open { transform: translateX(0); }
+
+.filter-drawer-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1.5rem;
+    padding-bottom: 1rem;
+    border-bottom: 1px solid var(--border-subtle);
+}
+.filter-drawer-title {
+    font-size: 0.65rem;
+    letter-spacing: 0.3em;
+    text-transform: uppercase;
+    color: var(--gold);
+    font-family: var(--font-sans);
+}
+.filter-drawer-close {
+    background: none;
+    border: none;
+    color: var(--text-muted);
+    font-size: 1.1rem;
+    cursor: pointer;
+    padding: 0.25rem;
+    transition: color 0.2s;
+}
+.filter-drawer-close:hover { color: var(--gold); }
+
+{% set active_filter_count = (1 if selected_brand else 0) + (1 if gender else 0) + (1 if price_range else 0) + (1 if sort else 0) %}
 </style>
 {% endblock %}
 
 {% block content %}
+<!-- MOBILE FILTER DRAWER -->
+<div class="filter-drawer-overlay" id="filterOverlay" onclick="closeFilterDrawer()"></div>
+<div class="filter-drawer" id="filterDrawer">
+    <div class="filter-drawer-header">
+        <span class="filter-drawer-title">
+            {% if current_lang == 'en' %}Filters{% else %}Filtreler{% endif %}
+        </span>
+        <button class="filter-drawer-close" onclick="closeFilterDrawer()">
+            <i class="fa-solid fa-xmark"></i>
+        </button>
+    </div>
+
+    <div class="filter-section">
+        <span class="filter-label">{% if current_lang == 'en' %}Brand{% else %}Marka{% endif %}</span>
+        <a href="{{ url_for('shop.product_list', gender=gender, sort=sort) }}" class="filter-option {% if not selected_brand %}active{% endif %}" onclick="closeFilterDrawer()">
+            {% if current_lang == 'en' %}All Brands{% else %}Tüm Markalar{% endif %}
+        </a>
+        {% for brand in brands %}
+        <a href="{{ url_for('shop.product_list', brand=brand.slug, gender=gender, sort=sort) }}"
+           class="filter-option {% if selected_brand and selected_brand.id == brand.id %}active{% endif %}" onclick="closeFilterDrawer()">
+            {{ brand.name }}
+        </a>
+        {% endfor %}
+    </div>
+
+    <div class="filter-section">
+        <span class="filter-label">{% if current_lang == 'en' %}Gender{% else %}Cinsiyet{% endif %}</span>
+        <a href="{{ url_for('shop.product_list', brand=selected_brand.slug if selected_brand else '', sort=sort) }}" class="filter-option {% if not gender %}active{% endif %}" onclick="closeFilterDrawer()">{% if current_lang == 'en' %}All{% else %}Tümü{% endif %}</a>
+        <a href="{{ url_for('shop.product_list', brand=selected_brand.slug if selected_brand else '', gender='erkek', sort=sort) }}" class="filter-option {% if gender == 'erkek' %}active{% endif %}" onclick="closeFilterDrawer()">{% if current_lang == 'en' %}Men{% else %}Erkek{% endif %}</a>
+        <a href="{{ url_for('shop.product_list', brand=selected_brand.slug if selected_brand else '', gender='kadin', sort=sort) }}" class="filter-option {% if gender == 'kadin' %}active{% endif %}" onclick="closeFilterDrawer()">{% if current_lang == 'en' %}Women{% else %}Kadın{% endif %}</a>
+        <a href="{{ url_for('shop.product_list', brand=selected_brand.slug if selected_brand else '', gender='unisex', sort=sort) }}" class="filter-option {% if gender == 'unisex' %}active{% endif %}" onclick="closeFilterDrawer()">Unisex</a>
+    </div>
+
+    <div class="filter-section">
+        <span class="filter-label">{% if current_lang == 'en' %}Price Range{% else %}Fiyat Aralığı{% endif %}</span>
+        <a href="{{ url_for('shop.product_list', brand=selected_brand.slug if selected_brand else '', gender=gender, sort=sort) }}" class="filter-option {% if not price_range %}active{% endif %}" onclick="closeFilterDrawer()">{% if current_lang == 'en' %}All Prices{% else %}Tüm Fiyatlar{% endif %}</a>
+        {% for key, low, high in price_ranges %}
+        <a href="{{ url_for('shop.product_list', brand=selected_brand.slug if selected_brand else '', gender=gender, sort=sort, price_range=key) }}" class="filter-option {% if price_range == key %}active{% endif %}" onclick="closeFilterDrawer()">
+            {% if high is none %}₺{{ "{:,.0f}".format(low) }}+{% else %}₺{{ "{:,.0f}".format(low) }} — ₺{{ "{:,.0f}".format(high) }}{% endif %}
+        </a>
+        {% endfor %}
+    </div>
+
+    <div class="filter-section">
+        <span class="filter-label">{% if current_lang == 'en' %}Sort By{% else %}Sırala{% endif %}</span>
+        <a href="{{ url_for('shop.product_list', brand=selected_brand.slug if selected_brand else '', gender=gender) }}" class="filter-option {% if not sort %}active{% endif %}" onclick="closeFilterDrawer()">{% if current_lang == 'en' %}Latest{% else %}En Yeni{% endif %}</a>
+        <a href="{{ url_for('shop.product_list', brand=selected_brand.slug if selected_brand else '', gender=gender, sort='price_asc') }}" class="filter-option {% if sort == 'price_asc' %}active{% endif %}" onclick="closeFilterDrawer()">{% if current_lang == 'en' %}Price: Low to High{% else %}Fiyat: Düşükten Yükseğe{% endif %}</a>
+        <a href="{{ url_for('shop.product_list', brand=selected_brand.slug if selected_brand else '', gender=gender, sort='price_desc') }}" class="filter-option {% if sort == 'price_desc' %}active{% endif %}" onclick="closeFilterDrawer()">{% if current_lang == 'en' %}Price: High to Low{% else %}Fiyat: Yüksekten Düşüğe{% endif %}</a>
+        <a href="{{ url_for('shop.product_list', brand=selected_brand.slug if selected_brand else '', gender=gender, sort='name') }}" class="filter-option {% if sort == 'name' %}active{% endif %}" onclick="closeFilterDrawer()">{% if current_lang == 'en' %}Name{% else %}İsim{% endif %}</a>
+    </div>
+
+    {% if selected_brand or gender or price_range or sort %}
+    <div style="margin-top: 1.5rem;">
+        <a href="{{ url_for('shop.product_list') }}" class="btn-ghost" style="width: 100%; justify-content: center; font-size: 0.7rem;" onclick="closeFilterDrawer()">
+            <i class="fa-solid fa-xmark"></i>
+            {% if current_lang == 'en' %}Clear All Filters{% else %}Tüm Filtreleri Temizle{% endif %}
+        </a>
+    </div>
+    {% endif %}
+</div>
+
 <div class="lw-container" style="padding-top: 2rem;">
     <!-- BREADCRUMB -->
     <nav class="lw-breadcrumb">
@@ -144,6 +261,24 @@
             </div>
 
             <div class="filter-section">
+                <span class="filter-label">{% if current_lang == 'en' %}Price Range{% else %}Fiyat Aralığı{% endif %}</span>
+                <a href="{{ url_for('shop.product_list', brand=selected_brand.slug if selected_brand else '', gender=gender, sort=sort) }}"
+                   class="filter-option {% if not price_range %}active{% endif %}">
+                    {% if current_lang == 'en' %}All Prices{% else %}Tüm Fiyatlar{% endif %}
+                </a>
+                {% for key, low, high in price_ranges %}
+                <a href="{{ url_for('shop.product_list', brand=selected_brand.slug if selected_brand else '', gender=gender, sort=sort, price_range=key) }}"
+                   class="filter-option {% if price_range == key %}active{% endif %}">
+                    {% if high is none %}
+                        ₺{{ "{:,.0f}".format(low) }}{% if current_lang == 'en' %}+{% else %}+{% endif %}
+                    {% else %}
+                        ₺{{ "{:,.0f}".format(low) }} — ₺{{ "{:,.0f}".format(high) }}
+                    {% endif %}
+                </a>
+                {% endfor %}
+            </div>
+
+            <div class="filter-section">
                 <span class="filter-label">{% if current_lang == 'en' %}Sort By{% else %}Sırala{% endif %}</span>
                 <a href="{{ url_for('shop.product_list', brand=selected_brand.slug if selected_brand else '', gender=gender) }}"
                    class="filter-option {% if not sort %}active{% endif %}">
@@ -193,22 +328,34 @@
                     <p class="products-count">{{ products.total }} {% if current_lang == 'en' %}timepieces{% else %}saat{% endif %}</p>
                     {% endif %}
                 </div>
-                <form action="{{ url_for('shop.product_list') }}" method="GET" style="display: flex; gap: 0.75rem; align-items: center;">
-                    {% if selected_brand %}<input type="hidden" name="brand" value="{{ selected_brand.slug }}">{% endif %}
-                    {% if gender %}<input type="hidden" name="gender" value="{{ gender }}">{% endif %}
-                    <div style="position: relative;">
-                        <input type="text" name="search" value="{{ search }}" placeholder="{% if current_lang == 'en' %}Search...{% else %}Ara...{% endif %}"
-                               class="lw-input" style="width: 200px; padding: 0.5rem 0;">
-                    </div>
-                    <button type="submit" class="btn-ghost" style="padding: 0.5rem 1rem;">
-                        <i class="fa-solid fa-magnifying-glass"></i>
+                <div style="display: flex; gap: 0.75rem; align-items: center; flex-wrap: wrap;">
+                    <!-- MOBİL FİLTRE BUTONU -->
+                    <button class="mobile-filter-btn btn-ghost" style="display: none; font-size: 0.72rem;" onclick="openFilterDrawer()">
+                        <i class="fa-solid fa-sliders"></i>
+                        {% if current_lang == 'en' %}Filters{% else %}Filtrele{% endif %}
+                        {% set afc = (1 if selected_brand else 0) + (1 if gender else 0) + (1 if price_range else 0) + (1 if sort else 0) %}
+                        {% if afc > 0 %}
+                        <span style="background: var(--gold); color: var(--bg-primary); font-size: 0.6rem; width: 16px; height: 16px; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; font-weight: 600;">{{ afc }}</span>
+                        {% endif %}
                     </button>
-                </form>
+                    <form action="{{ url_for('shop.product_list') }}" method="GET" style="display: flex; gap: 0.75rem; align-items: center;">
+                        {% if selected_brand %}<input type="hidden" name="brand" value="{{ selected_brand.slug }}">{% endif %}
+                        {% if gender %}<input type="hidden" name="gender" value="{{ gender }}">{% endif %}
+                        <div style="position: relative;">
+                            <input type="text" name="search" value="{{ search }}" placeholder="{% if current_lang == 'en' %}Search...{% else %}Ara...{% endif %}"
+                                   class="lw-input" style="width: 200px; padding: 0.5rem 0;">
+                        </div>
+                        <button type="submit" class="btn-ghost" style="padding: 0.5rem 1rem;">
+                            <i class="fa-solid fa-magnifying-glass"></i>
+                        </button>
+                    </form>
+                </div>
             </div>
 
             {% if products.items %}
             <div class="lw-product-grid">
                 {% for product in products.items %}
+                <div class="lw-product-card-wrapper">
                 <a href="{{ url_for('shop.product_detail', product_id=product.id) }}" class="lw-product-card" style="text-decoration: none;">
                     <div class="lw-product-card-image">
                         {% if product.is_featured %}<span class="lw-badge-featured">{% if current_lang == 'en' %}Featured{% else %}Öne Çıkan{% endif %}</span>{% endif %}
@@ -217,8 +364,13 @@
                             {% elif product.gender == 'kadin' %}{% if current_lang == 'en' %}Women{% else %}Kadın{% endif %}
                             {% else %}Unisex{% endif %}
                         </span>
+                        {% if product.stock_qty == 0 %}
+                        <span style="position: absolute; bottom: 0.6rem; left: 0.6rem; background: rgba(10,10,10,0.82); border: 1px solid rgba(180,60,60,0.5); color: #e07070; font-size: 0.6rem; letter-spacing: 0.12em; text-transform: uppercase; padding: 0.25rem 0.6rem; font-family: var(--font-sans); z-index: 2;">
+                            {% if current_lang == 'en' %}Out of Stock{% else %}Stokta Yok{% endif %}
+                        </span>
+                        {% endif %}
                         {% if product.image_path %}
-                        <img src="{{ url_for('static', filename='uploads/' + product.image_path) }}" alt="{{ product.get_name(current_lang) }}">
+                        <img src="{{ url_for('static', filename='uploads/' + product.image_path) }}" alt="{{ product.get_name(current_lang) }}" {% if product.stock_qty == 0 %}style="opacity: 0.5;"{% endif %}>
                         {% else %}
                         <div class="lw-product-placeholder">
                             <i class="fa-regular fa-clock"></i>
@@ -246,6 +398,26 @@
                         </div>
                     </div>
                 </a>
+                {% if current_user.is_authenticated %}
+                    {% if product.id in wishlist_ids %}
+                    <form action="{{ url_for('profile.wishlist_remove', product_id=product.id) }}" method="POST" class="lw-wishlist-form">
+                        <button type="submit" class="lw-wishlist-btn active" title="{% if current_lang == 'en' %}Remove from wishlist{% else %}Favorilerden çıkar{% endif %}">
+                            <i class="fa-solid fa-heart"></i>
+                        </button>
+                    </form>
+                    {% else %}
+                    <form action="{{ url_for('profile.wishlist_add', product_id=product.id) }}" method="POST" class="lw-wishlist-form">
+                        <button type="submit" class="lw-wishlist-btn" title="{% if current_lang == 'en' %}Add to wishlist{% else %}Favorilere ekle{% endif %}">
+                            <i class="fa-regular fa-heart"></i>
+                        </button>
+                    </form>
+                    {% endif %}
+                {% else %}
+                <a href="{{ url_for('auth.login') }}" class="lw-wishlist-btn" title="{% if current_lang == 'en' %}Sign in to save{% else %}Kaydetmek için giriş yap{% endif %}">
+                    <i class="fa-regular fa-heart"></i>
+                </a>
+                {% endif %}
+                </div>
                 {% endfor %}
             </div>
 
@@ -253,7 +425,7 @@
             {% if products.pages > 1 %}
             <div class="lw-pagination">
                 {% if products.has_prev %}
-                <a href="{{ url_for('shop.product_list', page=products.prev_num, brand=selected_brand.slug if selected_brand else '', gender=gender, sort=sort, search=search) }}">
+                <a href="{{ url_for('shop.product_list', page=products.prev_num, brand=selected_brand.slug if selected_brand else '', gender=gender, sort=sort, search=search, price_range=price_range) }}">
                     <i class="fa-solid fa-chevron-left"></i>
                 </a>
                 {% endif %}
@@ -262,14 +434,14 @@
                         {% if page_num == products.page %}
                         <span class="current-page">{{ page_num }}</span>
                         {% else %}
-                        <a href="{{ url_for('shop.product_list', page=page_num, brand=selected_brand.slug if selected_brand else '', gender=gender, sort=sort, search=search) }}">{{ page_num }}</a>
+                        <a href="{{ url_for('shop.product_list', page=page_num, brand=selected_brand.slug if selected_brand else '', gender=gender, sort=sort, search=search, price_range=price_range) }}">{{ page_num }}</a>
                         {% endif %}
                     {% else %}
                     <span>…</span>
                     {% endif %}
                 {% endfor %}
                 {% if products.has_next %}
-                <a href="{{ url_for('shop.product_list', page=products.next_num, brand=selected_brand.slug if selected_brand else '', gender=gender, sort=sort, search=search) }}">
+                <a href="{{ url_for('shop.product_list', page=products.next_num, brand=selected_brand.slug if selected_brand else '', gender=gender, sort=sort, search=search, price_range=price_range) }}">
                     <i class="fa-solid fa-chevron-right"></i>
                 </a>
                 {% endif %}
@@ -290,4 +462,22 @@
         </div>
     </div>
 </div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function openFilterDrawer() {
+    document.getElementById('filterDrawer').classList.add('open');
+    document.getElementById('filterOverlay').classList.add('open');
+    document.body.style.overflow = 'hidden';
+}
+function closeFilterDrawer() {
+    document.getElementById('filterDrawer').classList.remove('open');
+    document.getElementById('filterOverlay').classList.remove('open');
+    document.body.style.overflow = '';
+}
+document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') closeFilterDrawer();
+});
+</script>
 {% endblock %}

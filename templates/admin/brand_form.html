@@ -77,6 +77,21 @@
                     </div>
                 </div>
 
+                <div class="lw-admin-section-header" style="margin-top: 0.5rem;">Kapak Görseli <small style="font-size: 0.7rem; color: var(--text-muted); text-transform: none; letter-spacing: 0;">(Ana sayfadaki marka kutucuklarının arka planı)</small></div>
+                <div style="padding: 0 2rem 2rem;">
+                    {% if brand and brand.cover_image_path %}
+                    <div style="margin-bottom: 1rem; border: 1px solid var(--border); overflow: hidden;">
+                        <img src="{{ url_for('static', filename='uploads/' + brand.cover_image_path) }}" alt="{{ brand.name }} kapak" style="width: 100%; max-height: 200px; object-fit: cover; display: block;">
+                        <div style="padding: 0.5rem 1rem; font-size: 0.75rem; color: var(--text-muted); background: var(--bg-secondary);">Mevcut kapak görseli — Yeni yüklemek için alttaki alanı kullanın</div>
+                    </div>
+                    {% endif %}
+                    <div class="lw-form-group">
+                        <label class="lw-label">Kapak Görseli Yükle</label>
+                        <input type="file" name="cover_image" class="lw-input" accept="image/*">
+                        <div style="font-size: 0.72rem; color: var(--text-muted); margin-top: 0.35rem;">Geniş format önerilir (1600×900 veya üzeri)</div>
+                    </div>
+                </div>
+
                 <div style="display: flex; gap: 1rem; padding: 1.5rem 2rem; border-top: 1px solid var(--border); background: var(--bg-secondary);">
                     <button type="submit" class="lw-admin-btn-gold">
                         <i class="fa-solid fa-floppy-disk"></i>

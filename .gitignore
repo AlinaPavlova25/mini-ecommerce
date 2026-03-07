@@ -1,9 +1,8 @@
-venv/
+.env
 __pycache__/
 *.pyc
-*.pyo
 instance/
-migrations/
-static/uploads/
-.env
+venv/
+*.egg-info/
 .DS_Store
+static/uploads/

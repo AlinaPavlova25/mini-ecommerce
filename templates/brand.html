@@ -32,7 +32,26 @@
 {% block content %}
 
 <!-- Brand Hero -->
-<div style="position: relative; background: linear-gradient(180deg, var(--bg-secondary) 0%, var(--bg-primary) 100%); border-bottom: 1px solid var(--border); padding: 5rem 2rem 4rem; text-align: center; overflow: hidden;">
+{% if brand.cover_image_path %}
+<div style="position: relative; height: clamp(340px, 55vw, 580px); overflow: hidden;">
+    <img src="{{ url_for('static', filename='uploads/' + brand.cover_image_path) }}"
+         alt="{{ brand.name }}"
+         style="width: 100%; height: 100%; object-fit: cover; object-position: center;">
+    <div style="position: absolute; inset: 0; background: linear-gradient(to bottom, rgba(0,0,0,0.25) 0%, rgba(0,0,0,0.65) 100%);"></div>
+    <div style="position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; padding: 2rem;">
+        {% if brand.logo_path %}
+        <img src="{{ url_for('static', filename='uploads/' + brand.logo_path) }}" alt="{{ brand.name }}" style="height: 55px; width: auto; object-fit: contain; margin-bottom: 1.75rem; filter: brightness(0) invert(1) opacity(0.9);">
+        {% endif %}
+        <div style="font-size: 0.62rem; letter-spacing: 0.32em; text-transform: uppercase; color: var(--gold); margin-bottom: 0.85rem; font-family: var(--font-sans);">
+            {% if brand.country %}{{ brand.country }}{% endif %}{% if brand.country and brand.founded_year %} — {% endif %}{% if brand.founded_year %}Est. {{ brand.founded_year }}{% endif %}
+        </div>
+        <h1 style="font-family: var(--font-serif); font-size: clamp(2.8rem, 7vw, 5.5rem); color: #fff; letter-spacing: 0.04em; text-shadow: 0 2px 20px rgba(0,0,0,0.5);">
+            {{ brand.name }}
+        </h1>
+    </div>
+</div>
+{% else %}
+<div style="position: relative; background: linear-gradient(180deg, var(--bg-secondary) 0%, var(--bg-primary) 100%); border-bottom: 1px solid var(--border-subtle); padding: 5rem 2rem 4rem; text-align: center; overflow: hidden;">
     <div style="position: absolute; inset: 0; background: radial-gradient(ellipse at 50% 0%, rgba(198,167,94,0.07) 0%, transparent 65%); pointer-events: none;"></div>
     <div style="position: relative; z-index: 1;">
         {% if brand.logo_path %}
@@ -44,18 +63,115 @@
         <h1 style="font-family: var(--font-serif); font-size: clamp(2.5rem, 6vw, 4.5rem); color: var(--text-primary); margin-bottom: 1.5rem; letter-spacing: 0.03em;">
             {{ brand.name }}
         </h1>
-        <div class="lw-divider"></div>
-        {% if current_lang == 'en' and brand.description_en %}
-        <p style="max-width: 600px; margin: 1.5rem auto 0; color: var(--text-secondary); font-size: 0.9rem; line-height: 1.9;">{{ brand.description_en }}</p>
-        {% elif brand.description %}
-        <p style="max-width: 600px; margin: 1.5rem auto 0; color: var(--text-secondary); font-size: 0.9rem; line-height: 1.9;">{{ brand.description }}</p>
+    </div>
+</div>
+{% endif %}
+
+<!-- Brand Info Bar -->
+<div style="background: var(--bg-secondary); border-bottom: 1px solid var(--border-subtle);">
+    <div class="lw-container" style="display: flex; flex-wrap: wrap; align-items: stretch; gap: 0;">
+        {% if brand.founded_year %}
+        <div style="flex: 1; min-width: 150px; padding: 1.75rem 2rem; border-right: 1px solid var(--border-subtle); text-align: center;">
+            <div style="font-family: var(--font-serif); font-size: 1.8rem; color: var(--gold); line-height: 1;">{{ brand.founded_year }}</div>
+            <div style="font-size: 0.6rem; letter-spacing: 0.2em; text-transform: uppercase; color: var(--text-muted); margin-top: 0.35rem;">
+                {% if current_lang == 'en' %}Founded{% else %}Kuruluş{% endif %}
+            </div>
+        </div>
         {% endif %}
+        {% if brand.country %}
+        <div style="flex: 1; min-width: 150px; padding: 1.75rem 2rem; border-right: 1px solid var(--border-subtle); text-align: center;">
+            <div style="font-family: var(--font-serif); font-size: 1.4rem; color: var(--text-primary); line-height: 1.2;">{{ brand.country }}</div>
+            <div style="font-size: 0.6rem; letter-spacing: 0.2em; text-transform: uppercase; color: var(--text-muted); margin-top: 0.35rem;">
+                {% if current_lang == 'en' %}Country{% else %}Ülke{% endif %}
+            </div>
+        </div>
+        {% endif %}
+        <div style="flex: 1; min-width: 150px; padding: 1.75rem 2rem; border-right: 1px solid var(--border-subtle); text-align: center;">
+            <div style="font-family: var(--font-serif); font-size: 1.8rem; color: var(--gold); line-height: 1;">{{ total_products }}</div>
+            <div style="font-size: 0.6rem; letter-spacing: 0.2em; text-transform: uppercase; color: var(--text-muted); margin-top: 0.35rem;">
+                {% if current_lang == 'en' %}Models{% else %}Model{% endif %}
+            </div>
+        </div>
+        <div style="flex: 2; min-width: 260px; padding: 1.75rem 2rem; text-align: center; display: flex; align-items: center; justify-content: center;">
+            <div>
+                {% if current_lang == 'en' and brand.description_en %}
+                <p style="color: var(--text-secondary); font-size: 0.85rem; line-height: 1.9; max-width: 520px; margin: 0 auto;">{{ brand.description_en }}</p>
+                {% elif brand.description %}
+                <p style="color: var(--text-secondary); font-size: 0.85rem; line-height: 1.9; max-width: 520px; margin: 0 auto;">{{ brand.description }}</p>
+                {% endif %}
+            </div>
+        </div>
     </div>
 </div>
 
+<!-- Featured Product -->
+{% if featured_product %}
+<section style="padding: 4rem 2rem; background: var(--bg-primary);">
+    <div class="lw-container">
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 4rem; align-items: center;">
+            <div style="position: relative; aspect-ratio: 1; background: var(--bg-card); border: 1px solid var(--border-subtle); overflow: hidden;">
+                {% if featured_product.image_path %}
+                <img src="{{ url_for('static', filename='uploads/' + featured_product.image_path) }}"
+                     alt="{{ get_name(featured_product) }}"
+                     style="width: 100%; height: 100%; object-fit: cover;">
+                {% else %}
+                <div style="width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; color: var(--text-muted); font-size: 4rem;">
+                    <i class="fa-regular fa-clock"></i>
+                </div>
+                {% endif %}
+                <div style="position: absolute; top: 1rem; left: 1rem; font-size: 0.55rem; letter-spacing: 0.3em; text-transform: uppercase; background: var(--gold); color: var(--bg-primary); padding: 0.3rem 0.7rem; font-family: var(--font-sans); font-weight: 600;">
+                    {% if current_lang == 'en' %}Featured{% else %}Öne Çıkan{% endif %}
+                </div>
+            </div>
+            <div>
+                <div style="font-size: 0.6rem; letter-spacing: 0.3em; text-transform: uppercase; color: var(--gold); font-family: var(--font-sans); margin-bottom: 1rem;">{{ brand.name }}</div>
+                <h2 style="font-family: var(--font-serif); font-size: clamp(1.6rem, 3vw, 2.4rem); margin-bottom: 1.5rem; line-height: 1.2;">{{ get_name(featured_product) }}</h2>
+                <div class="lw-divider" style="margin-bottom: 1.5rem;"></div>
+                {% set desc = featured_product.description_en if current_lang == 'en' and featured_product.description_en else featured_product.description %}
+                {% if desc %}
+                <p style="color: var(--text-secondary); font-size: 0.88rem; line-height: 1.9; margin-bottom: 2rem;">{{ desc | truncate(220) }}</p>
+                {% endif %}
+                <div style="display: flex; flex-wrap: wrap; gap: 1.5rem; margin-bottom: 2.5rem;">
+                    {% if featured_product.case_diameter %}
+                    <div>
+                        <div style="font-size: 0.6rem; letter-spacing: 0.15em; text-transform: uppercase; color: var(--text-muted); font-family: var(--font-sans);">{% if current_lang == 'en' %}Case{% else %}Kasa{% endif %}</div>
+                        <div style="color: var(--text-primary); font-size: 0.9rem; margin-top: 0.2rem;">{{ featured_product.case_diameter }}</div>
+                    </div>
+                    {% endif %}
+                    {% if featured_product.movement %}
+                    <div>
+                        <div style="font-size: 0.6rem; letter-spacing: 0.15em; text-transform: uppercase; color: var(--text-muted); font-family: var(--font-sans);">{% if current_lang == 'en' %}Movement{% else %}Mekanizma{% endif %}</div>
+                        <div style="color: var(--text-primary); font-size: 0.9rem; margin-top: 0.2rem;">{{ featured_product.movement }}</div>
+                    </div>
+                    {% endif %}
+                    {% if featured_product.water_resistance %}
+                    <div>
+                        <div style="font-size: 0.6rem; letter-spacing: 0.15em; text-transform: uppercase; color: var(--text-muted); font-family: var(--font-sans);">{% if current_lang == 'en' %}Water Resistance{% else %}Su Direnci{% endif %}</div>
+                        <div style="color: var(--text-primary); font-size: 0.9rem; margin-top: 0.2rem;">{{ featured_product.water_resistance }}</div>
+                    </div>
+                    {% endif %}
+                </div>
+                <div style="display: flex; align-items: baseline; gap: 1rem; margin-bottom: 2rem;">
+                    {% if featured_product.active_discount %}
+                    <span style="font-family: var(--font-serif); font-size: 2rem; color: var(--gold);">{{ "%.2f"|format(featured_product.discounted_price) }} TL</span>
+                    <span style="color: var(--text-muted); text-decoration: line-through; font-size: 1rem;">{{ "%.2f"|format(featured_product.price) }} TL</span>
+                    {% else %}
+                    <span style="font-family: var(--font-serif); font-size: 2rem; color: var(--gold);">{{ "%.2f"|format(featured_product.price) }} TL</span>
+                    {% endif %}
+                </div>
+                <a href="{{ url_for('shop.product_detail', product_id=featured_product.id) }}" class="btn-gold-solid">
+                    <span>{% if current_lang == 'en' %}Discover{% else %}İncele{% endif %}</span>
+                    <i class="fa-solid fa-arrow-right"></i>
+                </a>
+            </div>
+        </div>
+    </div>
+</section>
+{% endif %}
+
 <!-- Men's Collection -->
 {% if men_products %}
-<section style="padding: 4rem 2rem;">
+<section style="padding: 4rem 2rem; background: var(--bg-secondary);">
     <div class="lw-container">
         <div style="display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 2.5rem;">
             <div>
@@ -78,7 +194,7 @@
 
 <!-- Women's Collection -->
 {% if women_products %}
-<section style="padding: 4rem 2rem; background: var(--bg-secondary);">
+<section style="padding: 4rem 2rem;">
     <div class="lw-container">
         <div style="display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 2.5rem;">
             <div>
@@ -101,7 +217,7 @@
 
 <!-- Unisex -->
 {% if unisex_products %}
-<section style="padding: 4rem 2rem;">
+<section style="padding: 4rem 2rem; background: var(--bg-secondary);">
     <div class="lw-container">
         <div style="display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 2.5rem;">
             <div>

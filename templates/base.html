@@ -32,12 +32,16 @@
             <li><a href="{{ url_for('shop.product_list', gender='kadin') }}">
                 {% if current_lang == 'en' %}Women{% else %}Kadın{% endif %}
             </a></li>
-            {% if current_user.is_authenticated and current_user.is_admin %}
+            {% if current_user.is_authenticated and current_user.has_role('admin', 'moderator') %}
             <li><a href="{{ url_for('admin.dashboard') }}">Admin</a></li>
             {% endif %}
         </ul>
 
         <div class="lw-nav-actions">
+            <button class="lw-nav-icon" id="search-btn" title="{% if current_lang == 'en' %}Search{% else %}Ara{% endif %}" style="background:none;border:none;">
+                <i class="fa-solid fa-magnifying-glass"></i>
+            </button>
+
             <div class="lw-lang-toggle">
                 <a href="{{ url_for('set_language', language='tr') }}" class="{% if current_lang == 'tr' %}active{% endif %}">TR</a>
                 <span>|</span>
@@ -47,6 +51,12 @@
             {% if current_user.is_authenticated %}
             <a href="{{ url_for('profile.index') }}" class="lw-nav-icon" title="{{ current_user.full_name or current_user.email }}">
                 <i class="fa-regular fa-user"></i>
+            </a>
+            <a href="{{ url_for('profile.index') }}?tab=wishlist" class="lw-nav-icon" title="{% if current_lang == 'en' %}Wishlist{% else %}Favorilerim{% endif %}">
+                <i class="fa-regular fa-heart"></i>
+                {% if wishlist_ids|length > 0 %}
+                <span class="lw-cart-badge">{{ wishlist_ids|length }}</span>
+                {% endif %}
             </a>
             {% else %}
             <a href="{{ url_for('auth.login') }}" class="lw-nav-icon">
@@ -63,6 +73,26 @@
         </div>
     </div>
 </nav>
+
+<!-- SEARCH OVERLAY -->
+<div id="search-overlay" role="dialog" aria-modal="true" aria-label="{% if current_lang == 'en' %}Search{% else %}Arama{% endif %}">
+    <button class="search-overlay-close" id="search-overlay-close" aria-label="{% if current_lang == 'en' %}Close{% else %}Kapat{% endif %}">
+        <i class="fa-solid fa-xmark"></i>
+    </button>
+    <div class="search-overlay-inner">
+        <form class="search-overlay-form" method="GET" action="{{ url_for('shop.product_list') }}">
+            <input type="text" name="search" id="search-overlay-input"
+                   placeholder="{% if current_lang == 'en' %}Search watches, brands...{% else %}Saat, marka ara...{% endif %}"
+                   autocomplete="off" autofocus>
+            <button type="submit" aria-label="{% if current_lang == 'en' %}Search{% else %}Ara{% endif %}">
+                <i class="fa-solid fa-arrow-right"></i>
+            </button>
+        </form>
+        <div class="search-overlay-hint">
+            {% if current_lang == 'en' %}Press Enter to search &mdash; Esc to close{% else %}Aramak için Enter &mdash; kapatmak için Esc{% endif %}
+        </div>
+    </div>
+</div>
 
 <!-- BRAND NAV -->
 <div class="lw-brand-nav">
@@ -185,6 +215,8 @@
                     <li><a href="{{ url_for('shop.product_list', gender='erkek') }}">{% if current_lang == 'en' %}Men's Watches{% else %}Erkek Saatleri{% endif %}</a></li>
                     <li><a href="{{ url_for('shop.product_list', gender='kadin') }}">{% if current_lang == 'en' %}Women's Watches{% else %}Kadın Saatleri{% endif %}</a></li>
                     <li><a href="{{ url_for('shop.product_list') }}">{% if current_lang == 'en' %}All Watches{% else %}Tüm Saatler{% endif %}</a></li>
+                    <li><a href="{{ url_for('shop.about') }}">{% if current_lang == 'en' %}About Us{% else %}Hakkımızda{% endif %}</a></li>
+                    <li><a href="{{ url_for('shop.faq') }}">{% if current_lang == 'en' %}FAQ & Warranty{% else %}SSS & Garanti{% endif %}</a></li>
                 </ul>
             </div>
             <div>
@@ -255,6 +287,34 @@ function closeNewsletter() {
         setTimeout(function() { modal.remove(); }, 400);
     }
 }
+</script>
+
+<!-- SEARCH OVERLAY JS -->
+<script>
+(function() {
+    var overlay = document.getElementById('search-overlay');
+    var input   = document.getElementById('search-overlay-input');
+
+    document.getElementById('search-btn').addEventListener('click', function() {
+        overlay.classList.add('active');
+        setTimeout(function() { input.focus(); }, 50);
+    });
+
+    document.getElementById('search-overlay-close').addEventListener('click', closeSearch);
+
+    overlay.addEventListener('click', function(e) {
+        if (e.target === overlay) closeSearch();
+    });
+
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape') closeSearch();
+    });
+
+    function closeSearch() {
+        overlay.classList.remove('active');
+        input.value = '';
+    }
+})();
 </script>
 
 {% block extra_js %}{% endblock %}

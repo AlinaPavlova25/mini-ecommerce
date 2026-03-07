@@ -1,0 +1,163 @@
+{% extends "base.html" %}
+
+{% block title %}{% if current_lang == 'en' %}FAQ & Warranty{% else %}SSS & Garanti{% endif %} — LuxWatch{% endblock %}
+
+{% block content %}
+
+<!-- Hero -->
+<div style="position: relative; background: linear-gradient(180deg, var(--bg-secondary) 0%, var(--bg-primary) 100%); border-bottom: 1px solid var(--border-subtle); padding: 5rem 2rem 4rem; text-align: center; overflow: hidden;">
+    <div style="position: absolute; inset: 0; background: radial-gradient(ellipse at 50% 0%, rgba(198,167,94,0.07) 0%, transparent 65%); pointer-events: none;"></div>
+    <div style="position: relative; z-index: 1;">
+        <div style="font-size: 0.62rem; letter-spacing: 0.35em; text-transform: uppercase; color: var(--gold); font-family: var(--font-sans); margin-bottom: 1rem;">
+            {% if current_lang == 'en' %}Support{% else %}Destek{% endif %}
+        </div>
+        <h1 style="font-family: var(--font-serif); font-size: clamp(2.2rem, 5vw, 3.5rem); margin-bottom: 1.5rem; letter-spacing: 0.03em;">
+            {% if current_lang == 'en' %}FAQ & Warranty{% else %}Sıkça Sorulan Sorular & Garanti{% endif %}
+        </h1>
+        <div class="lw-divider"></div>
+    </div>
+</div>
+
+{% set faq_items = [
+    (
+        "Saatler orijinal mi? / Are the watches authentic?",
+        "Evet. Koleksiyonumuzdaki tüm saatler yetkili distribütörlerden veya sertifikalı bayilerden temin edilmekte; her saat kutusu, orijinallik belgesi ve garanti kartıyla birlikte teslim edilmektedir. / Yes. All watches in our collection are sourced from authorized distributors or certified dealers; every watch is delivered with its box, certificate of authenticity, and warranty card."
+    ),
+    (
+        "Garanti süresi ne kadardır? / What is the warranty period?",
+        "Tüm saatler 2 yıl uluslararası üretici garantisiyle satılmaktadır. Garanti, fabrika kaynaklı malzeme ve işçilik hatalarını kapsar; dış darbe, nem veya yanlış kullanım kapsamı dışındadır. / All watches come with a 2-year international manufacturer's warranty covering factory defects in materials and workmanship. Accidental damage, moisture ingress, or misuse is not covered."
+    ),
+    (
+        "Kargo ve teslimat ne kadar sürer? / How long does shipping take?",
+        "Siparişler ödeme onayından sonra 1–2 iş günü içinde kargoya verilir. Türkiye içi teslimat genellikle 2–4 iş günüdür. Tüm paketler tam sigortalı ve izlenebilir kargo ile gönderilir. / Orders are dispatched within 1–2 business days after payment confirmation. Domestic delivery within Turkey is typically 2–4 business days. All packages are sent via fully insured, trackable courier."
+    ),
+    (
+        "İade politikanız nedir? / What is your return policy?",
+        "Teslimat tarihinden itibaren 14 gün içinde koşulsuz iade hakkınız bulunmaktadır. İade talebi için sipariş detay sayfasından iade kodu alabilirsiniz. Ürün orijinal kutusuyla eksiksiz iade edilmelidir. / You have an unconditional 14-day return right from the date of delivery. To initiate a return, generate a return code from the order detail page. The product must be returned in its original box and complete condition."
+    ),
+    (
+        "Taksit imkânı var mı? / Do you offer installments?",
+        "Evet, 2–12 taksit seçenekleri mevcuttur. 3 taksite kadar vade farkı uygulanmamakta; daha uzun vadelerde yıllık %12 faiz hesaplanmaktadır. Detaylar ödeme adımında gösterilmektedir. / Yes, installments from 2 to 12 months are available. No interest is applied up to 3 installments; longer terms carry an annual rate of 12%. Details are shown at the payment step."
+    ),
+    (
+        "Sertifika ve belgeler teslimatta geliyor mu? / Do certificates come with the delivery?",
+        "Evet. Her saat markasına özgü orijinallik sertifikası, garanti kartı ve orijinal kutusuyla birlikte gönderilmektedir. Herhangi bir belge eksikliğinde müşteri hizmetlerimizle iletişime geçin. / Yes. Each watch is shipped with its brand-specific certificate of authenticity, warranty card, and original box. If any document is missing, please contact our customer support."
+    ),
+    (
+        "Sipariş durumumu nasıl takip edebilirim? / How can I track my order?",
+        "Hesabınıza giriş yaparak 'Siparişlerim' sayfasından sipariş durumunu anlık olarak takip edebilirsiniz. Kargoya verildiğinde takip numarası e-posta ile iletilecektir. / Log in to your account and track your order status in real time from the 'My Orders' page. A tracking number will be sent to your e-mail once the package is dispatched."
+    ),
+    (
+        "Ürün stokta yoksa ne yapabilirim? / What if the product is out of stock?",
+        "Ürün detay sayfasındaki 'Gelince Haber Ver' formunu doldurabilirsiniz. Ürün tekrar stoğa girdiğinde e-posta ile bildirim alırsınız. / Fill in the 'Notify Me' form on the product detail page. You will receive an e-mail notification as soon as the product is back in stock."
+    ),
+] %}
+
+<div class="lw-container" style="padding: 4rem 2rem;">
+    <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 3rem; align-items: start;">
+
+        <!-- FAQ -->
+        <div>
+            <h2 style="font-family: var(--font-serif); font-size: 1.5rem; margin-bottom: 2rem;">
+                {% if current_lang == 'en' %}Frequently Asked Questions{% else %}Sıkça Sorulan Sorular{% endif %}
+            </h2>
+
+            <div style="display: flex; flex-direction: column; gap: 0;">
+                {% for q, a in faq_items %}
+                <div class="faq-item" style="border-bottom: 1px solid var(--border-subtle);">
+                    <button class="faq-q" onclick="toggleFaq(this)" style="width: 100%; background: none; border: none; text-align: left; padding: 1.25rem 0; cursor: pointer; display: flex; justify-content: space-between; align-items: center; gap: 1rem;">
+                        <span style="font-family: var(--font-serif); font-size: 0.95rem; color: var(--text-primary); line-height: 1.4;">
+                            {% if current_lang == 'en' %}{{ q.split(' / ')[1] }}{% else %}{{ q.split(' / ')[0] }}{% endif %}
+                        </span>
+                        <i class="fa-solid fa-plus faq-icon" style="color: var(--gold); font-size: 0.75rem; flex-shrink: 0; transition: transform 0.3s;"></i>
+                    </button>
+                    <div class="faq-a" style="display: none; padding-bottom: 1.25rem;">
+                        <p style="color: var(--text-secondary); font-size: 0.85rem; line-height: 1.9; margin: 0;">
+                            {% if current_lang == 'en' %}{{ a.split(' / ')[1] }}{% else %}{{ a.split(' / ')[0] }}{% endif %}
+                        </p>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+
+        <!-- Sidebar -->
+        <div style="position: sticky; top: 90px;">
+            <!-- Garanti -->
+            <div style="background: var(--bg-card); border: 1px solid var(--border-subtle); padding: 2rem; margin-bottom: 1.5rem;">
+                <div style="font-size: 1.8rem; color: var(--gold); margin-bottom: 1rem; text-align: center;"><i class="fa-solid fa-shield-halved"></i></div>
+                <h3 style="font-family: var(--font-serif); font-size: 1rem; text-align: center; margin-bottom: 1rem;">
+                    {% if current_lang == 'en' %}2-Year Warranty{% else %}2 Yıl Garanti{% endif %}
+                </h3>
+                <p style="font-size: 0.8rem; color: var(--text-secondary); line-height: 1.8; text-align: center; margin-bottom: 1.25rem;">
+                    {% if current_lang == 'en' %}All watches carry full manufacturer warranty with certificate.{% else %}Tüm saatler sertifikalı tam üretici garantisiyle teslim edilir.{% endif %}
+                </p>
+                <div style="border-top: 1px solid var(--border-subtle); padding-top: 1.25rem; display: flex; flex-direction: column; gap: 0.75rem;">
+                    {% for item in [
+                        ('fa-check', 'Malzeme ve işçilik hataları / Material & workmanship defects'),
+                        ('fa-check', 'Mekanizma arızaları / Mechanism failures'),
+                        ('fa-xmark', 'Dış darbe / Accidental damage'),
+                        ('fa-xmark', 'Nem ve su hasarı / Water damage'),
+                    ] %}
+                    <div style="display: flex; align-items: center; gap: 0.75rem; font-size: 0.78rem; color: var(--text-secondary);">
+                        <i class="fa-solid {{ item[0] }}" style="color: {% if item[0] == 'fa-check' %}#4ade80{% else %}#f87171{% endif %}; width: 14px; flex-shrink: 0;"></i>
+                        <span>{% if current_lang == 'en' %}{{ item[1].split(' / ')[1] }}{% else %}{{ item[1].split(' / ')[0] }}{% endif %}</span>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+
+            <!-- WhatsApp CTA -->
+            <div style="background: var(--bg-card); border: 1px solid var(--border-subtle); padding: 2rem; text-align: center;">
+                <div style="font-size: 0.65rem; letter-spacing: 0.2em; text-transform: uppercase; color: var(--text-muted); margin-bottom: 0.75rem;">
+                    {% if current_lang == 'en' %}Still have questions?{% else %}Hâlâ sorunuz var mı?{% endif %}
+                </div>
+                <p style="font-size: 0.82rem; color: var(--text-secondary); line-height: 1.8; margin-bottom: 1.5rem;">
+                    {% if current_lang == 'en' %}Our experts are ready to help.{% else %}Uzman ekibimiz yardımcı olmaya hazır.{% endif %}
+                </p>
+                <a href="https://wa.me/905056361208" target="_blank" rel="noopener noreferrer"
+                   style="display: inline-flex; align-items: center; justify-content: center; gap: 0.6rem; background: #25D366; color: #fff; padding: 0.8rem 1.5rem; font-family: var(--font-sans); font-size: 0.72rem; font-weight: 600; letter-spacing: 0.12em; text-transform: uppercase; text-decoration: none; border-radius: 2px; width: 100%; transition: background 0.2s;"
+                   onmouseover="this.style.background='#1ebe5d'"
+                   onmouseout="this.style.background='#25D366'">
+                    <i class="fa-brands fa-whatsapp" style="font-size: 1rem;"></i>
+                    <span>WhatsApp</span>
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block extra_css %}
+<style>
+.faq-item:first-child { border-top: 1px solid var(--border-subtle); }
+.faq-q:hover span { color: var(--gold); }
+.faq-icon.open { transform: rotate(45deg); }
+@media (max-width: 900px) {
+    .lw-container > div[style*="grid-template-columns: 2fr 1fr"] {
+        display: block !important;
+    }
+    .lw-container > div[style*="grid-template-columns: 2fr 1fr"] > div:last-child {
+        margin-top: 2rem;
+        position: static !important;
+    }
+}
+</style>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function toggleFaq(btn) {
+    var answer = btn.nextElementSibling;
+    var icon = btn.querySelector('.faq-icon');
+    var isOpen = answer.style.display === 'block';
+    document.querySelectorAll('.faq-a').forEach(function(a) { a.style.display = 'none'; });
+    document.querySelectorAll('.faq-icon').forEach(function(i) { i.classList.remove('open'); });
+    if (!isOpen) {
+        answer.style.display = 'block';
+        icon.classList.add('open');
+    }
+}
+</script>
+{% endblock %}

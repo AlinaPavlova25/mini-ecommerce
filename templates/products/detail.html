@@ -142,9 +142,12 @@
     <div class="product-detail-grid">
         <!-- IMAGE -->
         <div>
-            <div class="product-image-main">
+            <div class="product-image-main" style="cursor: zoom-in;" onclick="openLightbox(document.getElementById('main-product-img').src)">
                 {% if product.image_path %}
                 <img id="main-product-img" src="{{ url_for('static', filename='uploads/' + product.image_path) }}" alt="{{ product.get_name(current_lang) }}">
+                <div style="position: absolute; bottom: 0.75rem; right: 0.75rem; background: rgba(0,0,0,0.6); border: 1px solid rgba(198,167,94,0.3); color: var(--gold); width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; pointer-events: none;">
+                    <i class="fa-solid fa-magnifying-glass-plus" style="font-size: 0.8rem;"></i>
+                </div>
                 {% else %}
                 <div class="lw-product-placeholder" style="height: 100%; min-height: 450px;">
                     <i class="fa-regular fa-clock" style="font-size: 4rem; opacity: 0.2; color: var(--gold);"></i>
@@ -161,9 +164,12 @@
             {% if all_images|length > 1 %}
             <div class="product-thumbs">
                 {% for path in all_images %}
-                <img src="{{ url_for('static', filename='uploads/' + path) }}"
+                {% set src = url_for('static', filename='uploads/' + path) %}
+                <img src="{{ src }}"
                      class="product-thumb {% if loop.first %}active{% endif %}"
-                     onclick="setMainImage(this, '{{ url_for('static', filename='uploads/' + path) }}')">
+                     onclick="setMainImage(this, '{{ src }}')"
+                     ondblclick="openLightbox('{{ src }}')"
+                     title="{% if current_lang == 'en' %}Click to view, double-click to zoom{% else %}Görmek için tıkla, büyütmek için çift tıkla{% endif %}">
                 {% endfor %}
             </div>
             {% endif %}
@@ -268,6 +274,25 @@
                         <i class="fa-solid fa-bag-shopping"></i>
                         {% if current_lang == 'en' %}Add to Bag{% else %}Sepete Ekle{% endif %}
                     </button>
+                    {% if current_user.is_authenticated %}
+                        {% if product.id in wishlist_ids %}
+                        <form action="{{ url_for('profile.wishlist_remove', product_id=product.id) }}" method="POST" style="margin:0;">
+                            <button type="submit" class="lw-wishlist-btn-lg active" title="{% if current_lang == 'en' %}Remove from wishlist{% else %}Favorilerden çıkar{% endif %}">
+                                <i class="fa-solid fa-heart"></i>
+                            </button>
+                        </form>
+                        {% else %}
+                        <form action="{{ url_for('profile.wishlist_add', product_id=product.id) }}" method="POST" style="margin:0;">
+                            <button type="submit" class="lw-wishlist-btn-lg" title="{% if current_lang == 'en' %}Add to wishlist{% else %}Favorilere ekle{% endif %}">
+                                <i class="fa-regular fa-heart"></i>
+                            </button>
+                        </form>
+                        {% endif %}
+                    {% else %}
+                    <a href="{{ url_for('auth.login') }}" class="lw-wishlist-btn-lg" title="{% if current_lang == 'en' %}Sign in to save{% else %}Kaydetmek için giriş yap{% endif %}">
+                        <i class="fa-regular fa-heart"></i>
+                    </a>
+                    {% endif %}
                 </div>
             </form>
             <div style="font-size: 0.7rem; color: var(--text-muted); margin-bottom: 1rem;">
@@ -279,6 +304,25 @@
                 <span style="font-size: 0.75rem; color: #e07070; letter-spacing: 0.1em; text-transform: uppercase;">
                     {% if current_lang == 'en' %}Out of Stock{% else %}Stokta Yok{% endif %}
                 </span>
+            </div>
+            <div style="background: rgba(198,167,94,0.04); border: 1px solid rgba(198,167,94,0.2); padding: 1.25rem; margin-bottom: 1.5rem;">
+                <div style="font-size: 0.65rem; letter-spacing: 0.2em; text-transform: uppercase; color: var(--gold); font-family: var(--font-sans); margin-bottom: 0.6rem;">
+                    <i class="fa-regular fa-bell" style="margin-right: 0.4rem;"></i>
+                    {% if current_lang == 'en' %}Notify Me When Available{% else %}Gelince Haber Ver{% endif %}
+                </div>
+                <p style="font-size: 0.78rem; color: var(--text-muted); margin-bottom: 0.9rem; line-height: 1.6;">
+                    {% if current_lang == 'en' %}Enter your email and we'll notify you as soon as this watch is back in stock.{% else %}E-posta adresinizi bırakın, ürün tekrar stoka girdiğinde sizi bilgilendirelim.{% endif %}
+                </p>
+                <form action="{{ url_for('shop.stock_notify', product_id=product.id) }}" method="POST" style="display: flex; gap: 0.6rem; flex-wrap: wrap;">
+                    <input type="email" name="email" class="lw-input"
+                           value="{{ current_user.email if current_user.is_authenticated else '' }}"
+                           placeholder="{% if current_lang == 'en' %}Your e-mail address{% else %}E-posta adresiniz{% endif %}"
+                           required style="flex: 1; min-width: 180px;">
+                    <button type="submit" class="btn-gold-solid" style="white-space: nowrap;">
+                        <i class="fa-regular fa-bell"></i>
+                        {% if current_lang == 'en' %}Notify Me{% else %}Haber Ver{% endif %}
+                    </button>
+                </form>
             </div>
             {% endif %}
 
@@ -296,6 +340,31 @@
                     <i class="fa-solid fa-rotate-left" style="color: var(--gold); width: 16px;"></i>
                     {% if current_lang == 'en' %}14-Day Return Policy{% else %}14 Gün İade Hakkı{% endif %}
                 </div>
+            </div>
+
+            <!-- COMPARE -->
+            {% set compare_ids = session.get('compare', []) %}
+            <div style="margin-top: 1.5rem; padding-top: 1.25rem; border-top: 1px solid var(--border-subtle);">
+                {% if product.id in compare_ids %}
+                <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 0.75rem;">
+                    <span style="font-size: 0.75rem; color: var(--gold);">
+                        <i class="fa-solid fa-scale-balanced" style="margin-right: 0.4rem;"></i>
+                        {% if current_lang == 'en' %}Added to comparison{% else %}Karşılaştırmaya eklendi{% endif %}
+                    </span>
+                    <a href="{{ url_for('shop.compare_view') }}" class="btn-ghost" style="font-size: 0.72rem;">
+                        <span>{% if current_lang == 'en' %}View Comparison{% else %}Karşılaştırmayı Gör{% endif %}</span>
+                        <i class="fa-solid fa-arrow-right"></i>
+                    </a>
+                </div>
+                {% else %}
+                <form action="{{ url_for('shop.compare_add', product_id=product.id) }}" method="POST">
+                    <button type="submit" class="btn-ghost" style="width: 100%; justify-content: center; font-size: 0.75rem;">
+                        <i class="fa-solid fa-scale-balanced"></i>
+                        {% if current_lang == 'en' %}Add to Comparison{% else %}Karşılaştırmaya Ekle{% endif %}
+                        <span style="font-size: 0.65rem; color: var(--text-muted);">({{ compare_ids|length }}/3)</span>
+                    </button>
+                </form>
+                {% endif %}
             </div>
         </div>
     </div>
@@ -354,5 +423,71 @@ function setMainImage(thumb, src) {
     document.querySelectorAll('.product-thumb').forEach(function(t) { t.classList.remove('active'); });
     thumb.classList.add('active');
 }
+
+/* ===== LIGHTBOX ===== */
+var _lbImages = [];
+{% set all_images_js = [] %}
+{% if product.image_path %}{% set _ = all_images_js.append(product.image_path) %}{% endif %}
+{% for img in product.images %}{% set _ = all_images_js.append(img.image_path) %}{% endfor %}
+{% for path in all_images_js %}
+_lbImages.push('{{ url_for('static', filename='uploads/' + path) }}');
+{% endfor %}
+var _lbCurrent = 0;
+
+function openLightbox(src) {
+    var idx = _lbImages.indexOf(src);
+    _lbCurrent = idx >= 0 ? idx : 0;
+    _renderLightbox();
+    var lb = document.getElementById('lw-lightbox');
+    lb.style.display = 'flex';
+    requestAnimationFrame(function() { lb.style.opacity = '1'; });
+    document.body.style.overflow = 'hidden';
+}
+
+function closeLightbox() {
+    var lb = document.getElementById('lw-lightbox');
+    lb.style.opacity = '0';
+    setTimeout(function() { lb.style.display = 'none'; }, 300);
+    document.body.style.overflow = '';
+}
+
+function lbNav(dir) {
+    _lbCurrent = (_lbCurrent + dir + _lbImages.length) % _lbImages.length;
+    _renderLightbox();
+}
+
+function _renderLightbox() {
+    document.getElementById('lw-lb-img').src = _lbImages[_lbCurrent];
+    document.getElementById('lw-lb-counter').textContent = (_lbCurrent + 1) + ' / ' + _lbImages.length;
+    var prev = document.getElementById('lw-lb-prev');
+    var next = document.getElementById('lw-lb-next');
+    if (_lbImages.length <= 1) {
+        if (prev) prev.style.display = 'none';
+        if (next) next.style.display = 'none';
+    }
+}
+
+document.addEventListener('keydown', function(e) {
+    var lb = document.getElementById('lw-lightbox');
+    if (!lb || lb.style.display === 'none' || lb.style.display === '') return;
+    if (e.key === 'Escape') closeLightbox();
+    if (e.key === 'ArrowLeft') lbNav(-1);
+    if (e.key === 'ArrowRight') lbNav(1);
+});
 </script>
+
+<!-- LIGHTBOX -->
+<div id="lw-lightbox" style="display:none; opacity:0; position:fixed; inset:0; background:rgba(0,0,0,0.95); z-index:99999; align-items:center; justify-content:center; transition:opacity 0.3s ease;" onclick="if(event.target===this)closeLightbox()">
+    <button onclick="closeLightbox()" style="position:absolute;top:1.5rem;right:1.5rem;background:none;border:1px solid rgba(198,167,94,0.3);color:var(--gold);width:40px;height:40px;font-size:1rem;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all 0.2s;z-index:2;">
+        <i class="fa-solid fa-xmark"></i>
+    </button>
+    <button id="lw-lb-prev" onclick="lbNav(-1)" style="position:absolute;left:1.5rem;top:50%;transform:translateY(-50%);background:rgba(0,0,0,0.6);border:1px solid rgba(198,167,94,0.3);color:var(--gold);width:44px;height:44px;font-size:1rem;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all 0.2s;">
+        <i class="fa-solid fa-chevron-left"></i>
+    </button>
+    <img id="lw-lb-img" src="" alt="" style="max-width:90vw;max-height:88vh;object-fit:contain;user-select:none;display:block;">
+    <button id="lw-lb-next" onclick="lbNav(1)" style="position:absolute;right:1.5rem;top:50%;transform:translateY(-50%);background:rgba(0,0,0,0.6);border:1px solid rgba(198,167,94,0.3);color:var(--gold);width:44px;height:44px;font-size:1rem;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all 0.2s;">
+        <i class="fa-solid fa-chevron-right"></i>
+    </button>
+    <div id="lw-lb-counter" style="position:absolute;bottom:1.5rem;left:50%;transform:translateX(-50%);font-size:0.7rem;letter-spacing:0.2em;color:var(--text-muted);font-family:var(--font-sans);"></div>
+</div>
 {% endblock %}

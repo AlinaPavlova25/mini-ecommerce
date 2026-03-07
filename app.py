@@ -2,19 +2,38 @@ import os
 from flask import Flask, render_template, session, request, redirect, url_for
 from flask_migrate import Migrate
 from flask_login import LoginManager
-from models import db, User, Brand
+from flask_mail import Mail
+from flask_limiter import Limiter
+from flask_limiter.util import get_remote_address
+from dotenv import load_dotenv
+from models import db, User, Brand, CartItem, Wishlist
+
+load_dotenv()
+
+mail = Mail()
+limiter = Limiter(key_func=get_remote_address, default_limits=[])
 
 app = Flask(__name__)
 
 basedir = os.path.abspath(os.path.dirname(__file__))
 
-app.config['SECRET_KEY'] = 'dev-secret-key-change-in-production-12345'
+app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'dev-secret-key-change-in-production-12345')
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///' + os.path.join(basedir, 'instance', 'shop.db')
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.config['UPLOAD_FOLDER'] = os.path.join(app.root_path, 'static', 'uploads')
 app.config['MAX_CONTENT_LENGTH'] = 50 * 1024 * 1024
 
+app.config['MAIL_SERVER']        = os.environ.get('MAIL_SERVER', 'smtp.gmail.com')
+app.config['MAIL_PORT']          = int(os.environ.get('MAIL_PORT', 587))
+app.config['MAIL_USE_TLS']       = os.environ.get('MAIL_USE_TLS', 'true').lower() == 'true'
+app.config['MAIL_USERNAME']      = os.environ.get('MAIL_USERNAME', '')
+app.config['MAIL_PASSWORD']      = os.environ.get('MAIL_PASSWORD', '')
+app.config['MAIL_DEFAULT_SENDER'] = os.environ.get('MAIL_DEFAULT_SENDER', 'noreply@luxwatch.com')
+app.config['MAIL_SUPPRESS_SEND'] = True
+
 db.init_app(app)
+mail.init_app(app)
+limiter.init_app(app)
 migrate = Migrate(app, db)
 
 login_manager = LoginManager()
@@ -24,7 +43,7 @@ login_manager.login_message = 'Bu sayfaya erişmek için giriş yapmalısınız.
 
 @login_manager.user_loader
 def load_user(user_id):
-    return User.query.get(int(user_id))
+    return db.session.get(User, int(user_id))
 
 from routes.auth import auth_bp
 from routes.shop import shop_bp
@@ -35,6 +54,11 @@ app.register_blueprint(auth_bp)
 app.register_blueprint(shop_bp)
 app.register_blueprint(admin_bp, url_prefix='/admin')
 app.register_blueprint(profile_bp)
+
+limiter.limit('10 per hour')(app.view_functions['auth.login'])
+limiter.limit('10 per hour')(app.view_functions['auth.register'])
+limiter.limit('5 per hour')(app.view_functions['auth.forgot_password'])
+limiter.limit('20 per hour')(app.view_functions['shop.newsletter_subscribe'])
 
 @app.route('/set-newsletter-shown', methods=['POST'])
 def set_newsletter_shown():
@@ -52,8 +76,17 @@ def set_language(language):
 @app.context_processor
 def inject_globals():
     from utils.i18n import t
-    cart = session.get('cart', {})
-    cart_count = sum(cart.values())
+    from flask_login import current_user
+
+    if current_user.is_authenticated:
+        cart_items = CartItem.query.filter_by(user_id=current_user.id).all()
+        cart_count = sum(item.quantity for item in cart_items)
+        wishlist_ids = {w.product_id for w in Wishlist.query.filter_by(user_id=current_user.id).all()}
+    else:
+        cart = session.get('cart', {})
+        cart_count = sum(cart.values())
+        wishlist_ids = set()
+
     brands = Brand.query.order_by(Brand.sort_order.asc()).all()
     current_lang = session.get('language', 'tr')
 
@@ -64,6 +97,7 @@ def inject_globals():
 
     return {
         'cart_count': cart_count,
+        'wishlist_ids': wishlist_ids,
         'brands': brands,
         't': t,
         'current_lang': current_lang,

@@ -115,6 +115,10 @@
     .checkout-grid { grid-template-columns: 1fr; }
     .form-grid-2 { grid-template-columns: 1fr; }
 }
+
+#installment-rows > div:hover {
+    background: rgba(198,167,94,0.05) !important;
+}
 </style>
 {% endblock %}
 
@@ -167,29 +171,64 @@
                     <input type="hidden" name="saved_address_id" value="new">
                     <div id="new-address-form">
                     {% endif %}
+
+                        <!-- GPS BUTTON -->
+                        <div style="margin-bottom: 1.5rem;">
+                            <button type="button" id="gps-btn" onclick="getLocation()"
+                                style="display: flex; align-items: center; gap: 0.6rem; background: rgba(198,167,94,0.08); border: 1px solid rgba(198,167,94,0.35); color: var(--gold); font-family: var(--font-sans); font-size: 0.75rem; letter-spacing: 0.1em; text-transform: uppercase; padding: 0.65rem 1.25rem; cursor: pointer; transition: all 0.2s; width: 100%;">
+                                <i class="fa-solid fa-location-crosshairs" id="gps-icon"></i>
+                                <span id="gps-btn-text">{% if current_lang == 'en' %}Detect My Location Automatically{% else %}Konumumu Otomatik Algıla{% endif %}</span>
+                            </button>
+                        </div>
+
+                        <!-- GPS WARNING -->
+                        <div id="gps-warning" style="display: none; background: rgba(198,167,94,0.08); border: 2px solid var(--gold); padding: 1rem 1.25rem; margin-bottom: 1.5rem;">
+                            <div style="display: flex; align-items: flex-start; gap: 0.75rem;">
+                                <i class="fa-solid fa-triangle-exclamation" style="color: var(--gold); font-size: 1.1rem; margin-top: 0.1rem; flex-shrink: 0;"></i>
+                                <div>
+                                    <div style="font-size: 0.78rem; font-weight: 600; color: var(--gold); letter-spacing: 0.05em; margin-bottom: 0.4rem; text-transform: uppercase;">
+                                        {% if current_lang == 'en' %}Please Verify Your Address{% else %}Lütfen Adresinizi Kontrol Edin{% endif %}
+                                    </div>
+                                    <div style="font-size: 0.8rem; color: var(--text-secondary); line-height: 1.7;">
+                                        {% if current_lang == 'en' %}
+                                        Your location was detected automatically. GPS may not be 100% accurate — <strong style="color: var(--text-primary);">apartment number, floor and door details are not included.</strong> Please review and complete the fields below before placing your order.
+                                        {% else %}
+                                        Konumunuz otomatik olarak algılandı. GPS her zaman %100 doğru olmayabilir — <strong style="color: var(--text-primary);">daire numarası, kat ve kapı bilgileri getirilmemiştir.</strong> Siparişi tamamlamadan önce lütfen aşağıdaki alanları kontrol edip eksikleri tamamlayın.
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- GPS ERROR -->
+                        <div id="gps-error" style="display: none; background: rgba(180,60,60,0.08); border: 1px solid rgba(180,60,60,0.4); padding: 0.85rem 1.25rem; margin-bottom: 1.5rem; font-size: 0.8rem; color: #e07070;">
+                            <i class="fa-solid fa-circle-exclamation" style="margin-right: 0.5rem;"></i>
+                            <span id="gps-error-text"></span>
+                        </div>
+
                         <div class="form-grid-2">
                             <div class="form-field">
                                 <label>{% if current_lang == 'en' %}First Name{% else %}Ad{% endif %} *</label>
-                                <input type="text" name="receiver_name" placeholder="{% if current_lang == 'en' %}First name{% else %}Adınız{% endif %}">
+                                <input type="text" name="receiver_name" id="receiver_name" placeholder="{% if current_lang == 'en' %}First name{% else %}Adınız{% endif %}">
                             </div>
                             <div class="form-field">
                                 <label>{% if current_lang == 'en' %}Last Name{% else %}Soyad{% endif %} *</label>
-                                <input type="text" name="receiver_surname" placeholder="{% if current_lang == 'en' %}Last name{% else %}Soyadınız{% endif %}">
+                                <input type="text" name="receiver_surname" id="receiver_surname" placeholder="{% if current_lang == 'en' %}Last name{% else %}Soyadınız{% endif %}">
                             </div>
                         </div>
                         <div class="form-grid-2">
                             <div class="form-field">
                                 <label>{% if current_lang == 'en' %}Phone{% else %}Telefon{% endif %} *</label>
-                                <input type="tel" name="receiver_phone" placeholder="+90 555 000 00 00">
+                                <input type="tel" name="receiver_phone" id="receiver_phone" placeholder="+90 555 000 00 00" oninput="formatPhone(this)" onkeydown="phoneKeydown(event)">
                             </div>
                             <div class="form-field">
                                 <label>{% if current_lang == 'en' %}City{% else %}Şehir{% endif %} *</label>
-                                <input type="text" name="delivery_city" placeholder="{% if current_lang == 'en' %}City{% else %}Şehir{% endif %}">
+                                <input type="text" name="delivery_city" id="delivery_city" placeholder="{% if current_lang == 'en' %}City{% else %}Şehir{% endif %}">
                             </div>
                         </div>
                         <div class="form-field">
                             <label>{% if current_lang == 'en' %}Address{% else %}Adres{% endif %} *</label>
-                            <textarea name="shipping_address" rows="3" placeholder="{% if current_lang == 'en' %}Full address{% else %}Tam adres{% endif %}" style="width: 100%; background: transparent; border: 1px solid var(--border-subtle); color: var(--text-primary); font-family: var(--font-sans); font-size: 0.85rem; font-weight: 300; padding: 0.75rem 1rem; outline: none; resize: vertical; transition: border-color 0.3s ease;" onfocus="this.style.borderColor='var(--gold)'" onblur="this.style.borderColor='rgba(198,167,94,0.15)'"></textarea>
+                            <textarea name="shipping_address" id="shipping_address" rows="3" placeholder="{% if current_lang == 'en' %}Full address{% else %}Tam adres{% endif %}" style="width: 100%; background: transparent; border: 1px solid var(--border-subtle); color: var(--text-primary); font-family: var(--font-sans); font-size: 0.85rem; font-weight: 300; padding: 0.75rem 1rem; outline: none; resize: vertical; transition: border-color 0.3s ease;" onfocus="this.style.borderColor='var(--gold)'" onblur="this.style.borderColor='rgba(198,167,94,0.15)'"></textarea>
                         </div>
                     </div>
 
@@ -207,7 +246,7 @@
 
                     <div class="form-field">
                         <label>{% if current_lang == 'en' %}Cardholder Name{% else %}Kart Üzerindeki İsim{% endif %} *</label>
-                        <input type="text" name="card_holder" id="card_holder" placeholder="{% if current_lang == 'en' %}Full name on card{% else %}Kart üzerindeki ad soyad{% endif %}" autocomplete="cc-name">
+                        <input type="text" name="card_holder" id="card_holder" placeholder="{% if current_lang == 'en' %}Full name on card{% else %}Kart üzerindeki ad soyad{% endif %}" autocomplete="cc-name" oninput="formatCardHolder(this)" onkeydown="cardHolderKeydown(event)">
                     </div>
 
                     <div class="form-field" style="position: relative;">
@@ -233,6 +272,15 @@
                             <label>CVV *</label>
                             <input type="text" name="card_cvv" id="card_cvv" placeholder="000" maxlength="4" autocomplete="cc-csc">
                         </div>
+                    </div>
+
+                    <!-- INSTALLMENT -->
+                    <div class="form-field" style="margin-top: 1.5rem;">
+                        <label>{% if current_lang == 'en' %}Installment Option{% else %}Taksit Seçeneği{% endif %}</label>
+                        <div id="installment-table" style="border: 1px solid var(--border-subtle); overflow: hidden;">
+                            <div id="installment-rows"></div>
+                        </div>
+                        <input type="hidden" name="installment_count" id="installment_count" value="1">
                     </div>
 
                     <div style="display: flex; align-items: center; gap: 0.75rem; font-size: 0.75rem; color: var(--text-muted); margin-top: 0.5rem;">
@@ -287,7 +335,10 @@
                     </div>
                     <div style="display: flex; justify-content: space-between; padding-top: 1rem; border-top: 1px solid var(--border-subtle);">
                         <span style="font-family: var(--font-serif); font-size: 1rem;">{% if current_lang == 'en' %}Total{% else %}Toplam{% endif %}</span>
-                        <span style="font-family: var(--font-serif); font-size: 1.3rem; color: var(--gold);">₺{{ "{:,.0f}".format(final_total) }}</span>
+                        <span id="summary-total" style="font-family: var(--font-serif); font-size: 1.3rem; color: var(--gold);">₺{{ "{:,.0f}".format(final_total) }}</span>
+                    </div>
+                    <div id="summary-installment" style="display: none; margin-top: 0.6rem; padding: 0.6rem 0.75rem; background: rgba(198,167,94,0.06); border: 1px solid rgba(198,167,94,0.2); font-size: 0.78rem; color: var(--text-secondary);">
+                        <span id="summary-installment-text"></span>
                     </div>
                 </div>
 
@@ -305,6 +356,87 @@
 </div>
 
 <script>
+var BASE_TOTAL = {{ final_total }};
+var ANNUAL_RATE = 0.12;
+var isEN = {{ 'true' if current_lang == 'en' else 'false' }};
+var selectedInstallment = 1;
+
+function calcInstallment(months) {
+    if (months <= 3) return { monthly: BASE_TOTAL / months, total: BASE_TOTAL, extra: 0 };
+    var monthlyRate = ANNUAL_RATE / 12;
+    var monthly = BASE_TOTAL * (monthlyRate * Math.pow(1 + monthlyRate, months)) / (Math.pow(1 + monthlyRate, months) - 1);
+    var total = monthly * months;
+    return { monthly: monthly, total: total, extra: total - BASE_TOTAL };
+}
+
+function fmtNum(n) {
+    return n.toLocaleString('tr-TR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+}
+
+function buildInstallmentTable() {
+    var container = document.getElementById('installment-rows');
+    container.innerHTML = '';
+    var options = [1, 2, 3, 4, 5, 6, 9, 12];
+    options.forEach(function(m, idx) {
+        var calc = calcInstallment(m);
+        var isSelected = (m === selectedInstallment);
+        var row = document.createElement('div');
+        row.style.cssText = 'display: flex; align-items: center; padding: 0.65rem 1rem; cursor: pointer; border-bottom: 1px solid var(--border-subtle); transition: background 0.15s;' + (idx === options.length - 1 ? 'border-bottom: none;' : '') + (isSelected ? 'background: rgba(198,167,94,0.08);' : '');
+        row.dataset.months = m;
+
+        var radioHtml = '<div style="width: 16px; height: 16px; border-radius: 50%; border: 1px solid ' + (isSelected ? 'var(--gold)' : 'rgba(198,167,94,0.35)') + '; background: ' + (isSelected ? 'var(--gold)' : 'transparent') + '; flex-shrink: 0; margin-right: 0.85rem; box-shadow: ' + (isSelected ? '0 0 0 3px rgba(198,167,94,0.15)' : 'none') + ';"></div>';
+
+        var labelText = m === 1 ? (isEN ? 'Single Payment' : 'Tek Çekim') : m + (isEN ? ' Installments' : ' Taksit');
+        var labelHtml = '<span style="font-size: 0.82rem; color: var(--text-primary); flex: 1;">' + labelText + '</span>';
+
+        var monthlyHtml = '<span style="font-size: 0.78rem; color: var(--gold); white-space: nowrap; margin-right: 1rem;">₺' + fmtNum(calc.monthly) + (m > 1 ? (isEN ? '/mo' : '/ay') : '') + '</span>';
+
+        var extraHtml = '';
+        if (calc.extra > 0) {
+            extraHtml = '<span style="font-size: 0.7rem; color: var(--text-muted); white-space: nowrap;">₺' + fmtNum(calc.total) + '</span>';
+        } else {
+            extraHtml = '<span style="font-size: 0.7rem; color: #5a9a5a; white-space: nowrap;">' + (isEN ? 'No extra charge' : 'Vade farkı yok') + '</span>';
+        }
+
+        row.innerHTML = radioHtml + labelHtml + monthlyHtml + extraHtml;
+
+        row.addEventListener('click', function() {
+            selectedInstallment = parseInt(this.dataset.months);
+            document.getElementById('installment_count').value = selectedInstallment;
+            buildInstallmentTable();
+            updateSummary();
+        });
+
+        container.appendChild(row);
+    });
+}
+
+function updateSummary() {
+    var calc = calcInstallment(selectedInstallment);
+    var summaryTotal = document.getElementById('summary-total');
+    var summaryBox = document.getElementById('summary-installment');
+    var summaryText = document.getElementById('summary-installment-text');
+
+    summaryTotal.textContent = '₺' + fmtNum(calc.total);
+
+    if (selectedInstallment > 1) {
+        summaryBox.style.display = 'block';
+        var label = selectedInstallment + (isEN ? ' installments × ₺' : ' taksit × ₺') + fmtNum(calc.monthly) + (isEN ? '/mo' : '/ay');
+        if (calc.extra > 0) {
+            label += ' — ' + (isEN ? 'Interest: ₺' : 'Vade farkı: ₺') + fmtNum(calc.extra);
+        } else {
+            label += ' — ' + (isEN ? 'No extra charge' : 'Vade farkı yok');
+        }
+        summaryText.textContent = label;
+    } else {
+        summaryBox.style.display = 'none';
+        summaryTotal.textContent = '₺' + fmtNum(BASE_TOTAL);
+    }
+}
+
+buildInstallmentTable();
+updateSummary();
+
 function selectAddress(label, id) {
     document.querySelectorAll('.address-option').forEach(function(el) {
         el.classList.remove('selected');
@@ -370,9 +502,122 @@ function expiryCheck(val) {
     if (year < 100) year += 2000;
     if (month < 1 || month > 12) return false;
     var now = new Date();
+    var currentYear = now.getFullYear();
+    var maxYear = currentYear + 10;
+    if (year < currentYear || year > maxYear) return false;
     var expDate = new Date(year, month - 1, 1);
-    var nowDate = new Date(now.getFullYear(), now.getMonth(), 1);
+    var nowDate = new Date(currentYear, now.getMonth(), 1);
     return expDate >= nowDate;
+}
+
+function cardHolderKeydown(e) {
+    var allowed = ['Backspace','Delete','ArrowLeft','ArrowRight','ArrowUp','ArrowDown','Tab','Home','End',' '];
+    if (allowed.indexOf(e.key) !== -1) return;
+    if (!/^[a-zA-ZğüşıöçĞÜŞİÖÇ]$/.test(e.key)) e.preventDefault();
+}
+
+function formatCardHolder(input) {
+    var clean = input.value.replace(/[^a-zA-ZğüşıöçĞÜŞİÖÇ ]/g, '');
+    input.value = clean.toLocaleUpperCase('tr-TR');
+}
+
+function phoneKeydown(e) {
+    var allowed = ['Backspace','Delete','ArrowLeft','ArrowRight','ArrowUp','ArrowDown','Tab','Home','End'];
+    if (allowed.indexOf(e.key) !== -1) return;
+    if (!/^\d$/.test(e.key)) e.preventDefault();
+}
+
+function formatPhone(input) {
+    var raw = input.value.replace(/\D/g, '');
+    if (raw.startsWith('90')) raw = raw.substring(2);
+    if (raw.startsWith('0')) raw = raw.substring(1);
+    raw = raw.substring(0, 10);
+    var formatted = '';
+    if (raw.length > 0) formatted = '+90 ' + raw.substring(0, 3);
+    if (raw.length > 3) formatted += ' ' + raw.substring(3, 6);
+    if (raw.length > 6) formatted += ' ' + raw.substring(6, 8);
+    if (raw.length > 8) formatted += ' ' + raw.substring(8, 10);
+    input.value = formatted;
+}
+
+function getLocation() {
+    var btn = document.getElementById('gps-btn');
+    var btnText = document.getElementById('gps-btn-text');
+    var icon = document.getElementById('gps-icon');
+    var warning = document.getElementById('gps-warning');
+    var errorBox = document.getElementById('gps-error');
+    var errorText = document.getElementById('gps-error-text');
+
+    if (!navigator.geolocation) {
+        errorText.textContent = '{% if current_lang == "en" %}Your browser does not support location detection.{% else %}Tarayıcınız konum algılamayı desteklemiyor.{% endif %}';
+        errorBox.style.display = 'block';
+        return;
+    }
+
+    btn.disabled = true;
+    icon.className = 'fa-solid fa-circle-notch fa-spin';
+    btnText.textContent = '{% if current_lang == "en" %}Detecting...{% else %}Konum alınıyor...{% endif %}';
+    warning.style.display = 'none';
+    errorBox.style.display = 'none';
+
+    navigator.geolocation.getCurrentPosition(
+        function(position) {
+            var lat = position.coords.latitude;
+            var lon = position.coords.longitude;
+
+            fetch('https://nominatim.openstreetmap.org/reverse?lat=' + lat + '&lon=' + lon + '&format=json&accept-language=tr', {
+                headers: { 'Accept': 'application/json' }
+            })
+            .then(function(res) { return res.json(); })
+            .then(function(data) {
+                var addr = data.address || {};
+
+                var city = addr.province || addr.city || addr.town || addr.county || addr.state || '';
+                var road = addr.road || addr.pedestrian || addr.footway || '';
+                var suburb = addr.suburb || addr.neighbourhood || addr.quarter || '';
+                var postcode = addr.postcode || '';
+
+                var addressParts = [];
+                if (road) addressParts.push(road);
+                if (suburb) addressParts.push(suburb);
+                if (postcode) addressParts.push(postcode);
+
+                var cityField = document.getElementById('delivery_city');
+                var addressField = document.getElementById('shipping_address');
+
+                if (cityField) cityField.value = city;
+                if (addressField) addressField.value = addressParts.join(', ');
+
+                warning.style.display = 'block';
+                btn.disabled = false;
+                icon.className = 'fa-solid fa-location-crosshairs';
+                btnText.textContent = '{% if current_lang == "en" %}Location Detected{% else %}Konum Algılandı{% endif %}';
+            })
+            .catch(function() {
+                errorText.textContent = '{% if current_lang == "en" %}Could not retrieve address. Please fill in manually.{% else %}Adres bilgisi alınamadı. Lütfen manuel olarak doldurun.{% endif %}';
+                errorBox.style.display = 'block';
+                btn.disabled = false;
+                icon.className = 'fa-solid fa-location-crosshairs';
+                btnText.textContent = '{% if current_lang == "en" %}Detect My Location Automatically{% else %}Konumumu Otomatik Algıla{% endif %}';
+            });
+        },
+        function(err) {
+            var msg = '';
+            if (err.code === 1) {
+                msg = '{% if current_lang == "en" %}Location permission denied. Please allow access from browser settings.{% else %}Konum izni reddedildi. Lütfen tarayıcı ayarlarından izin verin.{% endif %}';
+            } else if (err.code === 2) {
+                msg = '{% if current_lang == "en" %}Location could not be determined.{% else %}Konum belirlenemedi.{% endif %}';
+            } else {
+                msg = '{% if current_lang == "en" %}Location request timed out.{% else %}Konum isteği zaman aşımına uğradı.{% endif %}';
+            }
+            errorText.textContent = msg;
+            errorBox.style.display = 'block';
+            btn.disabled = false;
+            icon.className = 'fa-solid fa-location-crosshairs';
+            btnText.textContent = '{% if current_lang == "en" %}Detect My Location Automatically{% else %}Konumumu Otomatik Algıla{% endif %}';
+        },
+        { timeout: 10000, maximumAge: 60000 }
+    );
 }
 
 document.getElementById('checkout-form').addEventListener('submit', function(e) {

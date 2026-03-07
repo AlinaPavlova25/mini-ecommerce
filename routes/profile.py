@@ -1,6 +1,6 @@
 from flask import Blueprint, render_template, request, redirect, url_for, flash
 from flask_login import login_required, current_user
-from models import db, Address, Wishlist, Product, User
+from models import db, Address, Wishlist, Product, User, Coupon, NewsletterSubscriber
 from werkzeug.security import generate_password_hash
 
 profile_bp = Blueprint('profile', __name__, url_prefix='/profile')
@@ -10,7 +10,15 @@ profile_bp = Blueprint('profile', __name__, url_prefix='/profile')
 def index():
     addresses = Address.query.filter_by(user_id=current_user.id).all()
     wishlist_items = Wishlist.query.filter_by(user_id=current_user.id).all()
-    return render_template('profile/index.html', addresses=addresses, wishlist_items=wishlist_items)
+
+    subscriber = NewsletterSubscriber.query.filter_by(email=current_user.email).first()
+    coupons = []
+    if subscriber and subscriber.coupon_code:
+        coupon = Coupon.query.filter_by(code=subscriber.coupon_code).first()
+        if coupon:
+            coupons.append(coupon)
+
+    return render_template('profile/index.html', addresses=addresses, wishlist_items=wishlist_items, coupons=coupons)
 
 @profile_bp.route('/update', methods=['POST'])
 @login_required
@@ -64,6 +72,38 @@ def address_add():
     
     flash(f'{label} adresi eklendi.', 'success')
     return redirect(url_for('profile.index'))
+
+@profile_bp.route('/address/<int:address_id>/edit', methods=['POST'])
+@login_required
+def address_edit(address_id):
+    address = Address.query.get_or_404(address_id)
+
+    if address.user_id != current_user.id:
+        flash('Bu adrese erişim yetkiniz yok.', 'danger')
+        return redirect(url_for('profile.index'))
+
+    label = request.form.get('label', '').strip()
+    receiver_name = request.form.get('receiver_name', '').strip()
+    receiver_surname = request.form.get('receiver_surname', '').strip()
+    receiver_phone = request.form.get('receiver_phone', '').strip()
+    city = request.form.get('city', '').strip()
+    addr_text = request.form.get('address', '').strip()
+
+    if not all([label, receiver_name, receiver_surname, receiver_phone, city, addr_text]):
+        flash('Lütfen tüm alanları doldurun.', 'danger')
+        return redirect(url_for('profile.index') + '?tab=addresses')
+
+    address.label = label
+    address.receiver_name = receiver_name
+    address.receiver_surname = receiver_surname
+    address.receiver_phone = receiver_phone
+    address.city = city
+    address.address = addr_text
+    db.session.commit()
+
+    flash(f'{label} adresi güncellendi.', 'success')
+    return redirect(url_for('profile.index') + '?tab=addresses')
+
 
 @profile_bp.route('/address/<int:address_id>/delete', methods=['POST'])
 @login_required

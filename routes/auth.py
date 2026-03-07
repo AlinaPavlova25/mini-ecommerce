@@ -1,6 +1,7 @@
 from flask import Blueprint, render_template, request, redirect, url_for, flash, session
 from flask_login import login_user, logout_user, login_required
-from models import db, User
+from models import db, User, CartItem
+from utils.mail import send_password_reset
 from datetime import datetime, timedelta
 import secrets
 
@@ -55,7 +56,21 @@ def login():
         user = User.query.filter_by(email=email).first()
         
         if user and user.check_password(password):
+            session_cart = session.get('cart', {})
             login_user(user)
+
+            if session_cart:
+                for product_id_str, qty in session_cart.items():
+                    if qty > 0:
+                        existing = CartItem.query.filter_by(user_id=user.id, product_id=int(product_id_str)).first()
+                        if existing:
+                            existing.quantity += qty
+                        else:
+                            db.session.add(CartItem(user_id=user.id, product_id=int(product_id_str), quantity=qty))
+                db.session.commit()
+                session.pop('cart', None)
+                session.modified = True
+
             flash(f'Hoş geldiniz, {user.full_name or user.email}!', 'success')
             
             next_page = request.args.get('next')
@@ -74,8 +89,11 @@ def login():
 @auth_bp.route('/logout')
 @login_required
 def logout():
-    session.pop('cart', None)
     logout_user()
+    session.pop('coupon_code', None)
+    session.pop('coupon_discount', None)
+    session.pop('compare', None)
+    session.modified = True
     flash('Çıkış yapıldı.', 'info')
     return redirect(url_for('shop.home'))
 
@@ -95,6 +113,13 @@ def forgot_password():
             user.reset_token = token
             user.reset_token_expiry = datetime.utcnow() + timedelta(hours=1)
             db.session.commit()
+
+            reset_url = url_for('auth.reset_password', token=token, _external=True)
+            try:
+                send_password_reset(user_email=user.email, reset_url=reset_url)
+            except Exception:
+                pass
+
             flash('Şifre sıfırlama linki e-posta adresinize gönderildi.', 'success')
         else:
             flash('Eğer bu e-posta kayıtlıysa, şifre sıfırlama linki gönderildi.', 'success')

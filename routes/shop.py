@@ -1,14 +1,34 @@
 from flask import Blueprint, render_template, request, redirect, url_for, flash, session, jsonify
 from flask_login import login_required, current_user
 from sqlalchemy import or_
-from models import db, Product, Brand, Order, OrderItem, Coupon, NewsletterSubscriber
+from models import db, Product, Brand, Order, OrderItem, Coupon, NewsletterSubscriber, CartItem, StockNotification
 from utils.cart import get_cart_items, calculate_cart_total
+from utils.mail import send_order_confirmation
 from utils.stock import check_stock_availability
 from datetime import datetime
 import random
 import string
 
 shop_bp = Blueprint('shop', __name__)
+
+
+def _get_cart_dict():
+    if current_user.is_authenticated:
+        items = CartItem.query.filter_by(user_id=current_user.id).all()
+        return {str(item.product_id): item.quantity for item in items}
+    return session.get('cart', {})
+
+
+def _save_cart_dict(cart_dict):
+    if current_user.is_authenticated:
+        CartItem.query.filter_by(user_id=current_user.id).delete()
+        for product_id_str, qty in cart_dict.items():
+            if qty > 0:
+                db.session.add(CartItem(user_id=current_user.id, product_id=int(product_id_str), quantity=qty))
+        db.session.commit()
+    else:
+        session['cart'] = cart_dict
+        session.modified = True
 
 
 @shop_bp.route('/')
@@ -28,12 +48,21 @@ def home():
                            site_images=site_images)
 
 
+PRICE_RANGES = [
+    ('0-50000',    0,      50000),
+    ('50000-150000', 50000, 150000),
+    ('150000-500000', 150000, 500000),
+    ('500000+',    500000, None),
+]
+
+
 @shop_bp.route('/products')
 def product_list():
     brand_slug = request.args.get('brand')
     gender = request.args.get('gender')
     search_query = request.args.get('search', '').strip()
     sort = request.args.get('sort', '')
+    price_range = request.args.get('price_range', '')
     page = request.args.get('page', 1, type=int)
 
     query = Product.query.filter_by(is_active=True)
@@ -51,10 +80,20 @@ def product_list():
         query = query.filter(
             or_(
                 Product.name.ilike(f'%{search_query}%'),
-                Product.name_en.ilike(f'%{search_query}%'),
-                Product.reference_number.ilike(f'%{search_query}%')
+                Product.name_en.ilike(f'%{search_query}%')
             )
         )
+
+    selected_price_range = None
+    price_low = None
+    price_high = None
+    if price_range:
+        for key, low, high in PRICE_RANGES:
+            if key == price_range:
+                selected_price_range = key
+                price_low = low
+                price_high = high
+                break
 
     if sort == 'price_asc':
         query = query.order_by(Product.price.asc())
@@ -67,7 +106,42 @@ def product_list():
     else:
         query = query.order_by(Product.created_at.desc())
 
-    products = query.paginate(page=page, per_page=12, error_out=False)
+    if selected_price_range is not None:
+        all_products = query.all()
+        filtered = [
+            p for p in all_products
+            if p.discounted_price >= price_low and (price_high is None or p.discounted_price < price_high)
+        ]
+        per_page = 12
+        total = len(filtered)
+        start = (page - 1) * per_page
+        items = filtered[start:start + per_page]
+
+        class SimplePagination:
+            def __init__(self, items, page, per_page, total):
+                self.items = items
+                self.page = page
+                self.per_page = per_page
+                self.total = total
+                self.pages = max(1, -(-total // per_page))
+                self.has_prev = page > 1
+                self.has_next = page < self.pages
+                self.prev_num = page - 1
+                self.next_num = page + 1
+            def iter_pages(self, left_edge=2, left_current=2, right_current=3, right_edge=2):
+                last = 0
+                for num in range(1, self.pages + 1):
+                    if (num <= left_edge or
+                        (self.page - left_current - 1 < num < self.page + right_current) or
+                        num > self.pages - right_edge):
+                        if last + 1 != num:
+                            yield None
+                        yield num
+                        last = num
+
+        products = SimplePagination(items, page, per_page, total)
+    else:
+        products = query.paginate(page=page, per_page=12, error_out=False)
     brands = Brand.query.order_by(Brand.sort_order.asc()).all()
 
     return render_template('products/list.html',
@@ -76,7 +150,9 @@ def product_list():
                            selected_brand=selected_brand,
                            gender=gender,
                            search=search_query,
-                           sort=sort)
+                           sort=sort,
+                           price_range=selected_price_range,
+                           price_ranges=PRICE_RANGES)
 
 
 @shop_bp.route('/products/<int:product_id>')
@@ -95,13 +171,85 @@ def product_detail(product_id):
 @shop_bp.route('/brands/<slug>')
 def brand_page(slug):
     brand = Brand.query.filter_by(slug=slug).first_or_404()
-    men_products = Product.query.filter_by(brand_id=brand.id, gender='erkek', is_active=True).limit(4).all()
-    women_products = Product.query.filter_by(brand_id=brand.id, gender='kadin', is_active=True).limit(4).all()
-    unisex_products = Product.query.filter_by(brand_id=brand.id, gender='unisex', is_active=True).limit(4).all()
+    men_products     = Product.query.filter_by(brand_id=brand.id, gender='erkek',  is_active=True).limit(4).all()
+    women_products   = Product.query.filter_by(brand_id=brand.id, gender='kadin',  is_active=True).limit(4).all()
+    unisex_products  = Product.query.filter_by(brand_id=brand.id, gender='unisex', is_active=True).limit(4).all()
+    total_products   = Product.query.filter_by(brand_id=brand.id, is_active=True).count()
+    featured_product = (Product.query
+                        .filter_by(brand_id=brand.id, is_active=True)
+                        .filter(Product.stock_qty > 0)
+                        .order_by(Product.price.desc())
+                        .first())
     return render_template('brand.html', brand=brand,
                            men_products=men_products,
                            women_products=women_products,
-                           unisex_products=unisex_products)
+                           unisex_products=unisex_products,
+                           total_products=total_products,
+                           featured_product=featured_product)
+
+
+@shop_bp.route('/stock-notify/<int:product_id>', methods=['POST'])
+def stock_notify(product_id):
+    product = Product.query.get_or_404(product_id)
+    email = request.form.get('email', '').strip().lower()
+
+    if not email:
+        flash('Lütfen e-posta adresinizi girin.' if session.get('language', 'tr') == 'tr' else 'Please enter your email address.', 'warning')
+        return redirect(url_for('shop.product_detail', product_id=product_id))
+
+    if product.stock_qty > 0:
+        flash('Bu ürün zaten stokta mevcut.' if session.get('language', 'tr') == 'tr' else 'This product is already in stock.', 'info')
+        return redirect(url_for('shop.product_detail', product_id=product_id))
+
+    existing = StockNotification.query.filter_by(product_id=product_id, email=email).first()
+    if existing:
+        flash('Bu e-posta zaten bildirim listesinde.' if session.get('language', 'tr') == 'tr' else 'This email is already on the notification list.', 'info')
+        return redirect(url_for('shop.product_detail', product_id=product_id))
+
+    notif = StockNotification(product_id=product_id, email=email)
+    db.session.add(notif)
+    db.session.commit()
+
+    flash('Ürün tekrar stoka girdiğinde e-posta ile bildirileceksiniz.' if session.get('language', 'tr') == 'tr' else 'You will be notified by email when this product is back in stock.', 'success')
+    return redirect(url_for('shop.product_detail', product_id=product_id))
+
+
+@shop_bp.route('/compare/add/<int:product_id>', methods=['POST'])
+def compare_add(product_id):
+    Product.query.get_or_404(product_id)
+    compare = session.get('compare', [])
+    if product_id not in compare:
+        if len(compare) >= 3:
+            flash('En fazla 3 ürün karşılaştırabilirsiniz.' if session.get('language', 'tr') == 'tr' else 'You can compare up to 3 products.', 'warning')
+        else:
+            compare.append(product_id)
+            session['compare'] = compare
+            session.modified = True
+    return redirect(request.referrer or url_for('shop.product_list'))
+
+
+@shop_bp.route('/compare/remove/<int:product_id>', methods=['POST'])
+def compare_remove(product_id):
+    compare = session.get('compare', [])
+    if product_id in compare:
+        compare.remove(product_id)
+        session['compare'] = compare
+        session.modified = True
+    return redirect(request.referrer or url_for('shop.compare_view'))
+
+
+@shop_bp.route('/compare/clear', methods=['POST'])
+def compare_clear():
+    session.pop('compare', None)
+    session.modified = True
+    return redirect(url_for('shop.product_list'))
+
+
+@shop_bp.route('/compare')
+def compare_view():
+    compare_ids = session.get('compare', [])
+    products = [db.session.get(Product, pid) for pid in compare_ids if db.session.get(Product, pid)]
+    return render_template('products/compare.html', products=products)
 
 
 @shop_bp.route('/cart/add', methods=['POST'])
@@ -119,7 +267,7 @@ def cart_add():
         flash('Bu ürün şu anda satışta değil.', 'warning')
         return redirect(url_for('shop.product_list'))
 
-    cart = session.get('cart', {})
+    cart = _get_cart_dict()
     current_qty = cart.get(str(product_id), 0)
     new_qty = current_qty + quantity
 
@@ -128,8 +276,7 @@ def cart_add():
         return redirect(url_for('shop.product_detail', product_id=product_id))
 
     cart[str(product_id)] = new_qty
-    session['cart'] = cart
-    session.modified = True
+    _save_cart_dict(cart)
 
     flash(f'{product.name} sepete eklendi.', 'success')
     return redirect(url_for('shop.cart_view'))
@@ -137,7 +284,7 @@ def cart_add():
 
 @shop_bp.route('/cart')
 def cart_view():
-    cart = session.get('cart', {})
+    cart = _get_cart_dict()
     cart_items = get_cart_items(cart)
     total = calculate_cart_total(cart_items)
     coupon_discount = session.get('coupon_discount', 0)
@@ -158,14 +305,14 @@ def cart_update():
     quantity = request.form.get('quantity', 0, type=int)
     action = request.form.get('action')
 
-    cart = session.get('cart', {})
+    cart = _get_cart_dict()
 
     if action == 'remove':
         if str(product_id) in cart:
             del cart[str(product_id)]
             flash('Ürün sepetten kaldırıldı.', 'info')
     elif quantity > 0:
-        product = Product.query.get(product_id)
+        product = db.session.get(Product, product_id)
         if product and product.has_sufficient_stock(quantity):
             cart[str(product_id)] = quantity
             flash('Sepet güncellendi.', 'success')
@@ -175,8 +322,7 @@ def cart_update():
         if str(product_id) in cart:
             del cart[str(product_id)]
 
-    session['cart'] = cart
-    session.modified = True
+    _save_cart_dict(cart)
 
     return redirect(url_for('shop.cart_view'))
 
@@ -184,7 +330,7 @@ def cart_update():
 @shop_bp.route('/cart/apply-coupon', methods=['POST'])
 def apply_coupon():
     code = request.form.get('coupon_code', '').strip().upper()
-    cart = session.get('cart', {})
+    cart = _get_cart_dict()
     cart_items = get_cart_items(cart)
     total = calculate_cart_total(cart_items)
 
@@ -243,7 +389,7 @@ def newsletter_subscribe():
 @shop_bp.route('/checkout')
 @login_required
 def checkout():
-    cart = session.get('cart', {})
+    cart = _get_cart_dict()
     if not cart:
         flash('Sepetiniz boş.', 'warning')
         return redirect(url_for('shop.cart_view'))
@@ -269,7 +415,7 @@ def checkout():
 def checkout_pay():
     from models import Address
 
-    cart = session.get('cart', {})
+    cart = _get_cart_dict()
     if not cart:
         flash('Sepetiniz boş.', 'warning')
         return redirect(url_for('shop.cart_view'))
@@ -277,7 +423,7 @@ def checkout_pay():
     saved_address_id = request.form.get('saved_address_id')
 
     if saved_address_id and saved_address_id != 'new':
-        address = Address.query.get(int(saved_address_id))
+        address = db.session.get(Address, int(saved_address_id))
         if not address or address.user_id != current_user.id:
             flash('Geçersiz adres seçimi.', 'danger')
             return redirect(url_for('shop.checkout'))
@@ -294,6 +440,9 @@ def checkout_pay():
         shipping_address = request.form.get('shipping_address', '').strip()
 
     delivery_note = request.form.get('delivery_note', '').strip()
+    installment_count = request.form.get('installment_count', 1, type=int)
+    if installment_count not in [1, 2, 3, 4, 5, 6, 9, 12]:
+        installment_count = 1
 
     if not all([receiver_name, receiver_surname, receiver_phone, delivery_city, shipping_address]):
         flash('Lütfen tüm gerekli alanları doldurun.', 'danger')
@@ -327,14 +476,25 @@ def checkout_pay():
         coupon_discount = session.get('coupon_discount', 0)
         final_total = max(0, total - coupon_discount)
 
+        ANNUAL_RATE = 0.12
+        if installment_count <= 1:
+            installment_total = final_total
+        elif installment_count <= 3:
+            installment_total = final_total
+        else:
+            monthly_rate = ANNUAL_RATE / 12
+            monthly = final_total * (monthly_rate * (1 + monthly_rate) ** installment_count) / ((1 + monthly_rate) ** installment_count - 1)
+            installment_total = round(monthly * installment_count, 2)
+
         new_order = Order(
             user_id=current_user.id,
             status='PAID',
-            total_amount=final_total,
+            total_amount=installment_total,
             shipping_address=full_address,
             delivery_note=delivery_note,
             coupon_code=coupon_code if coupon_code else None,
-            coupon_discount=coupon_discount
+            coupon_discount=coupon_discount,
+            installment_count=installment_count
         )
         db.session.add(new_order)
         db.session.flush()
@@ -360,10 +520,20 @@ def checkout_pay():
 
         db.session.commit()
 
-        session.pop('cart', None)
+        CartItem.query.filter_by(user_id=current_user.id).delete()
+        db.session.commit()
         session.pop('coupon_code', None)
         session.pop('coupon_discount', None)
         session.modified = True
+
+        try:
+            send_order_confirmation(
+                user_email=current_user.email,
+                user_name=current_user.full_name or current_user.email,
+                order=new_order,
+            )
+        except Exception:
+            pass
 
         flash('Ödemeniz başarıyla alındı! Siparişiniz hazırlanıyor.', 'success')
         return redirect(url_for('shop.order_detail', order_id=new_order.id))
@@ -444,7 +614,7 @@ def cancel_request(order_id):
         order.status = 'CANCELED'
         order.updated_at = datetime.utcnow()
         for item in order.items:
-            product = Product.query.get(item.product_id)
+            product = db.session.get(Product, item.product_id)
             if product:
                 product.stock_qty += item.quantity
         db.session.commit()
@@ -456,3 +626,39 @@ def cancel_request(order_id):
         flash('İptal talebiniz alındı. Admin onayı bekleniyor.', 'info')
 
     return redirect(url_for('shop.order_detail', order_id=order_id))
+
+
+@shop_bp.route('/orders/<int:order_id>/return-request', methods=['POST'])
+@login_required
+def return_request(order_id):
+    order = Order.query.get_or_404(order_id)
+
+    if order.user_id != current_user.id:
+        flash('Bu siparişe erişim yetkiniz yok.', 'danger')
+        return redirect(url_for('shop.orders'))
+
+    if not order.can_request_return():
+        flash('Bu sipariş için iade talebi oluşturulamaz.', 'warning')
+        return redirect(url_for('shop.order_detail', order_id=order_id))
+
+    code = 'RET-' + ''.join(random.choices(string.ascii_uppercase + string.digits, k=8))
+    order.return_code = code
+    order.return_requested_at = datetime.utcnow()
+    order.status = 'RETURN_REQUESTED'
+    order.updated_at = datetime.utcnow()
+    db.session.commit()
+
+    flash(f'İade kodunuz: {code} — Bu kodu kargo paketinize yazın.', 'info')
+    return redirect(url_for('shop.order_detail', order_id=order_id))
+
+
+@shop_bp.route('/hakkimizda')
+@shop_bp.route('/about')
+def about():
+    return render_template('about.html')
+
+
+@shop_bp.route('/sss')
+@shop_bp.route('/faq')
+def faq():
+    return render_template('faq.html')

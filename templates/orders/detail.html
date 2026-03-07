@@ -25,7 +25,8 @@
             {% elif order.status == 'DELIVERED' %}{% if current_lang == 'en' %}Delivered{% else %}Teslim Edildi{% endif %}
             {% elif order.status == 'CANCEL_REQUESTED' %}{% if current_lang == 'en' %}Cancel Requested{% else %}İptal Talep Edildi{% endif %}
             {% elif order.status == 'CANCELED' %}{% if current_lang == 'en' %}Canceled{% else %}İptal Edildi{% endif %}
-            {% elif order.status == 'RETURN_ARRIVED' %}{% if current_lang == 'en' %}Returned{% else %}İade Edildi{% endif %}
+            {% elif order.status == 'RETURN_REQUESTED' %}{% if current_lang == 'en' %}Return Requested{% else %}İade Talep Edildi{% endif %}
+            {% elif order.status == 'RETURN_ARRIVED' %}{% if current_lang == 'en' %}Returned{% else %}İade Tamamlandı{% endif %}
             {% else %}{{ order.status }}{% endif %}
         </span>
     </div>
@@ -62,13 +63,13 @@
                     </div>
                     <div style="text-align: right; flex-shrink: 0;">
                         {% if item.discount_percent_at_purchase > 0 %}
-                        <div style="font-size: 0.75rem; color: var(--text-muted); text-decoration: line-through;">{{ "%.2f"|format(item.unit_price_at_purchase) }} TL</div>
-                        <div style="color: var(--gold); font-family: var(--font-serif);">{{ "%.2f"|format(item.effective_price) }} TL</div>
+                        <div style="font-size: 0.75rem; color: var(--text-muted); text-decoration: line-through;">₺{{ "{:,.0f}".format(item.unit_price_at_purchase) }}</div>
+                        <div style="color: var(--gold); font-family: var(--font-serif);">₺{{ "{:,.0f}".format(item.effective_price) }}</div>
                         {% else %}
-                        <div style="color: var(--text-primary); font-family: var(--font-serif);">{{ "%.2f"|format(item.unit_price_at_purchase) }} TL</div>
+                        <div style="color: var(--text-primary); font-family: var(--font-serif);">₺{{ "{:,.0f}".format(item.unit_price_at_purchase) }}</div>
                         {% endif %}
                         <div style="font-size: 0.75rem; color: var(--text-muted); margin-top: 0.25rem;">× {{ item.quantity }}</div>
-                        <div style="font-size: 0.85rem; color: var(--text-primary); font-weight: 600; margin-top: 0.25rem;">{{ "%.2f"|format(item.subtotal) }} TL</div>
+                        <div style="font-size: 0.85rem; color: var(--text-primary); font-weight: 600; margin-top: 0.25rem;">₺{{ "{:,.0f}".format(item.subtotal) }}</div>
                     </div>
                 </div>
                 {% endfor %}
@@ -77,12 +78,18 @@
                     {% if order.coupon_code %}
                     <div style="display: flex; justify-content: space-between; font-size: 0.82rem; color: var(--text-secondary);">
                         <span>{% if current_lang == 'en' %}Coupon ({{ order.coupon_code }}){% else %}Kupon ({{ order.coupon_code }}){% endif %}</span>
-                        <span style="color: #4ade80;">-{{ "%.2f"|format(order.coupon_discount) }} TL</span>
+                        <span style="color: #4ade80;">-₺{{ "{:,.0f}".format(order.coupon_discount) }}</span>
+                    </div>
+                    {% endif %}
+                    {% if order.installment_count and order.installment_count > 1 %}
+                    <div style="display: flex; justify-content: space-between; font-size: 0.82rem; color: var(--text-secondary);">
+                        <span>{% if current_lang == 'en' %}Payment{% else %}Ödeme{% endif %}</span>
+                        <span>{{ order.installment_count }} {% if current_lang == 'en' %}installments{% else %}taksit{% endif %}</span>
                     </div>
                     {% endif %}
                     <div style="display: flex; justify-content: space-between; padding-top: 0.75rem; border-top: 1px solid var(--border);">
                         <span style="font-family: var(--font-serif); color: var(--text-primary);">{% if current_lang == 'en' %}Total{% else %}Toplam{% endif %}</span>
-                        <span style="font-family: var(--font-serif); font-size: 1.1rem; color: var(--gold);">{{ "%.2f"|format(order.total_amount) }} TL</span>
+                        <span style="font-family: var(--font-serif); font-size: 1.1rem; color: var(--gold);">₺{{ "{:,.0f}".format(order.total_amount) }}</span>
                     </div>
                 </div>
             </div>
@@ -132,7 +139,7 @@
                     </div>
                     {% endfor %}
 
-                    {% if order.status in ['CANCEL_REQUESTED', 'CANCELED', 'RETURN_ARRIVED'] %}
+                    {% if order.status in ['CANCEL_REQUESTED', 'CANCELED', 'RETURN_REQUESTED', 'RETURN_ARRIVED'] %}
                     <div style="display: flex; align-items: center; gap: 1rem; padding: 0.75rem 0; padding-top: 1rem; border-top: 1px solid var(--border);">
                         <div style="width: 32px; height: 32px; border-radius: 50%; border: 2px solid #f87171; display: flex; align-items: center; justify-content: center; flex-shrink: 0; background: rgba(248,113,113,0.1);">
                             <i class="fa-solid fa-xmark" style="font-size: 0.7rem; color: #f87171;"></i>
@@ -140,6 +147,7 @@
                         <span style="font-size: 0.8rem; color: #f87171;">
                             {% if order.status == 'CANCEL_REQUESTED' %}{% if current_lang == 'en' %}Cancel Requested{% else %}İptal Talep Edildi{% endif %}
                             {% elif order.status == 'CANCELED' %}{% if current_lang == 'en' %}Canceled{% else %}İptal Edildi{% endif %}
+                            {% elif order.status == 'RETURN_REQUESTED' %}{% if current_lang == 'en' %}Return Requested{% else %}İade Talep Edildi{% endif %}
                             {% elif order.status == 'RETURN_ARRIVED' %}{% if current_lang == 'en' %}Returned{% else %}İade Tamamlandı{% endif %}{% endif %}
                         </span>
                     </div>
@@ -148,29 +156,92 @@
             </div>
 
             <!-- Cancel Action -->
-            {% if order.can_request_cancel() %}
-            <div style="background: var(--bg-card); border: 1px solid rgba(251,146,60,0.3); padding: 1.75rem;">
+            {% if order.can_request_cancel() and order.status != 'CANCEL_REQUESTED' %}
+            <div style="background: var(--bg-card); border: 1px solid rgba(251,146,60,0.3); padding: 1.75rem; margin-bottom: 1.5rem;">
                 <h4 style="font-size: 0.8rem; letter-spacing: 0.1em; text-transform: uppercase; color: #fb923c; margin-bottom: 1rem;">
                     {% if current_lang == 'en' %}Cancel Order{% else %}İptal İşlemi{% endif %}
                 </h4>
-                {% if order.status == 'CANCEL_REQUESTED' %}
-                <p style="font-size: 0.8rem; color: var(--text-muted);">
-                    {% if current_lang == 'en' %}Your cancellation request is awaiting admin approval.{% else %}İptal talebiniz admin onayı bekliyor.{% endif %}
-                </p>
-                {% else %}
                 <p style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 1.25rem;">
-                    {% if order.can_cancel_directly() %}
-                    {% if current_lang == 'en' %}You can cancel this order. Stock will be automatically restored.{% else %}Siparişinizi iptal edebilirsiniz. Stok otomatik iade edilecektir.{% endif %}
-                    {% else %}
-                    {% if current_lang == 'en' %}You can submit a cancellation request. Admin approval is required.{% else %}İptal talebi gönderebilirsiniz. Admin onayı gerekir.{% endif %}
-                    {% endif %}
+                    {% if current_lang == 'en' %}You can cancel your order before it is shipped.{% else %}Siparişiniz kargoya verilmeden önce iptal edebilirsiniz.{% endif %}
                 </p>
                 <form method="POST" action="{{ url_for('shop.cancel_request', order_id=order.id) }}" onsubmit="return confirm('{% if current_lang == 'en' %}Are you sure you want to cancel this order?{% else %}Siparişi iptal etmek istediğinizden emin misiniz?{% endif %}');">
                     <button type="submit" style="width: 100%; background: transparent; border: 1px solid #fb923c; color: #fb923c; padding: 0.75rem; font-family: var(--font-sans); font-size: 0.75rem; letter-spacing: 0.1em; text-transform: uppercase; cursor: pointer; transition: all 0.2s;">
-                        {% if current_lang == 'en' %}Request Cancellation{% else %}İptal Talep Et{% endif %}
+                        {% if current_lang == 'en' %}Cancel Order{% else %}Siparişi İptal Et{% endif %}
                     </button>
                 </form>
+            </div>
+            {% endif %}
+
+            {% if order.status == 'CANCEL_REQUESTED' %}
+            <div style="background: var(--bg-card); border: 1px solid rgba(251,146,60,0.3); padding: 1.75rem; margin-bottom: 1.5rem;">
+                <h4 style="font-size: 0.8rem; letter-spacing: 0.1em; text-transform: uppercase; color: #fb923c; margin-bottom: 0.75rem;">
+                    {% if current_lang == 'en' %}Cancel Order{% else %}İptal İşlemi{% endif %}
+                </h4>
+                <p style="font-size: 0.8rem; color: var(--text-muted);">
+                    {% if current_lang == 'en' %}Your cancellation request is awaiting admin approval.{% else %}İptal talebiniz admin onayı bekliyor.{% endif %}
+                </p>
+            </div>
+            {% endif %}
+
+            <!-- Return Action -->
+            {% if order.status == 'DELIVERED' %}
+            <div style="background: var(--bg-card); border: 1px solid rgba(198,167,94,0.25); padding: 1.75rem;">
+                <h4 style="font-size: 0.8rem; letter-spacing: 0.1em; text-transform: uppercase; color: var(--gold); margin-bottom: 1rem;">
+                    {% if current_lang == 'en' %}Return & Refund{% else %}İade & Para İadesi{% endif %}
+                </h4>
+                {% if order.can_request_return() %}
+                <p style="font-size: 0.8rem; color: var(--text-secondary); line-height: 1.7; margin-bottom: 0.75rem;">
+                    {% if current_lang == 'en' %}You have <strong style="color: var(--text-primary);">{{ order.return_deadline_days_left() }} days</strong> left to request a return.
+                    {% else %}İade talebinde bulunmak için <strong style="color: var(--text-primary);">{{ order.return_deadline_days_left() }} gün</strong> süreniz var.{% endif %}
+                </p>
+                <div style="font-size: 0.75rem; color: var(--text-muted); line-height: 1.8; margin-bottom: 1.25rem; padding: 0.85rem 1rem; border-left: 2px solid rgba(198,167,94,0.35);">
+                    {% if current_lang == 'en' %}
+                    After clicking the button, a <strong style="color: var(--text-secondary);">return code</strong> will be generated. Write this code on your cargo package and send it back. Once the return reaches us and is approved, a <strong style="color: var(--text-secondary);">full refund will be issued to your credit card</strong> within 3–7 business days.
+                    {% else %}
+                    Butona tıkladıktan sonra size bir <strong style="color: var(--text-secondary);">iade kodu</strong> oluşturulacak. Bu kodu kargo paketinin üzerine yazarak ürünü geri gönderin. İade tarafımıza ulaşıp onaylandığında <strong style="color: var(--text-secondary);">ödemeniz kredi kartınıza</strong> 3–7 iş günü içinde iade edilecektir.
+                    {% endif %}
+                </div>
+                <form method="POST" action="{{ url_for('shop.return_request', order_id=order.id) }}" onsubmit="return confirm('{% if current_lang == 'en' %}Are you sure you want to request a return?{% else %}İade talebi oluşturmak istediğinizden emin misiniz?{% endif %}');">
+                    <button type="submit" style="width: 100%; background: transparent; border: 1px solid var(--gold); color: var(--gold); padding: 0.75rem; font-family: var(--font-sans); font-size: 0.75rem; letter-spacing: 0.1em; text-transform: uppercase; cursor: pointer; transition: all 0.2s;">
+                        {% if current_lang == 'en' %}Request Return Code{% else %}İade Kodu Talep Et{% endif %}
+                    </button>
+                </form>
+                {% elif order.return_requested_at %}
+                <div style="padding: 1rem; background: rgba(198,167,94,0.06); border: 1px solid rgba(198,167,94,0.2); margin-bottom: 1rem;">
+                    <div style="font-size: 0.7rem; color: var(--text-muted); letter-spacing: 0.1em; text-transform: uppercase; margin-bottom: 0.4rem;">
+                        {% if current_lang == 'en' %}Your Return Code{% else %}İade Kodunuz{% endif %}
+                    </div>
+                    <div style="font-size: 1.1rem; font-family: monospace; color: var(--gold); letter-spacing: 0.2em;">{{ order.return_code }}</div>
+                    <div style="font-size: 0.72rem; color: var(--text-muted); margin-top: 0.4rem;">{{ order.return_requested_at.strftime('%d.%m.%Y %H:%M') }}</div>
+                </div>
+                <p style="font-size: 0.78rem; color: var(--text-secondary); line-height: 1.7;">
+                    {% if current_lang == 'en' %}Write this code on your cargo package and ship it back. Once received and approved, your refund will be processed to your credit card within <strong style="color: var(--text-primary);">3–7 business days</strong>.
+                    {% else %}Bu kodu kargo paketinin üzerine yazarak ürünü geri gönderin. İade onaylandığında ödemeniz <strong style="color: var(--text-primary);">3–7 iş günü</strong> içinde kredi kartınıza yansıyacaktır.{% endif %}
+                </p>
+                {% else %}
+                <p style="font-size: 0.8rem; color: var(--text-muted);">
+                    {% if current_lang == 'en' %}The 14-day return period for this order has expired.{% else %}Bu sipariş için 14 günlük iade süresi dolmuştur.{% endif %}
+                </p>
                 {% endif %}
+            </div>
+            {% endif %}
+
+            {% if order.status == 'RETURN_REQUESTED' %}
+            <div style="background: var(--bg-card); border: 1px solid rgba(198,167,94,0.25); padding: 1.75rem;">
+                <h4 style="font-size: 0.8rem; letter-spacing: 0.1em; text-transform: uppercase; color: var(--gold); margin-bottom: 1rem;">
+                    {% if current_lang == 'en' %}Return & Refund{% else %}İade & Para İadesi{% endif %}
+                </h4>
+                <div style="padding: 1rem; background: rgba(198,167,94,0.06); border: 1px solid rgba(198,167,94,0.2); margin-bottom: 1rem;">
+                    <div style="font-size: 0.7rem; color: var(--text-muted); letter-spacing: 0.1em; text-transform: uppercase; margin-bottom: 0.4rem;">
+                        {% if current_lang == 'en' %}Your Return Code{% else %}İade Kodunuz{% endif %}
+                    </div>
+                    <div style="font-size: 1.1rem; font-family: monospace; color: var(--gold); letter-spacing: 0.2em;">{{ order.return_code }}</div>
+                    <div style="font-size: 0.72rem; color: var(--text-muted); margin-top: 0.4rem;">{{ order.return_requested_at.strftime('%d.%m.%Y %H:%M') }}</div>
+                </div>
+                <p style="font-size: 0.78rem; color: var(--text-secondary); line-height: 1.7;">
+                    {% if current_lang == 'en' %}Your return request is being processed. Write this code on your cargo package and ship it back. Once received and approved, your refund will be processed within <strong style="color: var(--text-primary);">3–7 business days</strong>.
+                    {% else %}İade talebiniz işleme alındı. Bu kodu kargo paketinin üzerine yazarak ürünü geri gönderin. Tarafımıza ulaşıp onaylandığında ödemeniz <strong style="color: var(--text-primary);">3–7 iş günü</strong> içinde kredi kartınıza yansıyacaktır.{% endif %}
+                </p>
             </div>
             {% endif %}
         </div>
@@ -196,6 +267,7 @@
 .lw-order-delivered { color: #34d399; border-color: #34d39940; background: #34d39910; }
 .lw-order-cancel_requested { color: #fb923c; border-color: #fb923c40; background: #fb923c10; }
 .lw-order-canceled { color: #f87171; border-color: #f8717140; background: #f8717110; }
+.lw-order-return_requested { color: var(--gold); border-color: rgba(198,167,94,0.3); background: rgba(198,167,94,0.08); }
 .lw-order-return_arrived { color: var(--text-muted); border-color: var(--border); background: var(--bg-secondary); }
 @media (max-width: 768px) {
     .lw-container > div[style*="grid-template-columns"] {

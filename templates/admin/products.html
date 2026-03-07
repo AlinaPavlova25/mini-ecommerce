@@ -109,10 +109,16 @@
                                     </button>
                                 </form>
                             </td>
-                            <td>
+                            <td style="display: flex; gap: 0.4rem; align-items: center;">
                                 <a href="{{ url_for('admin.product_edit', product_id=product.id) }}" class="lw-admin-btn-sm">
                                     <i class="fa-solid fa-pen-to-square"></i> Düzenle
                                 </a>
+                                <form method="POST" action="{{ url_for('admin.product_delete', product_id=product.id) }}"
+                                      onsubmit="return confirm('{{ product.name }} silinecek. Emin misiniz?')">
+                                    <button type="submit" class="lw-admin-btn-sm" style="color: #f87171; border-color: #f8717140;">
+                                        <i class="fa-solid fa-trash"></i>
+                                    </button>
+                                </form>
                             </td>
                         </tr>
                         {% else %}
