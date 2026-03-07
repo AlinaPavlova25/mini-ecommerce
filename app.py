@@ -77,6 +77,25 @@ def debug_products():
     data = [{'id': p.id, 'name': p.name, 'image_path': p.image_path} for p in products]
     return json.dumps(data, ensure_ascii=False)
 
+@app.route('/upload-db', methods=['GET', 'POST'])
+def upload_db():
+    secret = request.args.get('secret') or request.form.get('secret')
+    if secret != 'luxwatch-db-upload-2026':
+        return 'Forbidden', 403
+    if request.method == 'POST':
+        f = request.files.get('db')
+        if not f:
+            return 'No file', 400
+        db_path = os.path.join(app.root_path, 'instance', 'shop.db')
+        os.makedirs(os.path.dirname(db_path), exist_ok=True)
+        f.save(db_path)
+        return 'OK - veritabani yuklendi'
+    return '''<form method="POST" enctype="multipart/form-data">
+        <input type="file" name="db">
+        <input type="hidden" name="secret" value="luxwatch-db-upload-2026">
+        <button type="submit">Yukle</button>
+    </form>'''
+
 @app.route('/set-newsletter-shown', methods=['POST'])
 def set_newsletter_shown():
     session['newsletter_popup_shown'] = True
