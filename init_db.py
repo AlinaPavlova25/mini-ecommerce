@@ -17,14 +17,25 @@ with app.app_context():
         )
         print(f"needs_seed: {needs_seed}")
         if needs_seed:
+            print("drop_all basliyor...")
             db.drop_all()
+            print("drop_all tamam, create_all basliyor...")
             db.create_all()
+            print("create_all tamam, stamp basliyor...")
             try:
                 stamp()
-            except Exception:
-                pass
-            from seed import seed
-            seed()
+            except Exception as se:
+                print(f"stamp hatasi (devam ediliyor): {se}")
+            print("seed import ediliyor...")
+            try:
+                from seed import seed
+                print("seed import tamam, seed() cagriliyor...")
+                seed()
+                print("seed() tamamlandi.")
+            except Exception as se:
+                print(f"SEED HATASI: {se}")
+                traceback.print_exc()
+                raise
         else:
             print("Seed atlandi, mevcut veri korunuyor.")
     except Exception as e:
