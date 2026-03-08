@@ -40,7 +40,7 @@ Tarayıcıda aç: http://127.0.0.1:5000
 - Profil yönetimi
 - Favori listesi
 - Çift dil desteği (TR / EN)
-- Newsletter aboneliği (otomatik kupon kodu)
+- Newsletter aboneliği — kupon yoksa profil/kuponlarım sekmesinden de abone olunabilir
 - Hakkımızda ve SSS/Garanti sayfaları
 - WhatsApp iletişim yönlendirmesi
 
@@ -60,7 +60,7 @@ Tarayıcıda aç: http://127.0.0.1:5000
 ## Teknolojiler
 
 - **Backend:** Flask, SQLAlchemy, Flask-Login, Flask-Migrate, Flask-Mail, Flask-Limiter
-- **Database:** SQLite
+- **Database:** PostgreSQL (production) / SQLite (local geliştirme)
 - **Frontend:** Jinja2, Custom CSS (Bootstrap bağımlılığı yok)
 - **Görsel İşleme:** Pillow
 - **Güvenlik:** python-dotenv (.env), rate limiting, rol bazlı yetkilendirme
@@ -118,13 +118,13 @@ MAIL_PASSWORD=
 MAIL_DEFAULT_SENDER=noreply@luxwatch.com
 ```
 
-Railway'de **Variables** sekmesinden `SECRET_KEY` ekleyin.
+Railway'de **Variables** sekmesinden `SECRET_KEY` ve `DATABASE_URL` ekleyin.
 
 ---
 
 ## Veritabanı
 
-İlk kurulumda:
+### Local Geliştirme (SQLite)
 
 ```bash
 python seed.py
@@ -136,14 +136,19 @@ Migration uygulamak için:
 flask db upgrade
 ```
 
+### Production (PostgreSQL)
+
+`DATABASE_URL` environment variable otomatik olarak okunur. `init_db.py` başlangıçta tabloları oluşturur; Brand veya Product tablosu boşsa seed çalıştırır, doluysa mevcut veriyi korur.
+
 ---
 
 ## Railway Deploy
 
 1. GitHub reposunu Railway'e bağlayın
-2. Variables sekmesinden `SECRET_KEY` ekleyin
-3. Deploy otomatik başlar — `init_db.py` tabloları oluşturur ve seed çalıştırır
-4. Admin panelinden görsel ve banner yükleyin
+2. Railway dashboard'dan **PostgreSQL** servisi ekleyin
+3. Web servisinin Variables sekmesine `DATABASE_URL` (PostgreSQL public URL) ve `SECRET_KEY` ekleyin
+4. Deploy otomatik başlar — tablolar oluşturulur, ilk kez seed çalışır
+5. Sonraki deploy'larda tüm veriler (siparişler, kullanıcılar, ayarlar) korunur
 
 ---
 
