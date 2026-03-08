@@ -18,6 +18,15 @@ with app.app_context():
         print(f"needs_seed: {needs_seed}")
         if needs_seed:
             print("drop_all basliyor...")
+            db.session.remove()
+            db.engine.dispose()
+            if 'postgresql' in str(db.engine.url):
+                with db.engine.connect() as conn:
+                    conn.execute(db.text(
+                        "SELECT pg_terminate_backend(pid) FROM pg_stat_activity "
+                        "WHERE datname = current_database() AND pid <> pg_backend_pid()"
+                    ))
+                    conn.commit()
             db.drop_all()
             print("drop_all tamam, create_all basliyor...")
             db.create_all()
