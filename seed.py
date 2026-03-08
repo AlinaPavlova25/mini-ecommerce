@@ -359,54 +359,58 @@ SITE_IMAGES = [
 ]
 
 
+def _do_seed():
+    brand_map = {}
+    for b in BRANDS:
+        existing = Brand.query.filter_by(slug=b['slug']).first()
+        if not existing:
+            brand = Brand(**b)
+            db.session.add(brand)
+            db.session.flush()
+            brand_map[b['slug']] = brand
+        else:
+            brand_map[b['slug']] = existing
+
+    for p in PRODUCTS:
+        brand_slug = p.pop('brand')
+        brand = brand_map.get(brand_slug)
+        if not brand:
+            continue
+        existing = Product.query.filter_by(reference_number=p['reference_number']).first()
+        if not existing:
+            product = Product(brand_id=brand.id, **p)
+            db.session.add(product)
+            db.session.flush()
+            pos = product.id
+            if pos in PRODUCT_VIDEOS:
+                product.video_path = PRODUCT_VIDEOS[pos]
+            for img_path in PRODUCT_EXTRA_IMAGES.get(pos, []):
+                db.session.add(ProductImage(product_id=product.id, image_path=img_path, sort_order=0))
+
+    for si in SITE_IMAGES:
+        existing = SiteImage.query.filter_by(key=si['key']).first()
+        if not existing:
+            db.session.add(SiteImage(**si))
+
+    admin = User.query.filter_by(email='admin@luxwatch.com').first()
+    if not admin:
+        admin = User(
+            email='admin@luxwatch.com',
+            full_name='Admin',
+            is_admin=True
+        )
+        admin.set_password('admin123')
+        db.session.add(admin)
+
+    db.session.commit()
+    print(f'Seed tamamlandi: {len(BRANDS)} marka, {len(PRODUCTS)} urun, {len(SITE_IMAGES)} site gorseli')
+    print('Admin: admin@luxwatch.com / admin123')
+
+
 def seed():
-    with app.app_context():
-        brand_map = {}
-        for b in BRANDS:
-            existing = Brand.query.filter_by(slug=b['slug']).first()
-            if not existing:
-                brand = Brand(**b)
-                db.session.add(brand)
-                db.session.flush()
-                brand_map[b['slug']] = brand
-            else:
-                brand_map[b['slug']] = existing
-
-        for p in PRODUCTS:
-            brand_slug = p.pop('brand')
-            brand = brand_map.get(brand_slug)
-            if not brand:
-                continue
-            existing = Product.query.filter_by(reference_number=p['reference_number']).first()
-            if not existing:
-                product = Product(brand_id=brand.id, **p)
-                db.session.add(product)
-                db.session.flush()
-                pos = product.id
-                if pos in PRODUCT_VIDEOS:
-                    product.video_path = PRODUCT_VIDEOS[pos]
-                for img_path in PRODUCT_EXTRA_IMAGES.get(pos, []):
-                    db.session.add(ProductImage(product_id=product.id, image_path=img_path, sort_order=0))
-
-        for si in SITE_IMAGES:
-            existing = SiteImage.query.filter_by(key=si['key']).first()
-            if not existing:
-                db.session.add(SiteImage(**si))
-
-        admin = User.query.filter_by(email='admin@luxwatch.com').first()
-        if not admin:
-            admin = User(
-                email='admin@luxwatch.com',
-                full_name='Admin',
-                is_admin=True
-            )
-            admin.set_password('admin123')
-            db.session.add(admin)
-
-        db.session.commit()
-        print(f'Seed tamamlandi: {len(BRANDS)} marka, {len(PRODUCTS)} urun, {len(SITE_IMAGES)} site gorseli')
-        print('Admin: admin@luxwatch.com / admin123')
+    _do_seed()
 
 
 if __name__ == '__main__':
-    seed()
+    with app.app_context():
+        _do_seed()
