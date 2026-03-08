@@ -355,10 +355,22 @@
         </div>
         {% else %}
         <div style="background: var(--bg-card); border: 1px solid var(--border); padding: 3rem; text-align: center; max-width: 520px;">
-            <i class="fa-solid fa-tag" style="font-size: 2rem; color: var(--border); margin-bottom: 1rem; display: block;"></i>
-            <p style="color: var(--text-muted); font-size: 0.85rem;">
-                {% if current_lang == 'en' %}No coupons yet. Subscribe to our newsletter to get 15% off.{% else %}Henüz kuponunuz yok. %15 indirim için e-bültenimize abone olun.{% endif %}
+            <i class="fa-solid fa-tag" style="font-size: 2rem; color: var(--gold-dark); opacity: 0.5; margin-bottom: 1.25rem; display: block;"></i>
+            <p style="color: var(--text-secondary); font-size: 0.9rem; margin-bottom: 0.5rem; font-family: var(--font-serif);">
+                {% if current_lang == 'en' %}Get 15% off your first order{% else %}İlk siparişinizde %15 indirim kazanın{% endif %}
             </p>
+            <p style="color: var(--text-muted); font-size: 0.78rem; margin-bottom: 2rem; line-height: 1.7;">
+                {% if current_lang == 'en' %}Subscribe to our newsletter and receive your exclusive discount coupon instantly.{% else %}E-bültenimize abone olun, indirim kodunuz anında hesabınıza eklensin.{% endif %}
+            </p>
+            <form id="profile-newsletter-form" style="display: flex; gap: 0.5rem; max-width: 380px; margin: 0 auto;">
+                <input type="email" id="profile-newsletter-email" value="{{ current_user.email }}"
+                       style="flex: 1; background: var(--bg-secondary); border: 1px solid var(--border); color: var(--text-primary); padding: 0.65rem 1rem; font-size: 0.8rem; font-family: var(--font-sans); outline: none;"
+                       placeholder="{% if current_lang == 'en' %}Your e-mail{% else %}E-posta adresiniz{% endif %}">
+                <button type="submit" class="btn-gold" style="padding: 0.65rem 1.25rem; font-size: 0.72rem; white-space: nowrap;">
+                    <span>{% if current_lang == 'en' %}Subscribe{% else %}Abone Ol{% endif %}</span>
+                </button>
+            </form>
+            <div id="profile-newsletter-msg" style="margin-top: 1rem; font-size: 0.78rem; display: none;"></div>
         </div>
         {% endif %}
     </div>
@@ -502,5 +514,34 @@ document.getElementById('address-edit-modal').addEventListener('click', function
 document.addEventListener('keydown', function(e) {
     if (e.key === 'Escape') closeAddressEdit();
 });
+
+var newsletterForm = document.getElementById('profile-newsletter-form');
+if (newsletterForm) {
+    newsletterForm.addEventListener('submit', function(e) {
+        e.preventDefault();
+        var email = document.getElementById('profile-newsletter-email').value.trim();
+        var msgEl = document.getElementById('profile-newsletter-msg');
+        fetch('/newsletter/subscribe', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+            body: 'email=' + encodeURIComponent(email)
+        })
+        .then(function(r) { return r.json(); })
+        .then(function(data) {
+            msgEl.style.display = 'block';
+            if (data.success) {
+                msgEl.style.color = '#5a9a5a';
+                msgEl.textContent = '{% if current_lang == "en" %}Your coupon code: {% else %}Kupon kodunuz: {% endif %}' + data.coupon_code + ' — {% if current_lang == "en" %}Refresh the page to see your coupon.{% else %}Kuponu görmek için sayfayı yenileyin.{% endif %}';
+                newsletterForm.style.display = 'none';
+            } else if (data.already_subscribed) {
+                msgEl.style.color = 'var(--text-muted)';
+                msgEl.textContent = '{% if current_lang == "en" %}This e-mail is already subscribed.{% else %}Bu e-posta zaten kayıtlı.{% endif %}';
+            } else {
+                msgEl.style.color = '#c0392b';
+                msgEl.textContent = data.message;
+            }
+        });
+    });
+}
 </script>
 {% endblock %}
