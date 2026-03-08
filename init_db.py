@@ -6,7 +6,10 @@ from models import Brand, Product
 with app.app_context():
     try:
         db.create_all()
-        stamp()
+        try:
+            stamp()
+        except Exception:
+            pass
         print("DB tablolari olusturuldu.")
         needs_seed = (
             Brand.query.count() == 0 or
@@ -16,7 +19,10 @@ with app.app_context():
         if needs_seed:
             db.drop_all()
             db.create_all()
-            stamp()
+            try:
+                stamp()
+            except Exception:
+                pass
             from seed import seed
             seed()
         else:
