@@ -111,8 +111,12 @@
                                 <button type="button" class="cp-filter" data-filter="kadin" onclick="setCpFilter('kadin',this)">Kadın</button>
                                 <button type="button" class="cp-filter" data-filter="unisex" onclick="setCpFilter('unisex',this)">Unisex</button>
                                 <div style="width:1px; background:var(--border-subtle); margin:0 0.2rem;"></div>
-                                {% for brand in products | map(attribute='brand') | unique(attribute='id') | sort(attribute='name') %}
-                                <button type="button" class="cp-filter" data-filter="brand-{{ brand.id }}" onclick="setCpFilter('brand-{{ brand.id }}',this)">{{ brand.name }}</button>
+                                {% set seen_brands = [] %}
+                                {% for product in products | sort(attribute='brand.name') %}
+                                    {% if product.brand.id not in seen_brands %}
+                                        {% set _ = seen_brands.append(product.brand.id) %}
+                                        <button type="button" class="cp-filter" data-filter="brand-{{ product.brand.id }}" onclick="setCpFilter('brand-{{ product.brand.id }}',this)">{{ product.brand.name }}</button>
+                                    {% endif %}
                                 {% endfor %}
                                 <div style="width:1px; background:var(--border-subtle); margin:0 0.2rem;"></div>
                                 <button type="button" class="cp-filter" data-filter="alpha" onclick="setCpFilter('alpha',this)">A–Z</button>
@@ -168,14 +172,27 @@
 var cpOpen = false;
 var cpActiveFilter = 'all';
 
-function toggleProductPicker() {
+function openProductPicker() {
     var panel = document.getElementById('cp-picker');
     var chevron = document.getElementById('cp-chevron');
-    cpOpen = !cpOpen;
-    panel.style.display = cpOpen ? 'flex' : 'none';
+    cpOpen = true;
+    panel.style.display = 'flex';
     panel.style.flexDirection = 'column';
-    chevron.style.transform = cpOpen ? 'rotate(180deg)' : '';
-    if (cpOpen) { setTimeout(function(){ document.getElementById('cp-search').focus(); }, 50); renderCpList(); }
+    chevron.style.transform = 'rotate(180deg)';
+    setTimeout(function(){ document.getElementById('cp-search').focus(); }, 50);
+    renderCpList();
+}
+
+function closeProductPicker() {
+    var panel = document.getElementById('cp-picker');
+    var chevron = document.getElementById('cp-chevron');
+    cpOpen = false;
+    panel.style.display = 'none';
+    chevron.style.transform = '';
+}
+
+function toggleProductPicker() {
+    if (cpOpen) { closeProductPicker(); } else { openProductPicker(); }
 }
 
 function setCpFilter(filter, btn) {
@@ -219,18 +236,16 @@ function selectCpProduct(id, label) {
     document.querySelectorAll('.cp-item').forEach(function(i) {
         i.classList.toggle('selected', parseInt(i.dataset.id) === id);
     });
-    cpOpen = true;
-    toggleProductPicker();
+    closeProductPicker();
 }
 
 document.getElementById('cp-search').addEventListener('input', renderCpList);
 
 document.addEventListener('click', function(e) {
     if (!cpOpen) return;
-    var wrap = document.getElementById('cp-selected-display').parentElement;
-    if (!wrap.contains(e.target)) {
-        cpOpen = true;
-        toggleProductPicker();
+    var container = document.getElementById('cp-selected-display').closest('.lw-form-group');
+    if (container && !container.contains(e.target)) {
+        closeProductPicker();
     }
 });
 
@@ -240,7 +255,7 @@ document.querySelector('form[action*="campaign_new"]').addEventListener('submit'
         document.getElementById('cp-selected-display').style.borderColor = '#f87171';
         document.getElementById('cp-selected-text').textContent = 'Lütfen bir ürün seçin';
         document.getElementById('cp-selected-text').style.color = '#f87171';
-        if (!cpOpen) toggleProductPicker();
+        openProductPicker();
     }
 });
 </script>

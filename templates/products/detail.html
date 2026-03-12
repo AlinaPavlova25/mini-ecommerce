@@ -262,9 +262,9 @@
 
             <!-- ADD TO CART -->
             {% if product.stock_qty > 0 %}
-            <form action="{{ url_for('shop.cart_add') }}" method="POST">
-                <input type="hidden" name="product_id" value="{{ product.id }}">
-                <div style="display: flex; gap: 1rem; align-items: center; flex-wrap: wrap; margin-bottom: 1rem;">
+            <div style="display: flex; gap: 1rem; align-items: center; flex-wrap: wrap; margin-bottom: 1rem;">
+                <form action="{{ url_for('shop.cart_add') }}" method="POST" style="display: contents;">
+                    <input type="hidden" name="product_id" value="{{ product.id }}">
                     <div class="qty-control">
                         <button type="button" class="qty-btn" onclick="changeQty(-1)">−</button>
                         <input type="number" name="quantity" id="qty" value="1" min="1" max="{{ product.stock_qty }}" class="qty-input">
@@ -274,27 +274,27 @@
                         <i class="fa-solid fa-bag-shopping"></i>
                         {% if current_lang == 'en' %}Add to Bag{% else %}Sepete Ekle{% endif %}
                     </button>
-                    {% if current_user.is_authenticated %}
-                        {% if product.id in wishlist_ids %}
-                        <form action="{{ url_for('profile.wishlist_remove', product_id=product.id) }}" method="POST" style="margin:0;">
-                            <button type="submit" class="lw-wishlist-btn-lg active" title="{% if current_lang == 'en' %}Remove from wishlist{% else %}Favorilerden çıkar{% endif %}">
-                                <i class="fa-solid fa-heart"></i>
-                            </button>
-                        </form>
-                        {% else %}
-                        <form action="{{ url_for('profile.wishlist_add', product_id=product.id) }}" method="POST" style="margin:0;">
-                            <button type="submit" class="lw-wishlist-btn-lg" title="{% if current_lang == 'en' %}Add to wishlist{% else %}Favorilere ekle{% endif %}">
-                                <i class="fa-regular fa-heart"></i>
-                            </button>
-                        </form>
-                        {% endif %}
+                </form>
+                {% if current_user.is_authenticated %}
+                    {% if product.id in wishlist_ids %}
+                    <form action="{{ url_for('profile.wishlist_remove', product_id=product.id) }}" method="POST" style="margin:0;">
+                        <button type="submit" class="lw-wishlist-btn-lg active" title="{% if current_lang == 'en' %}Remove from wishlist{% else %}Favorilerden çıkar{% endif %}">
+                            <i class="fa-solid fa-heart"></i>
+                        </button>
+                    </form>
                     {% else %}
-                    <a href="{{ url_for('auth.login') }}" class="lw-wishlist-btn-lg" title="{% if current_lang == 'en' %}Sign in to save{% else %}Kaydetmek için giriş yap{% endif %}">
-                        <i class="fa-regular fa-heart"></i>
-                    </a>
+                    <form action="{{ url_for('profile.wishlist_add', product_id=product.id) }}" method="POST" style="margin:0;">
+                        <button type="submit" class="lw-wishlist-btn-lg" title="{% if current_lang == 'en' %}Add to wishlist{% else %}Favorilere ekle{% endif %}">
+                            <i class="fa-regular fa-heart"></i>
+                        </button>
+                    </form>
                     {% endif %}
-                </div>
-            </form>
+                {% else %}
+                <a href="{{ url_for('auth.login') }}" class="lw-wishlist-btn-lg" title="{% if current_lang == 'en' %}Sign in to save{% else %}Kaydetmek için giriş yap{% endif %}">
+                    <i class="fa-regular fa-heart"></i>
+                </a>
+                {% endif %}
+            </div>
             <div style="font-size: 0.7rem; color: var(--text-muted); margin-bottom: 1rem;">
                 <i class="fa-solid fa-circle-check" style="color: #5a9a5a; margin-right: 0.4rem;"></i>
                 {{ product.stock_qty }} {% if current_lang == 'en' %}pieces in stock{% else %}adet stokta{% endif %}
