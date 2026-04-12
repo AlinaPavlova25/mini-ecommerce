@@ -94,7 +94,6 @@
                         <input type="hidden" name="product_id" id="cp-product-id">
 
                         <div id="cp-selected-display"
-                             onclick="toggleProductPicker()"
                              style="display:flex; justify-content:space-between; align-items:center; cursor:pointer; padding:0.55rem 0.85rem; background:var(--bg-elevated); border:1px solid var(--border-subtle); color:var(--text-muted); font-size:0.82rem; user-select:none;">
                             <span id="cp-selected-text">Seçiniz...</span>
                             <i class="fa-solid fa-chevron-down" id="cp-chevron" style="font-size:0.7rem; transition:transform 0.2s;"></i>
@@ -106,20 +105,20 @@
                                        style="width:100%; background:var(--bg-primary); border:1px solid var(--border-subtle); color:var(--text-primary); padding:0.4rem 0.7rem; font-size:0.8rem; outline:none;">
                             </div>
                             <div style="display:flex; gap:0.4rem; flex-wrap:wrap; padding:0.5rem 0.75rem; border-bottom:1px solid var(--border-subtle); background:var(--bg-secondary);">
-                                <button type="button" class="cp-filter active" data-filter="all" onclick="setCpFilter('all',this)">Tümü</button>
-                                <button type="button" class="cp-filter" data-filter="erkek" onclick="setCpFilter('erkek',this)">Erkek</button>
-                                <button type="button" class="cp-filter" data-filter="kadin" onclick="setCpFilter('kadin',this)">Kadın</button>
-                                <button type="button" class="cp-filter" data-filter="unisex" onclick="setCpFilter('unisex',this)">Unisex</button>
+                                <button type="button" class="cp-filter active" data-filter="all">Tümü</button>
+                                <button type="button" class="cp-filter" data-filter="erkek">Erkek</button>
+                                <button type="button" class="cp-filter" data-filter="kadin">Kadın</button>
+                                <button type="button" class="cp-filter" data-filter="unisex">Unisex</button>
                                 <div style="width:1px; background:var(--border-subtle); margin:0 0.2rem;"></div>
                                 {% set seen_brands = [] %}
                                 {% for product in products | sort(attribute='brand.name') %}
                                     {% if product.brand.id not in seen_brands %}
                                         {% set _ = seen_brands.append(product.brand.id) %}
-                                        <button type="button" class="cp-filter" data-filter="brand-{{ product.brand.id }}" onclick="setCpFilter('brand-{{ product.brand.id }}',this)">{{ product.brand.name }}</button>
+                                        <button type="button" class="cp-filter" data-filter="brand-{{ product.brand.id }}">{{ product.brand.name }}</button>
                                     {% endif %}
                                 {% endfor %}
                                 <div style="width:1px; background:var(--border-subtle); margin:0 0.2rem;"></div>
-                                <button type="button" class="cp-filter" data-filter="alpha" onclick="setCpFilter('alpha',this)">A–Z</button>
+                                <button type="button" class="cp-filter" data-filter="alpha">A–Z</button>
                             </div>
                             <div id="cp-list" style="overflow-y:auto; max-height:230px; font-size:0.82rem;">
                                 {% for product in products | sort(attribute='name') %}
@@ -129,7 +128,7 @@
                                      data-brand="{{ product.brand.name | lower }}"
                                      data-brand-id="{{ product.brand.id }}"
                                      data-gender="{{ product.gender }}"
-                                     data-label="{{ product.name }} ({{ product.brand.name }})"
+                                     data-label="{{ (product.name ~ ' (' ~ product.brand.name ~ ')') | e }}"
                                      style="padding:0.55rem 0.85rem; cursor:pointer; border-bottom:1px solid rgba(198,167,94,0.07); display:flex; justify-content:space-between; align-items:center; transition:background 0.15s;">
                                     <span>{{ product.name }}</span>
                                     <span style="font-size:0.7rem; color:var(--text-muted);">{{ product.brand.name }} · {{ product.gender }}</span>
@@ -169,109 +168,114 @@
 
 {% block extra_js %}
 <script>
-var cpOpen = false;
-var cpActiveFilter = 'all';
+document.addEventListener('DOMContentLoaded', function() {
+    var cpOpen = false;
+    var cpActiveFilter = 'all';
 
-var cpPicker       = document.getElementById('cp-picker');
-var cpDisplay      = document.getElementById('cp-selected-display');
-var cpSelectedText = document.getElementById('cp-selected-text');
-var cpProductId    = document.getElementById('cp-product-id');
-var cpChevron      = document.getElementById('cp-chevron');
-var cpSearch       = document.getElementById('cp-search');
-var cpList         = document.getElementById('cp-list');
-var cpEmpty        = document.getElementById('cp-empty');
+    var cpPicker       = document.getElementById('cp-picker');
+    var cpDisplay      = document.getElementById('cp-selected-display');
+    var cpSelectedText = document.getElementById('cp-selected-text');
+    var cpProductId    = document.getElementById('cp-product-id');
+    var cpChevron      = document.getElementById('cp-chevron');
+    var cpSearch       = document.getElementById('cp-search');
+    var cpList         = document.getElementById('cp-list');
+    var cpEmpty        = document.getElementById('cp-empty');
 
-function openProductPicker() {
-    cpOpen = true;
-    cpPicker.style.display = 'flex';
-    cpPicker.style.flexDirection = 'column';
-    cpChevron.style.transform = 'rotate(180deg)';
-    setTimeout(function(){ cpSearch.focus(); }, 50);
-    renderCpList();
-}
+    if (!cpPicker || !cpList || !cpDisplay) return;
 
-function closeProductPicker() {
-    cpOpen = false;
-    cpPicker.style.display = 'none';
-    cpChevron.style.transform = '';
-}
-
-function toggleProductPicker() {
-    if (cpOpen) { closeProductPicker(); } else { openProductPicker(); }
-}
-
-function setCpFilter(filter, btn) {
-    cpActiveFilter = filter;
-    document.querySelectorAll('.cp-filter').forEach(function(b) { b.classList.remove('active'); });
-    btn.classList.add('active');
-    renderCpList();
-}
-
-function renderCpList() {
-    var search = cpSearch.value.toLowerCase().trim();
-    var items = Array.from(cpList.querySelectorAll('.cp-item'));
-
-    if (cpActiveFilter === 'alpha') {
-        items.sort(function(a, b) { return a.dataset.name.localeCompare(b.dataset.name, 'tr'); });
-        items.forEach(function(item) { cpList.insertBefore(item, cpEmpty); });
+    function openProductPicker() {
+        cpOpen = true;
+        cpPicker.style.display = 'flex';
+        cpPicker.style.flexDirection = 'column';
+        if (cpChevron) cpChevron.style.transform = 'rotate(180deg)';
+        renderCpList();
+        setTimeout(function(){ if (cpSearch) cpSearch.focus(); }, 50);
     }
 
-    var visible = 0;
-    items.forEach(function(item) {
-        var matchSearch = !search || item.dataset.name.includes(search) || item.dataset.brand.includes(search);
-        var matchFilter = true;
-        if (cpActiveFilter === 'erkek')  matchFilter = item.dataset.gender === 'erkek';
-        else if (cpActiveFilter === 'kadin')  matchFilter = item.dataset.gender === 'kadin';
-        else if (cpActiveFilter === 'unisex') matchFilter = item.dataset.gender === 'unisex';
-        else if (cpActiveFilter.startsWith('brand-')) matchFilter = item.dataset.brandId === cpActiveFilter.replace('brand-', '');
-        var show = matchSearch && matchFilter;
-        item.style.display = show ? '' : 'none';
-        if (show) visible++;
+    function closeProductPicker() {
+        cpOpen = false;
+        cpPicker.style.display = 'none';
+        if (cpChevron) cpChevron.style.transform = '';
+    }
+
+    function renderCpList() {
+        var search = cpSearch ? cpSearch.value.toLowerCase().trim() : '';
+        var items = Array.from(cpList.querySelectorAll('.cp-item'));
+
+        if (cpActiveFilter === 'alpha') {
+            items.sort(function(a, b) { return (a.dataset.name || '').localeCompare(b.dataset.name || '', 'tr'); });
+            items.forEach(function(item) { cpList.insertBefore(item, cpEmpty); });
+        }
+
+        var visible = 0;
+        items.forEach(function(item) {
+            var name   = item.dataset.name   || '';
+            var brand  = item.dataset.brand  || '';
+            var gender = item.dataset.gender || '';
+            var bId    = item.dataset.brandId || '';
+            var matchSearch = !search || name.includes(search) || brand.includes(search);
+            var matchFilter = true;
+            if      (cpActiveFilter === 'erkek')            matchFilter = gender === 'erkek';
+            else if (cpActiveFilter === 'kadin')            matchFilter = gender === 'kadin';
+            else if (cpActiveFilter === 'unisex')           matchFilter = gender === 'unisex';
+            else if (cpActiveFilter.startsWith('brand-'))   matchFilter = bId === cpActiveFilter.replace('brand-', '');
+            var show = matchSearch && matchFilter;
+            item.style.display = show ? '' : 'none';
+            if (show) visible++;
+        });
+
+        if (cpEmpty) cpEmpty.style.display = visible === 0 ? 'block' : 'none';
+    }
+
+    function selectCpProduct(id, label) {
+        cpProductId.value = id;
+        cpSelectedText.textContent = label;
+        cpSelectedText.style.color = 'var(--text-primary)';
+        cpDisplay.style.borderColor = '';
+        Array.from(cpList.querySelectorAll('.cp-item')).forEach(function(i) {
+            i.classList.toggle('selected', i.dataset.id === String(id));
+        });
+        closeProductPicker();
+    }
+
+    cpDisplay.addEventListener('click', function(e) {
+        e.stopPropagation();
+        if (cpOpen) { closeProductPicker(); } else { openProductPicker(); }
     });
 
-    cpEmpty.style.display = visible === 0 ? 'block' : 'none';
-}
-
-function selectCpProduct(id, label) {
-    cpProductId.value = id;
-    cpSelectedText.textContent = label;
-    cpSelectedText.style.color = 'var(--text-primary)';
-    cpDisplay.style.borderColor = '';
-    Array.from(cpList.querySelectorAll('.cp-item')).forEach(function(i) {
-        i.classList.toggle('selected', parseInt(i.dataset.id) === parseInt(id));
+    cpPicker.addEventListener('click', function(e) {
+        e.stopPropagation();
+        var filterBtn = e.target.closest('.cp-filter');
+        if (filterBtn) {
+            cpActiveFilter = filterBtn.dataset.filter;
+            document.querySelectorAll('.cp-filter').forEach(function(b) { b.classList.remove('active'); });
+            filterBtn.classList.add('active');
+            renderCpList();
+            return;
+        }
+        var item = e.target.closest('.cp-item');
+        if (item) {
+            selectCpProduct(item.dataset.id, item.dataset.label);
+        }
     });
-    closeProductPicker();
-}
 
-cpList.addEventListener('click', function(e) {
-    e.stopPropagation();
-    var item = e.target.closest('.cp-item');
-    if (!item) return;
-    selectCpProduct(item.dataset.id, item.dataset.label);
-});
+    if (cpSearch) cpSearch.addEventListener('input', renderCpList);
 
-cpDisplay.addEventListener('click', function(e) {
-    e.stopPropagation();
-    toggleProductPicker();
-});
+    document.addEventListener('click', function() {
+        if (cpOpen) closeProductPicker();
+    });
 
-cpPicker.addEventListener('click', function(e) {
-    e.stopPropagation();
-});
-
-cpSearch.addEventListener('input', renderCpList);
-
-document.addEventListener('click', function() {
-    if (cpOpen) closeProductPicker();
-});
-
-document.querySelector('form[action*="campaign_new"]').addEventListener('submit', function(e) {
-    if (!cpProductId.value) {
-        e.preventDefault();
-        cpDisplay.style.borderColor = '#f87171';
-        cpSelectedText.textContent = 'Lütfen bir ürün seçin';
-        cpSelectedText.style.color = '#f87171';
-        openProductPicker();
+    var form = document.querySelector('form[action*="campaign_new"]');
+    if (form) {
+        form.addEventListener('submit', function(e) {
+            if (!cpProductId.value) {
+                e.preventDefault();
+                cpDisplay.style.borderColor = '#f87171';
+                cpSelectedText.textContent = 'Lütfen bir ürün seçin';
+                cpSelectedText.style.color = '#f87171';
+                openProductPicker();
+            }
+        });
     }
 });
 </script>
