@@ -557,8 +557,9 @@ def checkout_pay():
                 user_name=current_user.full_name or current_user.email,
                 order=new_order,
             )
-        except Exception:
-            pass
+        except Exception as e:
+            import logging
+            logging.error(f'Siparis onay maili gonderilemedi #{new_order.id}: {e}')
 
         flash('Ödemeniz başarıyla alındı! Siparişiniz hazırlanıyor.', 'success')
         return redirect(url_for('shop.order_detail', order_id=new_order.id))

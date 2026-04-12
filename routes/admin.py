@@ -3,6 +3,7 @@ from flask_login import login_required, current_user
 from functools import wraps
 from models import db, Product, Brand, Order, OrderItem, DiscountRule, User, SiteImage, Coupon, NewsletterSubscriber, ProductImage, CartItem, Wishlist, StockNotification
 from utils.upload import save_product_image, delete_product_image, save_product_video, save_banner_image
+from utils.mail import send_stock_notification
 from datetime import datetime
 
 admin_bp = Blueprint('admin', __name__)
@@ -412,12 +413,34 @@ def stock_adjust():
     product_id = request.form.get('product_id', type=int)
     adjustment = request.form.get('adjustment', type=int)
 
+    if product_id is None or adjustment is None:
+        flash('Geçersiz istek.', 'danger')
+        return redirect(url_for('admin.stock'))
+
     product = Product.query.get_or_404(product_id)
+    was_out_of_stock = product.stock_qty == 0
     product.stock_qty += adjustment
     if product.stock_qty < 0:
         product.stock_qty = 0
 
     db.session.commit()
+
+    if was_out_of_stock and product.stock_qty > 0:
+        notifications = StockNotification.query.filter_by(product_id=product.id).all()
+        if notifications:
+            product_url = url_for('shop.product_detail', product_id=product.id, _external=True)
+            for notif in notifications:
+                try:
+                    send_stock_notification(
+                        email=notif.email,
+                        product_name=product.name,
+                        product_url=product_url,
+                    )
+                except Exception:
+                    pass
+            StockNotification.query.filter_by(product_id=product.id).delete()
+            db.session.commit()
+
     flash(f'{product.name} stoku güncellendi: {product.stock_qty}', 'success')
     return redirect(url_for('admin.stock'))
 
