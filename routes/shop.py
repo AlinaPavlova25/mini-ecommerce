@@ -343,6 +343,14 @@ def apply_coupon():
         flash('Geçersiz veya kullanılmış kupon kodu.', 'danger')
         return redirect(url_for('shop.cart_view'))
 
+    if coupon.source == 'newsletter':
+        subscriber = NewsletterSubscriber.query.filter_by(coupon_code=code).first()
+        if subscriber:
+            user_email = current_user.email if current_user.is_authenticated else None
+            if not user_email or subscriber.email.lower() != user_email.lower():
+                flash('Bu kupon kodu size ait değil.', 'danger')
+                return redirect(url_for('shop.cart_view'))
+
     discount = round(total * coupon.discount_percent / 100, 2)
     session['coupon_code'] = code
     session['coupon_discount'] = discount
