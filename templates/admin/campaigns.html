@@ -94,7 +94,7 @@
                         <input type="hidden" name="product_id" id="cp-product-id">
 
                         <div id="cp-selected-display"
-                             onclick="toggleProductPicker()"
+                             onclick="event.stopPropagation(); toggleProductPicker()"
                              style="display:flex; justify-content:space-between; align-items:center; cursor:pointer; padding:0.55rem 0.85rem; background:var(--bg-elevated); border:1px solid var(--border-subtle); color:var(--text-muted); font-size:0.82rem; user-select:none;">
                             <span id="cp-selected-text">Seçiniz...</span>
                             <i class="fa-solid fa-chevron-down" id="cp-chevron" style="font-size:0.7rem; transition:transform 0.2s;"></i>
@@ -129,7 +129,7 @@
                                      data-brand="{{ product.brand.name | lower }}"
                                      data-brand-id="{{ product.brand.id }}"
                                      data-gender="{{ product.gender }}"
-                                     onclick="selectCpProduct({{ product.id }}, {{ (product.name ~ ' (' ~ product.brand.name ~ ')') | tojson }})"
+                                     onclick="event.stopPropagation(); selectCpProduct({{ product.id }}, {{ (product.name ~ ' (' ~ product.brand.name ~ ')') | tojson }})"
                                      style="padding:0.55rem 0.85rem; cursor:pointer; border-bottom:1px solid rgba(198,167,94,0.07); display:flex; justify-content:space-between; align-items:center; transition:background 0.15s;">
                                     <span>{{ product.name }}</span>
                                     <span style="font-size:0.7rem; color:var(--text-muted);">{{ product.brand.name }} · {{ product.gender }}</span>
