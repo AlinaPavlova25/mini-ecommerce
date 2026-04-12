@@ -393,13 +393,12 @@ def _do_seed():
 
     admin = User.query.filter_by(email='admin@luxwatch.com').first()
     if not admin:
-        admin_password = os.environ.get('ADMIN_PASSWORD', 'admin123')
         admin = User(
             email='admin@luxwatch.com',
             full_name='Admin',
             is_admin=True
         )
-        admin.set_password(admin_password)
+        admin.set_password('admin123')
         db.session.add(admin)
 
     db.session.commit()
