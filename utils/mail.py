@@ -1,19 +1,28 @@
 from flask import current_app, render_template_string
 from flask_mail import Message
+from threading import Thread
+import logging
+
+
+def _send_async(app, mail, msg):
+    with app.app_context():
+        try:
+            mail.send(msg)
+            logging.info(f'Mail gonderildi: {msg.recipients}')
+        except Exception as e:
+            logging.error(f'Mail gonderilemedi: {msg.recipients} - Hata: {e}')
 
 
 def send_email(subject, recipients, html_body, text_body=None):
-    import logging
     from app import mail
     msg = Message(subject=subject, recipients=recipients)
     msg.html = html_body
     if text_body:
         msg.body = text_body
-    try:
-        mail.send(msg)
-        logging.info(f'Mail gonderildi: {recipients}')
-    except Exception as e:
-        logging.error(f'Mail gonderilemedi: {recipients} - Hata: {e}')
+    app = current_app._get_current_object()
+    t = Thread(target=_send_async, args=(app, mail, msg))
+    t.daemon = False
+    t.start()
 
 
 ORDER_CONFIRM_HTML = """
