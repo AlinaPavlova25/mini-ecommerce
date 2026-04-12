@@ -237,7 +237,7 @@
                 {% if product.case_material %}
                 <div class="spec-item">
                     <div class="spec-label">{% if current_lang == 'en' %}Case Material{% else %}Kasa Malzemesi{% endif %}</div>
-                    <div class="spec-value">{{ product.case_material }}</div>
+                    <div class="spec-value">{% if current_lang == 'en' and product.case_material_en %}{{ product.case_material_en }}{% else %}{{ product.case_material }}{% endif %}</div>
                 </div>
                 {% endif %}
                 {% if product.case_diameter %}
@@ -249,13 +249,13 @@
                 {% if product.movement %}
                 <div class="spec-item">
                     <div class="spec-label">{% if current_lang == 'en' %}Movement{% else %}Mekanizma{% endif %}</div>
-                    <div class="spec-value">{{ product.movement }}</div>
+                    <div class="spec-value">{% if current_lang == 'en' and product.movement_en %}{{ product.movement_en }}{% else %}{{ product.movement }}{% endif %}</div>
                 </div>
                 {% endif %}
                 {% if product.water_resistance %}
                 <div class="spec-item">
                     <div class="spec-label">{% if current_lang == 'en' %}Water Resistance{% else %}Su Direnci{% endif %}</div>
-                    <div class="spec-value">{{ product.water_resistance }}</div>
+                    <div class="spec-value">{% if current_lang == 'en' and product.water_resistance_en %}{{ product.water_resistance_en }}{% else %}{{ product.water_resistance }}{% endif %}</div>
                 </div>
                 {% endif %}
             </div>

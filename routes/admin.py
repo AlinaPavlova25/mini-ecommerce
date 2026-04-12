@@ -95,8 +95,10 @@ def product_new():
         gender = request.form.get('gender', 'unisex')
         reference_number = request.form.get('reference_number', '').strip()
         case_material = request.form.get('case_material', '').strip()
+        case_material_en = request.form.get('case_material_en', '').strip()
         case_diameter = request.form.get('case_diameter', '').strip()
         movement = request.form.get('movement', '').strip()
+        movement_en = request.form.get('movement_en', '').strip()
         water_resistance = request.form.get('water_resistance', '').strip()
         price = request.form.get('price', type=float)
         stock_qty = request.form.get('stock_qty', type=int)
@@ -123,8 +125,10 @@ def product_new():
             gender=gender,
             reference_number=reference_number,
             case_material=case_material,
+            case_material_en=case_material_en,
             case_diameter=case_diameter,
             movement=movement,
+            movement_en=movement_en,
             water_resistance=water_resistance,
             price=price,
             stock_qty=stock_qty,
@@ -156,8 +160,10 @@ def product_edit(product_id):
         product.gender = request.form.get('gender', 'unisex')
         product.reference_number = request.form.get('reference_number', '').strip()
         product.case_material = request.form.get('case_material', '').strip()
+        product.case_material_en = request.form.get('case_material_en', '').strip()
         product.case_diameter = request.form.get('case_diameter', '').strip()
         product.movement = request.form.get('movement', '').strip()
+        product.movement_en = request.form.get('movement_en', '').strip()
         product.water_resistance = request.form.get('water_resistance', '').strip()
         product.price = request.form.get('price', type=float)
         product.stock_qty = request.form.get('stock_qty', type=int)

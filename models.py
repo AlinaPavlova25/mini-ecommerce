@@ -112,9 +112,12 @@ class Product(db.Model):
     gender = db.Column(db.String(10), nullable=False, default='unisex')  # erkek / kadin / unisex
     reference_number = db.Column(db.String(100))   # örn: Rolex 116610LN
     case_material = db.Column(db.String(100))       # Çelik, Altın, Titanyum
+    case_material_en = db.Column(db.String(100))
     case_diameter = db.Column(db.String(20))        # örn: 41mm
     movement = db.Column(db.String(100))            # Otomatik, Kuvars vb.
+    movement_en = db.Column(db.String(100))
     water_resistance = db.Column(db.String(50))     # örn: 300m
+    water_resistance_en = db.Column(db.String(50))
     price = db.Column(db.Numeric(10, 2), nullable=False)
     stock_qty = db.Column(db.Integer, default=0, nullable=False)
     image_path = db.Column(db.String(200))

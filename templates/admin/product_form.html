@@ -79,18 +79,26 @@
                             <input type="text" name="reference_number" class="lw-input" value="{{ product.reference_number if product else '' }}" placeholder="ör: 126610LN">
                         </div>
                         <div class="lw-form-group">
-                            <label class="lw-label">Kasa Malzemesi</label>
-                            <input type="text" name="case_material" class="lw-input" value="{{ product.case_material if product else '' }}" placeholder="ör: Oyster Çelik">
+                            <label class="lw-label">Kasa Malzemesi (TR)</label>
+                            <input type="text" name="case_material" class="lw-input" value="{{ product.case_material if product else '' }}" placeholder="ör: Paslanmaz Çelik">
+                        </div>
+                        <div class="lw-form-group">
+                            <label class="lw-label">Case Material (EN)</label>
+                            <input type="text" name="case_material_en" class="lw-input" value="{{ product.case_material_en if product else '' }}" placeholder="e.g. Stainless Steel">
                         </div>
                     </div>
-                    <div class="lw-admin-form-row-3">
+                    <div class="lw-admin-form-row" style="grid-template-columns: 1fr 1fr 1fr 1fr;">
                         <div class="lw-form-group">
                             <label class="lw-label">Kasa Çapı</label>
                             <input type="text" name="case_diameter" class="lw-input" value="{{ product.case_diameter if product else '' }}" placeholder="ör: 41 mm">
                         </div>
                         <div class="lw-form-group">
-                            <label class="lw-label">Mekanizma</label>
-                            <input type="text" name="movement" class="lw-input" value="{{ product.movement if product else '' }}" placeholder="ör: Cal. 3235">
+                            <label class="lw-label">Mekanizma (TR)</label>
+                            <input type="text" name="movement" class="lw-input" value="{{ product.movement if product else '' }}" placeholder="ör: Otomatik">
+                        </div>
+                        <div class="lw-form-group">
+                            <label class="lw-label">Movement (EN)</label>
+                            <input type="text" name="movement_en" class="lw-input" value="{{ product.movement_en if product else '' }}" placeholder="e.g. Automatic">
                         </div>
                         <div class="lw-form-group">
                             <label class="lw-label">Su Direnci</label>
