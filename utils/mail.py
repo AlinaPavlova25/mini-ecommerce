@@ -1,26 +1,26 @@
-from flask import current_app, render_template_string
-from flask_mail import Message
+from flask import render_template_string
 from threading import Thread
 import logging
+import os
 
 
-def _send_async(app, mail, msg):
-    with app.app_context():
-        try:
-            mail.send(msg)
-            logging.info(f'Mail gonderildi: {msg.recipients}')
-        except Exception as e:
-            logging.error(f'Mail gonderilemedi: {msg.recipients} - Hata: {e}')
+def _send_via_resend(subject, recipients, html_body):
+    try:
+        import resend
+        resend.api_key = os.environ.get('RESEND_API_KEY', '')
+        resend.Emails.send({
+            'from': 'LuxWatch <onboarding@resend.dev>',
+            'to': recipients,
+            'subject': subject,
+            'html': html_body,
+        })
+        logging.info(f'Mail gonderildi: {recipients}')
+    except Exception as e:
+        logging.error(f'Mail gonderilemedi: {recipients} - Hata: {e}')
 
 
 def send_email(subject, recipients, html_body, text_body=None):
-    from app import mail
-    msg = Message(subject=subject, recipients=recipients)
-    msg.html = html_body
-    if text_body:
-        msg.body = text_body
-    app = current_app._get_current_object()
-    t = Thread(target=_send_async, args=(app, mail, msg))
+    t = Thread(target=_send_via_resend, args=(subject, recipients, html_body))
     t.daemon = False
     t.start()
 
@@ -283,7 +283,7 @@ WELCOME_HTML = """
   <p style="text-align: center;">
     <a href="{{ shop_url }}" class="btn">Koleksiyonu Keşfet</a>
   </p>
-  <p style="font-size: 0.8rem; color: #6b5d4f;">Herhangi bir sorunuz olursa bize ulaşmaktan çekinmeyin.</p>
+  <p style="font-size:0.8rem; color:#6b5d4f;">Herhangi bir sorunuz olursa bize ulaşmaktan çekinmeyin.</p>
   <div class="footer">
     <p>LuxWatch &mdash; Seçkin Saatler</p>
     <p>Bu e-posta otomatik olarak oluşturulmuştur, lütfen yanıtlamayın.</p>
@@ -297,7 +297,7 @@ WELCOME_HTML = """
 def send_welcome_email(user_email, full_name, shop_url):
     html = render_template_string(WELCOME_HTML, full_name=full_name, shop_url=shop_url)
     send_email(
-        subject='LuxWatch\'a Hoş Geldiniz',
+        subject="LuxWatch'a Hoş Geldiniz",
         recipients=[user_email],
         html_body=html,
     )
