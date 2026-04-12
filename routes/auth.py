@@ -1,7 +1,7 @@
 from flask import Blueprint, render_template, request, redirect, url_for, flash, session
 from flask_login import login_user, logout_user, login_required
 from models import db, User, CartItem
-from utils.mail import send_password_reset
+from utils.mail import send_password_reset, send_welcome_email
 from datetime import datetime, timedelta
 import secrets
 
@@ -43,7 +43,17 @@ def register():
         
         db.session.add(new_user)
         db.session.commit()
-        
+
+        try:
+            shop_url = url_for('shop.product_list', _external=True)
+            send_welcome_email(
+                user_email=email,
+                full_name=full_name or email,
+                shop_url=shop_url
+            )
+        except Exception:
+            pass
+
         flash('Kayıt başarılı! Şimdi giriş yapabilirsiniz.', 'success')
         return redirect(url_for('auth.login'))
     
