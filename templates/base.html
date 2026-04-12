@@ -245,15 +245,25 @@
 (function() {
     {% if not session.get('newsletter_popup_shown') %}
     setTimeout(function() {
-        document.getElementById('newsletter-modal').classList.add('active');
+        var modal = document.getElementById('newsletter-modal');
+        if (modal) modal.classList.add('active');
     }, 3000);
 
     document.getElementById('newsletter-close').addEventListener('click', closeNewsletter);
 
     document.getElementById('newsletter-form').addEventListener('submit', function(e) {
         e.preventDefault();
-        var email = document.getElementById('newsletter-email').value;
-        var phone = document.getElementById('newsletter-phone').value;
+        var email = document.getElementById('newsletter-email').value.trim();
+        var phone = document.getElementById('newsletter-phone').value.trim();
+
+        if (!email || !phone) {
+            alert('{% if current_lang == "en" %}Please fill in all fields.{% else %}Lütfen tüm alanları doldurun.{% endif %}');
+            return;
+        }
+
+        var btn = this.querySelector('button[type="submit"]');
+        btn.disabled = true;
+
         var formData = new FormData();
         formData.append('email', email);
         formData.append('phone', phone);
@@ -264,25 +274,27 @@
         })
         .then(function(r) { return r.json(); })
         .then(function(data) {
-            if (data.success) {
+            if (data.success || data.already_subscribed) {
                 document.getElementById('newsletter-form').style.display = 'none';
                 document.getElementById('newsletter-success').style.display = 'block';
-            } else if (data.already_subscribed) {
-                document.getElementById('newsletter-form').style.display = 'none';
-                document.getElementById('newsletter-success').style.display = 'block';
+                fetch('/set-newsletter-shown', { method: 'POST' }).catch(function(){});
             } else {
                 alert(data.message);
+                btn.disabled = false;
             }
+        })
+        .catch(function() {
+            alert('{% if current_lang == "en" %}An error occurred. Please try again.{% else %}Bir hata oluştu. Lütfen tekrar deneyin.{% endif %}');
+            btn.disabled = false;
         });
     });
     {% endif %}
-
-    fetch('/set-newsletter-shown', { method: 'POST' }).catch(function(){});
 })();
 
 function closeNewsletter() {
     var modal = document.getElementById('newsletter-modal');
     if (modal) {
+        fetch('/set-newsletter-shown', { method: 'POST' }).catch(function(){});
         modal.classList.remove('active');
         setTimeout(function() { modal.remove(); }, 400);
     }
