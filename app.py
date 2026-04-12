@@ -1,5 +1,5 @@
 import os
-from flask import Flask, render_template, session, request, redirect, url_for
+from flask import Flask, render_template, session, request, redirect, url_for, g
 from flask_migrate import Migrate
 from flask_login import LoginManager
 from flask_mail import Mail
@@ -99,16 +99,19 @@ def inject_globals():
     from utils.i18n import t
     from flask_login import current_user
 
-    if current_user.is_authenticated:
-        cart_items = CartItem.query.filter_by(user_id=current_user.id).all()
-        cart_count = sum(item.quantity for item in cart_items)
-        wishlist_ids = {w.product_id for w in Wishlist.query.filter_by(user_id=current_user.id).all()}
-    else:
-        cart = session.get('cart', {})
-        cart_count = sum(cart.values())
-        wishlist_ids = set()
+    if not hasattr(g, 'cart_count'):
+        if current_user.is_authenticated:
+            cart_items = CartItem.query.filter_by(user_id=current_user.id).all()
+            g.cart_count = sum(item.quantity for item in cart_items)
+            g.wishlist_ids = {w.product_id for w in Wishlist.query.filter_by(user_id=current_user.id).all()}
+        else:
+            cart = session.get('cart', {})
+            g.cart_count = sum(cart.values())
+            g.wishlist_ids = set()
 
-    brands = Brand.query.order_by(Brand.sort_order.asc()).all()
+    if not hasattr(g, 'brands'):
+        g.brands = Brand.query.order_by(Brand.sort_order.asc()).all()
+
     current_lang = session.get('language', 'tr')
 
     def get_localized_name(obj):
@@ -117,9 +120,9 @@ def inject_globals():
         return obj.name if hasattr(obj, 'name') else str(obj)
 
     return {
-        'cart_count': cart_count,
-        'wishlist_ids': wishlist_ids,
-        'brands': brands,
+        'cart_count': g.cart_count,
+        'wishlist_ids': g.wishlist_ids,
+        'brands': g.brands,
         't': t,
         'current_lang': current_lang,
         'get_name': get_localized_name
