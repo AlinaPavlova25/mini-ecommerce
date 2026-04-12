@@ -27,6 +27,12 @@ def register():
         if existing_user:
             flash('Bu email adresi zaten kayıtlı.', 'danger')
             return redirect(url_for('auth.register'))
+
+        if phone:
+            existing_phone = User.query.filter_by(phone=phone).first()
+            if existing_phone:
+                flash('Bu telefon numarası zaten kayıtlı.', 'danger')
+                return redirect(url_for('auth.register'))
         
         new_user = User(
             email=email,

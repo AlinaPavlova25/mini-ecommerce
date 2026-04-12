@@ -17,7 +17,7 @@ class User(UserMixin, db.Model):
     is_admin = db.Column(db.Boolean, default=False, nullable=False)
     role = db.Column(db.String(20), nullable=False, default='user')
     full_name = db.Column(db.String(100))
-    phone = db.Column(db.String(20))
+    phone = db.Column(db.String(20), unique=True)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     reset_token = db.Column(db.String(100), unique=True)
     reset_token_expiry = db.Column(db.DateTime)
@@ -234,6 +234,7 @@ class NewsletterSubscriber(db.Model):
 
     id = db.Column(db.Integer, primary_key=True)
     email = db.Column(db.String(120), unique=True, nullable=False)
+    phone = db.Column(db.String(20), unique=True)
     coupon_code = db.Column(db.String(50))
     subscribed_at = db.Column(db.DateTime, default=datetime.utcnow)
 

@@ -163,6 +163,7 @@
         </p>
         <form id="newsletter-form" style="display: flex; flex-direction: column; gap: 1rem;">
             <input type="email" id="newsletter-email" class="lw-input" placeholder="{% if current_lang == 'en' %}Your e-mail address{% else %}E-posta adresiniz{% endif %}" required style="text-align: center;">
+            <input type="tel" id="newsletter-phone" class="lw-input" placeholder="{% if current_lang == 'en' %}Your phone number (e.g. 05XX XXX XX XX){% else %}Telefon numaranız (05XX XXX XX XX){% endif %}" required style="text-align: center;">
             <button type="submit" class="btn-gold-solid w-100" style="justify-content: center;">
                 <span>{% if current_lang == 'en' %}Get My 15% Discount{% else %}%15 İndirimimi Al{% endif %}</span>
             </button>
@@ -171,10 +172,9 @@
             <p style="color: var(--gold); font-family: var(--font-serif); font-size: 1.1rem; margin-bottom: 1rem;">
                 {% if current_lang == 'en' %}Thank You!{% else %}Teşekkürler!{% endif %}
             </p>
-            <p style="color: var(--text-secondary); font-size: 0.85rem; margin-bottom: 1rem;">
-                {% if current_lang == 'en' %}Your coupon code:{% else %}Kupon kodunuz:{% endif %}
+            <p style="color: var(--text-secondary); font-size: 0.85rem; margin-bottom: 1.5rem; line-height: 1.8;">
+                {% if current_lang == 'en' %}Your 15% discount code has been sent to your e-mail address.{% else %}%15 indirim kodunuz e-posta adresinize gönderildi.{% endif %}
             </p>
-            <div id="coupon-display" style="border: 1px solid var(--gold); padding: 0.75rem 1.5rem; font-family: monospace; font-size: 1.2rem; letter-spacing: 0.2em; color: var(--gold); margin-bottom: 1rem;"></div>
             <button class="btn-ghost" onclick="closeNewsletter()" style="width: 100%; justify-content: center;">
                 {% if current_lang == 'en' %}Start Shopping{% else %}Alışverişe Başla{% endif %}
             </button>
@@ -253,8 +253,10 @@
     document.getElementById('newsletter-form').addEventListener('submit', function(e) {
         e.preventDefault();
         var email = document.getElementById('newsletter-email').value;
+        var phone = document.getElementById('newsletter-phone').value;
         var formData = new FormData();
         formData.append('email', email);
+        formData.append('phone', phone);
 
         fetch('{{ url_for("shop.newsletter_subscribe") }}', {
             method: 'POST',
@@ -265,11 +267,9 @@
             if (data.success) {
                 document.getElementById('newsletter-form').style.display = 'none';
                 document.getElementById('newsletter-success').style.display = 'block';
-                document.getElementById('coupon-display').textContent = data.coupon_code;
             } else if (data.already_subscribed) {
                 document.getElementById('newsletter-form').style.display = 'none';
                 document.getElementById('newsletter-success').style.display = 'block';
-                document.getElementById('coupon-display').textContent = '{% if current_lang == "en" %}Already subscribed{% else %}Zaten kayıtlısınız{% endif %}';
             } else {
                 alert(data.message);
             }

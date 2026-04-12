@@ -185,3 +185,61 @@ def send_password_reset(user_email, reset_url):
         recipients=[user_email],
         html_body=html,
     )
+
+
+NEWSLETTER_COUPON_HTML = """
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<style>
+  body { font-family: 'Helvetica Neue', Arial, sans-serif; background: #0f0f0f; color: #f0ead8; margin: 0; padding: 0; }
+  .wrap { max-width: 560px; margin: 0 auto; padding: 2rem; }
+  .header { text-align: center; padding: 2rem 0 1.5rem; border-bottom: 1px solid rgba(198,167,94,0.25); }
+  .logo { font-size: 1.8rem; font-weight: 700; letter-spacing: 0.08em; color: #c6a75e; }
+  .tagline { font-size: 0.6rem; letter-spacing: 0.3em; text-transform: uppercase; color: #a89880; margin-top: 4px; }
+  h2 { color: #c6a75e; font-size: 1.2rem; margin: 2rem 0 0.5rem; font-weight: 400; letter-spacing: 0.05em; }
+  p { color: #a89880; font-size: 0.9rem; line-height: 1.8; margin: 0.5rem 0; }
+  .coupon-box { background: #1a1a1a; border: 1px solid rgba(198,167,94,0.4); padding: 1.5rem; margin: 1.5rem 0; text-align: center; }
+  .coupon-label { font-size: 0.6rem; letter-spacing: 0.25em; text-transform: uppercase; color: #6b5d4f; margin-bottom: 0.5rem; }
+  .coupon-code { font-size: 1.8rem; font-family: monospace; letter-spacing: 0.25em; color: #c6a75e; font-weight: 700; }
+  .coupon-pct { font-size: 0.8rem; color: #a89880; margin-top: 0.5rem; }
+  .footer { text-align: center; margin-top: 2rem; padding-top: 1.5rem; border-top: 1px solid rgba(198,167,94,0.15); font-size: 0.75rem; color: #6b5d4f; line-height: 2; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="header">
+    <div class="logo">LuxWatch</div>
+    <div class="tagline">Horologerie de Luxe</div>
+  </div>
+  <h2>Hoş Geldiniz</h2>
+  <p>LuxWatch bültenine abone olduğunuz için teşekkürler. İlk siparişinizde kullanabileceğiniz özel indirim kodunuz aşağıdadır.</p>
+  <div class="coupon-box">
+    <div class="coupon-label">İndirim Kodunuz</div>
+    <div class="coupon-code">{{ coupon_code }}</div>
+    <div class="coupon-pct">%{{ discount_percent }} indirim · Tek kullanımlık</div>
+  </div>
+  <p>Bu kodu sepet sayfasında "Kupon Kodu" alanına girerek indiriminizi uygulayabilirsiniz.</p>
+  <p style="font-size:0.8rem; color:#6b5d4f;">Kupon yalnızca bu e-posta adresine kayıtlı hesabınızla kullanılabilir.</p>
+  <div class="footer">
+    <p>LuxWatch &mdash; Seçkin Saatler</p>
+    <p>Bu e-posta otomatik olarak oluşturulmuştur, lütfen yanıtlamayın.</p>
+  </div>
+</div>
+</body>
+</html>
+"""
+
+
+def send_newsletter_coupon(email, coupon_code, discount_percent=15):
+    html = render_template_string(
+        NEWSLETTER_COUPON_HTML,
+        coupon_code=coupon_code,
+        discount_percent=discount_percent,
+    )
+    send_email(
+        subject='LuxWatch — %{} İndirim Kodunuz'.format(discount_percent),
+        recipients=[email],
+        html_body=html,
+    )

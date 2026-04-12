@@ -3,6 +3,7 @@ from flask_login import login_required, current_user
 from sqlalchemy import or_
 from models import db, Product, Brand, Order, OrderItem, Coupon, NewsletterSubscriber, CartItem, StockNotification
 from utils.cart import get_cart_items, calculate_cart_total
+from utils.mail import send_newsletter_coupon
 from utils.mail import send_order_confirmation
 from utils.stock import check_stock_availability
 from datetime import datetime
@@ -347,7 +348,10 @@ def apply_coupon():
         subscriber = NewsletterSubscriber.query.filter_by(coupon_code=code).first()
         if subscriber:
             user_email = current_user.email if current_user.is_authenticated else None
-            if not user_email or subscriber.email.lower() != user_email.lower():
+            user_phone = current_user.phone if current_user.is_authenticated else None
+            email_match = user_email and subscriber.email.lower() == user_email.lower()
+            phone_match = subscriber.phone and user_phone and subscriber.phone == user_phone
+            if not email_match or (subscriber.phone and not phone_match):
                 flash('Bu kupon kodu size ait değil.', 'danger')
                 return redirect(url_for('shop.cart_view'))
 
@@ -372,13 +376,21 @@ def remove_coupon():
 @shop_bp.route('/newsletter/subscribe', methods=['POST'])
 def newsletter_subscribe():
     email = request.form.get('email', '').strip().lower()
+    phone = request.form.get('phone', '').strip()
 
     if not email:
         return jsonify({'success': False, 'message': 'E-posta adresi gerekli.'})
 
-    existing = NewsletterSubscriber.query.filter_by(email=email).first()
-    if existing:
+    if not phone:
+        return jsonify({'success': False, 'message': 'Telefon numarası gerekli.'})
+
+    existing_email = NewsletterSubscriber.query.filter_by(email=email).first()
+    if existing_email:
         return jsonify({'success': False, 'message': 'Bu e-posta zaten kayıtlı.', 'already_subscribed': True})
+
+    existing_phone = NewsletterSubscriber.query.filter_by(phone=phone).first()
+    if existing_phone:
+        return jsonify({'success': False, 'message': 'Bu telefon numarası zaten kayıtlı.', 'already_subscribed': True})
 
     code = ''.join(random.choices(string.ascii_uppercase + string.digits, k=10))
     while Coupon.query.filter_by(code=code).first():
@@ -387,11 +399,16 @@ def newsletter_subscribe():
     coupon = Coupon(code=code, discount_percent=15, source='newsletter')
     db.session.add(coupon)
 
-    subscriber = NewsletterSubscriber(email=email, coupon_code=code)
+    subscriber = NewsletterSubscriber(email=email, phone=phone, coupon_code=code)
     db.session.add(subscriber)
     db.session.commit()
 
-    return jsonify({'success': True, 'coupon_code': code})
+    try:
+        send_newsletter_coupon(email=email, coupon_code=code, discount_percent=15)
+    except Exception:
+        pass
+
+    return jsonify({'success': True})
 
 
 @shop_bp.route('/checkout')
