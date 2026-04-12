@@ -10,6 +10,7 @@
     --bg-secondary: #161616;
     --bg-card: #1a1a1a;
     --bg-elevated: #212121;
+    --border: rgba(255,255,255,0.08);
     --border-subtle: rgba(198, 167, 94, 0.15);
     --border-gold: rgba(198, 167, 94, 0.5);
     --text-primary: #f0ead8;
@@ -21,6 +22,86 @@
     --transition-fast: all 0.2s ease;
     --shadow-gold: 0 0 30px rgba(198, 167, 94, 0.15);
     --shadow-card: 0 8px 40px rgba(0, 0, 0, 0.6);
+}
+
+[data-theme="light"] {
+    --bg-primary: #faf8f4;
+    --bg-secondary: #f0ece4;
+    --bg-card: #ffffff;
+    --bg-elevated: #f5f1ea;
+    --border: rgba(0,0,0,0.08);
+    --border-subtle: rgba(198, 167, 94, 0.25);
+    --border-gold: rgba(198, 167, 94, 0.6);
+    --text-primary: #1a1410;
+    --text-secondary: #5a4a3a;
+    --text-muted: #9a8a7a;
+    --shadow-gold: 0 0 30px rgba(198, 167, 94, 0.2);
+    --shadow-card: 0 8px 40px rgba(0, 0, 0, 0.1);
+}
+
+[data-theme="light"] .lw-nav {
+    background: rgba(250, 248, 244, 0.95);
+    border-bottom-color: rgba(198, 167, 94, 0.2);
+}
+
+[data-theme="light"] .lw-nav-scrolled {
+    background: rgba(250, 248, 244, 0.98);
+}
+
+[data-theme="light"] .lw-modal {
+    background: #ffffff;
+}
+
+[data-theme="light"] .lw-modal-overlay {
+    background: rgba(0, 0, 0, 0.4);
+}
+
+[data-theme="light"] .lw-footer {
+    background: #1a1410;
+    color: #f0ead8;
+}
+
+[data-theme="light"] .btn-ghost {
+    border-color: var(--gold);
+    color: var(--text-primary);
+}
+
+[data-theme="light"] .lw-input {
+    background: #ffffff;
+    border-color: rgba(0,0,0,0.15);
+    color: var(--text-primary);
+}
+
+[data-theme="light"] .lw-product-card {
+    background: #ffffff;
+    box-shadow: 0 2px 20px rgba(0,0,0,0.08);
+}
+
+[data-theme="light"] .lw-nav-link,
+[data-theme="light"] .lw-nav-icon-btn {
+    color: var(--text-primary);
+}
+
+/* Theme toggle button */
+.theme-toggle-btn {
+    background: none;
+    border: 1px solid var(--border-subtle);
+    color: var(--text-secondary);
+    width: 34px;
+    height: 34px;
+    border-radius: 50%;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.85rem;
+    transition: var(--transition-fast);
+    flex-shrink: 0;
+}
+
+.theme-toggle-btn:hover {
+    border-color: var(--gold);
+    color: var(--gold);
 }
 
 * {

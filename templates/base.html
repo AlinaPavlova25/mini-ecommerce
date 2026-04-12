@@ -48,6 +48,10 @@
                 <a href="{{ url_for('set_language', language='en') }}" class="{% if current_lang == 'en' %}active{% endif %}">EN</a>
             </div>
 
+            <button class="theme-toggle-btn" id="theme-toggle" title="Tema değiştir">
+                <i class="fa-solid fa-sun" id="theme-icon"></i>
+            </button>
+
             {% if current_user.is_authenticated %}
             <a href="{{ url_for('profile.index') }}" class="lw-nav-icon" title="{{ current_user.full_name or current_user.email }}">
                 <i class="fa-regular fa-user"></i>
@@ -330,5 +334,32 @@ function closeNewsletter() {
 </script>
 
 {% block extra_js %}{% endblock %}
+
+<script>
+(function() {
+    var btn = document.getElementById('theme-toggle');
+    var icon = document.getElementById('theme-icon');
+    var saved = localStorage.getItem('lw-theme') || 'dark';
+
+    function applyTheme(theme) {
+        document.documentElement.setAttribute('data-theme', theme);
+        if (theme === 'light') {
+            icon.classList.remove('fa-sun');
+            icon.classList.add('fa-moon');
+        } else {
+            icon.classList.remove('fa-moon');
+            icon.classList.add('fa-sun');
+        }
+        localStorage.setItem('lw-theme', theme);
+    }
+
+    applyTheme(saved);
+
+    btn.addEventListener('click', function() {
+        var current = document.documentElement.getAttribute('data-theme');
+        applyTheme(current === 'light' ? 'dark' : 'light');
+    });
+})();
+</script>
 </body>
 </html>
