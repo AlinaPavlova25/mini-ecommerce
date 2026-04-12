@@ -25,14 +25,21 @@ def index():
 def update_info():
     current_user.full_name = request.form.get('full_name', '').strip()
     current_user.phone = request.form.get('phone', '').strip()
-    
+
     new_password = request.form.get('new_password', '').strip()
     if new_password:
+        current_password = request.form.get('current_password', '').strip()
+        if not current_password or not current_user.check_password(current_password):
+            flash('Mevcut şifreniz hatalı.', 'danger')
+            return redirect(url_for('profile.index'))
+        if len(new_password) < 6:
+            flash('Yeni şifre en az 6 karakter olmalıdır.', 'danger')
+            return redirect(url_for('profile.index'))
         current_user.set_password(new_password)
         flash('Bilgileriniz ve şifreniz güncellendi.', 'success')
     else:
         flash('Bilgileriniz güncellendi.', 'success')
-    
+
     db.session.commit()
     return redirect(url_for('profile.index'))
 

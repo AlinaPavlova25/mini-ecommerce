@@ -5,6 +5,7 @@ from flask_login import LoginManager
 from flask_mail import Mail
 from flask_limiter import Limiter
 from flask_limiter.util import get_remote_address
+from flask_wtf.csrf import CSRFProtect
 from dotenv import load_dotenv
 from models import db, User, Brand, CartItem, Wishlist
 
@@ -12,12 +13,15 @@ load_dotenv()
 
 mail = Mail()
 limiter = Limiter(key_func=get_remote_address, default_limits=[])
+csrf = CSRFProtect()
 
 app = Flask(__name__)
 
 basedir = os.path.abspath(os.path.dirname(__file__))
 
 app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'dev-secret-key-change-in-production-12345')
+app.config['WTF_CSRF_TIME_LIMIT'] = None
+app.config['WTF_CSRF_CHECK_DEFAULT'] = True
 
 database_url = os.environ.get('DATABASE_URL', 'sqlite:///' + os.path.join(basedir, 'instance', 'shop.db'))
 if database_url.startswith('postgres://'):
@@ -38,6 +42,7 @@ app.config['MAIL_SUPPRESS_SEND'] = not bool(os.environ.get('MAIL_USERNAME', ''))
 db.init_app(app)
 mail.init_app(app)
 limiter.init_app(app)
+csrf.init_app(app)
 migrate = Migrate(app, db)
 
 @app.template_filter('tl')
@@ -77,6 +82,11 @@ def set_newsletter_shown():
     session.modified = True
     from flask import Response
     return Response(status=204)
+
+csrf.exempt(set_newsletter_shown)
+
+from routes.shop import newsletter_subscribe
+csrf.exempt(newsletter_subscribe)
 
 @app.route('/set-language/<language>')
 def set_language(language):

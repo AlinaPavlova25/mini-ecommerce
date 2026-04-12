@@ -68,6 +68,10 @@
                             {% if current_lang == 'en' %}Change Password (Optional){% else %}Şifre Değiştir (Opsiyonel){% endif %}
                         </h4>
                         <div class="lw-form-group">
+                            <label class="lw-label">{% if current_lang == 'en' %}Current Password{% else %}Mevcut Şifre{% endif %}</label>
+                            <input type="password" name="current_password" class="lw-input" placeholder="{% if current_lang == 'en' %}Enter current password{% else %}Mevcut şifrenizi girin{% endif %}">
+                        </div>
+                        <div class="lw-form-group">
                             <label class="lw-label">{% if current_lang == 'en' %}New Password{% else %}Yeni Şifre{% endif %}</label>
                             <input type="password" name="new_password" class="lw-input" placeholder="{% if current_lang == 'en' %}Leave blank to keep current{% else %}Boş bırakırsanız değişmez{% endif %}">
                         </div>

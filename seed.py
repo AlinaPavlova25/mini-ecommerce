@@ -1,7 +1,6 @@
 import sys
 import os
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-
 from app import app, db
 from models import Brand, Product, User, SiteImage, ProductImage
 from werkzeug.security import generate_password_hash
@@ -394,12 +393,13 @@ def _do_seed():
 
     admin = User.query.filter_by(email='admin@luxwatch.com').first()
     if not admin:
+        admin_password = os.environ.get('ADMIN_PASSWORD', 'admin123')
         admin = User(
             email='admin@luxwatch.com',
             full_name='Admin',
             is_admin=True
         )
-        admin.set_password('admin123')
+        admin.set_password(admin_password)
         db.session.add(admin)
 
     db.session.commit()

@@ -1,11 +1,18 @@
 from flask import Blueprint, render_template, request, redirect, url_for, flash, session
 from flask_login import login_user, logout_user, login_required
+from urllib.parse import urlparse, urljoin
 from models import db, User, CartItem
 from utils.mail import send_password_reset, send_welcome_email
 from datetime import datetime, timedelta
 import secrets
 
 auth_bp = Blueprint('auth', __name__)
+
+
+def is_safe_url(target):
+    ref_url = urlparse(request.host_url)
+    test_url = urlparse(urljoin(request.host_url, target))
+    return test_url.scheme in ('http', 'https') and ref_url.netloc == test_url.netloc
 
 @auth_bp.route('/register', methods=['GET', 'POST'])
 def register():
@@ -90,7 +97,7 @@ def login():
             flash(f'Hoş geldiniz, {user.full_name or user.email}!', 'success')
             
             next_page = request.args.get('next')
-            if next_page:
+            if next_page and is_safe_url(next_page):
                 return redirect(next_page)
             
             if user.is_admin:

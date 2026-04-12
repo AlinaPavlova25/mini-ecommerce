@@ -544,6 +544,12 @@ def order_approve_cancel(order_id):
 
     order.status = 'CANCELED'
     order.updated_at = datetime.utcnow()
+
+    for item in order.items:
+        product = db.session.get(Product, item.product_id)
+        if product:
+            product.stock_qty += item.quantity
+
     db.session.commit()
     flash(f'Sipariş #{order.id} iptal edildi.', 'info')
     return redirect(url_for('admin.order_detail', order_id=order_id))
