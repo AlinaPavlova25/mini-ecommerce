@@ -1,3 +1,4 @@
+
 {% extends 'base.html' %}
 
 {% block title %}{{ product.get_name(current_lang) }} — {{ product.brand.name }} — LuxWatch{% endblock %}
@@ -154,9 +155,22 @@
                     <span style="font-size: 0.75rem; letter-spacing: 0.2em;">{{ product.brand.name }}</span>
                 </div>
                 {% endif %}
+ 
                 {% if product.is_featured %}
                 <span class="lw-badge-featured">{% if current_lang == 'en' %}Featured{% else %}Öne Çıkan{% endif %}</span>
                 {% endif %}
+            </div>
+            <hr>
+
+            <h4>Saati Kolda Deneyin</h4>
+            
+            <button class="btn btn-dark mb-3" onclick="startCamera()">
+                Kamerayı Aç
+            </button>
+            
+            <div class="camera-container">
+                <video id="camera" autoplay playsinline></video>
+                <img src="{{ url_for('static', filename='uploads/' + product.image_path) }}" class="watch-overlay-camera">
             </div>
             {% set all_images = [] %}
             {% if product.image_path %}{% set _ = all_images.append(product.image_path) %}{% endif %}

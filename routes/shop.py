@@ -8,7 +8,9 @@ from utils.mail import send_order_confirmation
 from utils.stock import check_stock_availability
 from datetime import datetime
 import random
+
 import string
+
 
 shop_bp = Blueprint('shop', __name__)
 
