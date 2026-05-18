@@ -43,6 +43,7 @@ Tarayıcıda aç: http://127.0.0.1:5000
 - Newsletter aboneliği — kupon yoksa profil/kuponlarım sekmesinden de abone olunabilir
 - Hakkımızda ve SSS/Garanti sayfaları
 - WhatsApp iletişim yönlendirmesi
+- Karanlık mod desteği
 
 ### Admin Tarafı
 - Dashboard (sipariş ve stok özeti)
